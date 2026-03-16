@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* ตั้งค่าให้พื้นหลังโปร่งใสสำหรับ OBS */
+        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; }
+        
+        .goal-container { width: 100%; max-width: 600px; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; color: white; }
+        .goal-title { margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,1); font-size: 1.5rem; font-weight: bold; }
+        .goal-bar-bg { width: 100%; height: 40px; background: rgba(0,0,0,0.6); border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        /* หลอดสีฟ้าที่มีแอนิเมชันวิ่งแบบสมูทๆ */
+        .goal-bar-fill { height: 100%; border-radius: 20px 0 0 20px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
+        
+        .goal-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; text-shadow: 0 1px 3px black; font-size: 1.1rem; white-space: nowrap; }
+        .goal-info { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; font-size: 1rem; text-shadow: 0 1px 3px black; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="goal-container" id="goal-box">
+        <div class="goal-title" id="obs-goal-title">เป้าหมายโดเนท</div>
+        <div class="goal-bar-bg">
+            <div class="goal-bar-fill" id="obs-goal-bar" style="width: 0%; background: #0EA5E9; box-shadow: 0 0 15px #0EA5E9;"></div>
+            <div class="goal-text" id="obs-goal-percentage">0 บาท (0%)</div>
+        </div>
+        <div class="goal-info">
+            <span>จากเป้าหมาย <span id="obs-goal-target">100</span> บาท</span>
+        </div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+
+        socket.on('apply_goal', (goal) => {
+            // อัปเดตข้อความ
+            document.getElementById('obs-goal-title').innerText = goal.title;
+            document.getElementById('obs-goal-target').innerText = goal.target;
+            document.getElementById('goal-box').style.color = goal.textColor;
+            
+            // อัปเดตสีหลอด
+            const barFill = document.getElementById('obs-goal-bar');
+            barFill.style.background = goal.barColor;
+            barFill.style.boxShadow = `0 0 15px ${goal.barColor}`;
+
+            // คำนวณเปอร์เซ็นต์ความยาวหลอด (กันทะลุ 100%)
+            let percent = (goal.current / goal.target) * 100;
+            if(percent > 100) percent = 100;
+
+            // สั่งขยับหลอด!
+            barFill.style.width = percent + '%';
+            document.getElementById('obs-goal-percentage').innerText = `${goal.current} บาท (${Math.round(percent)}%)`;
+        });
+    </script>
+</body>
+</html>

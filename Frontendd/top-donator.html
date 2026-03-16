@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; color: white; transition: 0.3s; }
+        .leaderboard-box { background: rgba(0, 0, 0, 0.6); border-radius: 15px; padding: 20px; width: 350px; backdrop-filter: blur(10px); transition: 0.3s; }
+        .title { font-size: 1.5rem; font-weight: bold; color: #5BC0EB; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 5px black; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; transition: 0.3s; }
+        
+        /* 📌 จุดที่แก้ไข: เปลี่ยน background เป็น transparent เอาสีขาวจางๆ ออกไปเลย */
+        .list-item { display: flex; align-items: center; justify-content: space-between; background: transparent; border: none; margin-bottom: 10px; padding: 12px 15px; border-radius: 10px; transition: 0.3s; }
+        
+        .rank { font-size: 1.2rem; font-weight: bold; width: 30px; text-shadow: 0 1px 2px black; }
+        .name { flex: 1; font-weight: 500; font-size: 1.1rem; text-shadow: 0 1px 2px black; }
+        .amount { font-weight: bold; color: inherit; font-size: 1.1rem; text-shadow: 0 1px 2px black; }
+
+        .rank-1 { color: #fbbf24; font-size: 1.5rem; } .rank-2 { color: #94a3b8; font-size: 1.3rem; } .rank-3 { color: #b45309; font-size: 1.3rem; } 
+    </style>
+</head>
+<body>
+    <div class="leaderboard-box" id="td-box">
+        <div class="title" id="td-title">🏆 Top Donators</div>
+        <div id="leaderboard-content"></div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+
+        socket.on('apply_top_donor', (settings) => {
+            const box = document.getElementById('td-box');
+            
+            if (settings.isTransparent) {
+                box.style.background = 'transparent';
+                box.style.backdropFilter = 'none'; 
+            } else {
+                box.style.background = settings.boxColor;
+                box.style.backdropFilter = 'blur(10px)';
+            }
+            
+            if (settings.hasBorder === false) {
+                box.style.border = 'none';
+                box.style.boxShadow = 'none';
+            } else {
+                const bColor = settings.borderColor || '#3A86FF';
+                box.style.border = `2px solid ${bColor}`;
+                box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)';
+            }
+
+            document.getElementById('td-title').style.color = settings.titleColor;
+            document.getElementById('td-title').innerText = settings.title;
+            document.body.style.color = settings.textColor; 
+        });
+
+        socket.on('update_leaderboard', (topDonators) => {
+            const container = document.getElementById('leaderboard-content');
+            container.innerHTML = ''; 
+            topDonators.forEach((donator, index) => {
+                let rankClass = ''; let rankText = `#${index + 1}`;
+                if (index === 0) { rankClass = 'rank-1'; rankText = '👑'; }
+                else if (index === 1) { rankClass = 'rank-2'; rankText = '🥈'; }
+                else if (index === 2) { rankClass = 'rank-3'; rankText = '🥉'; }
+
+                container.innerHTML += `
+                    <div class="list-item">
+                        <div class="rank ${rankClass}">${rankText}</div>
+                        <div class="name">${donator.name}</div>
+                        <div class="amount" style="color: #10b981;">${donator.amount.toLocaleString()} ฿</div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ / สมัครสมาชิก | Ocean Donate</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="mainstyle.css">
+    <style>
+        body { background: var(--dark); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        
+        /* เมนูด้านบน (กลับหน้าแรก & เปลี่ยนภาษา) */
+        .top-nav { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .back-home { color: var(--text); text-decoration: none; font-size: 1rem; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .back-home:hover { color: var(--blue); }
+        .lang-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .lang-btn:hover { background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
+
+        /* กล่อง Form */
+        .auth-container { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); position: relative; z-index: 10; }
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-header .logo { font-size: 1.8rem; margin-bottom: 10px; font-weight: 700; }
+        .auth-header .logo span { color: var(--blue); }
+        .auth-header p { color: var(--text); font-size: 0.9rem; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text); }
+        .input-group input { width: 100%; padding: 12px 15px 12px 45px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; outline: none; transition: 0.3s; }
+        .input-group input:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(58, 134, 255, 0.2); }
+        .auth-btn { width: 100%; background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; margin-bottom: 20px; }
+        .auth-btn:hover { background: #2a6edc; transform: translateY(-2px); }
+        .social-login { display: flex; gap: 10px; margin-bottom: 20px; }
+        .social-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); color: white; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.3s; font-weight: 400; text-decoration: none; }
+        .discord-btn:hover { background: #5865F2; border-color: #5865F2; }
+        .google-btn:hover { background: #DB4437; border-color: #DB4437; }
+        .divider { text-align: center; margin: 20px 0; position: relative; }
+        .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(255,255,255,0.1); }
+        .divider::before { left: 0; }
+        .divider::after { right: 0; }
+        .divider span { color: var(--text); font-size: 0.8rem; background: var(--dark); padding: 0 10px; }
+        .toggle-text { text-align: center; color: var(--text); font-size: 0.9rem; }
+        .toggle-text a { color: var(--blue); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .toggle-text a:hover { text-decoration: underline; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow top-left"></div>
+    <div class="bg-glow bottom-right"></div>
+
+    <div class="top-nav">
+        <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> <span id="text-back">กลับหน้าแรก</span></a>
+        <button class="lang-btn" id="langToggle">
+            <img src="https://flagcdn.com/w20/th.png" id="flagImg" alt="TH" width="20">
+            <span id="langText">TH</span>
+        </button>
+    </div>
+
+    <div class="auth-container">
+        <div id="login-form">
+            <div class="auth-header">
+                <div class="logo">OCEAN<span>DONATE</span></div>
+                <p id="text-login-desc">เข้าสู่ระบบเพื่อจัดการหน้า Dashboard ของคุณ</p>
+            </div>
+            <div class="social-login">
+                <button class="social-btn discord-btn"><i class="fab fa-discord"></i> Discord</button>
+                <button class="social-btn google-btn"><i class="fab fa-google"></i> Google</button>
+            </div>
+            <div class="divider"><span id="text-or-login">หรือใช้รหัสผ่าน</span></div>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="input-email-login" placeholder="อีเมลของคุณ" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="input-pass-login" placeholder="รหัสผ่าน" required>
+            </div>
+            <div style="text-align: right; margin-bottom: 20px;">
+                <a href="#" id="text-forgot" style="color: var(--text); font-size: 0.8rem; text-decoration: none;">ลืมรหัสผ่าน?</a>
+            </div>
+            <button class="auth-btn" id="btn-login-submit" onclick="window.location.href='dashboard.html'">เข้าสู่ระบบ</button>
+            <div class="toggle-text">
+                <span id="text-no-acc">ยังไม่มีบัญชีใช่ไหม?</span> <a onclick="toggleForm()" id="text-go-reg">สมัครสมาชิกเลย</a>
+            </div>
+        </div>
+
+        <div id="register-form" class="hidden">
+            <div class="auth-header">
+                <div class="logo">OCEAN<span>DONATE</span></div>
+                <p id="text-reg-desc">สร้างบัญชีใหม่ ฟรี! ไม่มีค่าธรรมเนียม</p>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="input-user-reg" placeholder="ชื่อผู้ใช้งาน (Username)" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="input-email-reg" placeholder="อีเมลของคุณ" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="input-pass-reg" placeholder="รหัสผ่าน" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="input-pass-confirm" placeholder="ยืนยันรหัสผ่าน" required>
+            </div>
+            <button class="auth-btn" id="btn-reg-submit">สมัครสมาชิก</button>
+            <div class="toggle-text">
+                <span id="text-has-acc">มีบัญชีอยู่แล้ว?</span> <a onclick="toggleForm()" id="text-go-login">เข้าสู่ระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+        }
+
+        // ระบบแปลภาษา
+        const langToggle = document.getElementById('langToggle');
+        const translations = {
+            th: {
+                lang: "TH", flag: "https://flagcdn.com/w20/th.png",
+                back: "กลับหน้าแรก", loginDesc: "เข้าสู่ระบบเพื่อจัดการหน้า Dashboard ของคุณ",
+                orLogin: "หรือใช้รหัสผ่าน", emailHolder: "อีเมลของคุณ", passHolder: "รหัสผ่าน",
+                forgot: "ลืมรหัสผ่าน?", btnLogin: "เข้าสู่ระบบ", noAcc: "ยังไม่มีบัญชีใช่ไหม?", goReg: "สมัครสมาชิกเลย",
+                regDesc: "สร้างบัญชีใหม่ ฟรี! ไม่มีค่าธรรมเนียม", userHolder: "ชื่อผู้ใช้งาน (Username)",
+                passConfHolder: "ยืนยันรหัสผ่าน", btnReg: "สมัครสมาชิก", hasAcc: "มีบัญชีอยู่แล้ว?", goLogin: "เข้าสู่ระบบ"
+            },
+            en: {
+                lang: "EN", flag: "https://flagcdn.com/w20/gb.png",
+                back: "Back Home", loginDesc: "Login to manage your Dashboard",
+                orLogin: "or use password", emailHolder: "Your Email", passHolder: "Password",
+                forgot: "Forgot Password?", btnLogin: "Login", noAcc: "Don't have an account?", goReg: "Register Now",
+                regDesc: "Create a new account for free!", userHolder: "Username",
+                passConfHolder: "Confirm Password", btnReg: "Register", hasAcc: "Already have an account?", goLogin: "Login"
+            }
+        };
+
+        let currentLang = 'th';
+        langToggle.onclick = () => {
+            currentLang = currentLang === 'th' ? 'en' : 'th';
+            const t = translations[currentLang];
+            
+            document.getElementById('langText').innerText = t.lang;
+            document.getElementById('flagImg').src = t.flag;
+            document.getElementById('text-back').innerText = t.back;
+            document.getElementById('text-login-desc').innerText = t.loginDesc;
+            document.getElementById('text-or-login').innerText = t.orLogin;
+            document.getElementById('input-email-login').placeholder = t.emailHolder;
+            document.getElementById('input-pass-login').placeholder = t.passHolder;
+            document.getElementById('text-forgot').innerText = t.forgot;
+            document.getElementById('btn-login-submit').innerText = t.btnLogin;
+            document.getElementById('text-no-acc').innerText = t.noAcc;
+            document.getElementById('text-go-reg').innerText = t.goReg;
+            
+            document.getElementById('text-reg-desc').innerText = t.regDesc;
+            document.getElementById('input-user-reg').placeholder = t.userHolder;
+            document.getElementById('input-email-reg').placeholder = t.emailHolder;
+            document.getElementById('input-pass-reg').placeholder = t.passHolder;
+            document.getElementById('input-pass-confirm').placeholder = t.passConfHolder;
+            document.getElementById('btn-reg-submit').innerText = t.btnReg;
+            document.getElementById('text-has-acc').innerText = t.hasAcc;
+            document.getElementById('text-go-login').innerText = t.goLogin;
+        };
+    </script>
+</body>
+</html>

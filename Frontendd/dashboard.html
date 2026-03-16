@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Ocean Donate</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        /* ================= BASE STYLES ================= */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --dark: #050811; --blue: #3A86FF; --text: #a0aec0; --card-bg: rgba(255,255,255,0.02); --border: rgba(255,255,255,0.05); --success: #10b981; }
+        body { background: var(--dark); color: white; overflow-x: hidden; font-family: 'Kanit', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--dark); }
+        ::-webkit-scrollbar-thumb { background: rgba(58, 134, 255, 0.5); border-radius: 10px; }
+
+        .bg-glow { position: fixed; width: 400px; height: 400px; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.15; pointer-events: none; }
+        .top-left { top: -100px; left: -100px; background: var(--blue); }
+        .bottom-right { bottom: -100px; right: -100px; background: #5BC0EB; }
+
+        /* ================= NAVBAR & SIDEBAR ================= */
+        .dash-nav { position: fixed; width: 100%; top: 0; background: rgba(5, 8, 17, 0.85); backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); padding: 15px 30px; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 700; font-size: 1.2rem; } .logo span { color: var(--blue); }
+        .nav-right-tools { display: flex; align-items: center; gap: 15px; }
+        .btn-outline { color: var(--text); text-decoration: none; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; padding: 8px 15px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; }
+        .btn-outline:hover { color: white; background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
+
+        .dashboard-wrapper { display: flex; min-height: 100vh; padding-top: 65px; }
+        .dash-sidebar { width: 260px; background: rgba(255,255,255,0.01); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; overflow-y: auto; }
+        .user-profile { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .user-profile img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--blue); margin-bottom: 10px; }
+        .user-profile p { color: var(--success); font-size: 0.85rem; }
+        .dash-menu { list-style: none; } .dash-menu li { margin-bottom: 5px; }
+        .dash-menu a { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: var(--text); text-decoration: none; border-radius: 10px; transition: 0.3s; font-weight: 400; }
+        .dash-menu a:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        .dash-menu a.active { background: rgba(58, 134, 255, 0.1); color: var(--blue); border-left: 3px solid var(--blue); font-weight: 500; }
+
+        /* ================= MAIN CONTENT ================= */
+        .dash-main { flex: 1; padding: 40px; margin-left: 260px; }
+        .page-title { margin-bottom: 30px; font-size: 1.8rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border: 1px solid var(--border); padding: 20px; border-radius: 15px; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-3px); border-color: rgba(58, 134, 255, 0.3); }
+        .stat-card h4 { color: var(--text); font-size: 0.9rem; font-weight: 400; margin-bottom: 10px; }
+        .stat-card .amount { font-size: 1.8rem; font-weight: 700; color: white; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text); font-size: 0.95rem; }
+        .form-control { width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: var(--blue); box-shadow: 0 0 10px rgba(58, 134, 255, 0.2); }
+        .color-picker { width: 100%; height: 45px; border: none; border-radius: 10px; background: transparent; cursor: pointer; padding: 0; }
+        
+        .btn-primary { background: var(--blue); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary:hover { background: #2a6edc; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(58, 134, 255, 0.4); }
+        .btn-success { background: var(--success); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-success:hover { background: #059669; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); transform: translateY(-2px); }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--blue); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--blue); cursor: pointer; margin-top: -6px; box-shadow: 0 0 10px rgba(58, 134, 255, 0.5); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 5px; }
+
+        .badge-free { background: rgba(58, 134, 255, 0.1); color: var(--blue); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; border: 1px solid rgba(58, 134, 255, 0.3); vertical-align: middle; margin-left: 10px; font-weight: 600; }
+        .payment-card { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; }
+
+        /* WIDGETS SPECIFIC */
+        .widget-nav { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; }
+        .widget-tab { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; color: var(--text); white-space: nowrap; }
+        .widget-tab.active { background: rgba(58, 134, 255, 0.1); border-color: var(--blue); color: var(--blue); box-shadow: 0 0 15px rgba(58, 134, 255, 0.2); }
+        .widget-panel { display: none; animation: fadeIn 0.4s; }
+        .widget-panel.active { display: block; }
+
+        .transparent-bg { background-color: #1a1a1a; background-image: linear-gradient(45deg, #252525 25%, transparent 25%, transparent 75%, #252525 75%, #252525), linear-gradient(45deg, #252525 25%, transparent 25%, transparent 75%, #252525 75%, #252525); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
+        .preview-box { border: 1px solid var(--border); border-radius: 15px; padding: 40px 20px; text-align: center; position: relative; min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
+        .preview-actions { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 10px; }
+        
+        .layout-selector { display: flex; gap: 15px; margin-bottom: 20px; }
+        .layout-item { flex: 1; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .layout-item.active { border-color: var(--blue); background: rgba(58, 134, 255, 0.1); box-shadow: 0 0 15px rgba(58, 134, 255, 0.2); }
+        .layout-item .mock-img { width: 40px; height: 40px; background: #334155; border-radius: 5px; margin: 0 auto 10px; }
+        .layout-item .mock-text { height: 8px; background: #475569; border-radius: 4px; margin: 5px auto; width: 60%; }
+
+        #preview-alert-content { transition: all 0.3s; display: flex; flex-direction: column; align-items: center; font-family: 'Kanit', sans-serif; }
+        #preview-alert-content.layout-row { flex-direction: row; gap: 20px; text-align: left; }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-box { background: #0f1322; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; border-radius: 15px; padding: 25px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); transform: translateY(-20px); transition: 0.3s; }
+        .modal-overlay.active .modal-box { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .history-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        .history-table th { background: rgba(58, 134, 255, 0.1); color: var(--blue); font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(58, 134, 255, 0.3); }
+        .history-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text); }
+        .history-table tr:hover td { background: rgba(255,255,255,0.02); }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow top-left"></div>
+    <div class="bg-glow bottom-right"></div>
+
+    <nav class="dash-nav">
+        <div class="logo">OCEAN<span>DONATE</span></div>
+        <div class="nav-right-tools">
+            <button class="btn-outline" id="langToggle" style="padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
+                <img src="https://flagcdn.com/w20/th.png" id="flagImg" alt="TH" width="20" style="border-radius: 3px;">
+                <span id="langText">TH</span>
+            </button>
+            <a href="index.html" class="btn-outline lang-el" data-th="<i class='fas fa-home'></i> กลับหน้าแรก" data-en="<i class='fas fa-home'></i> Home"><i class="fas fa-home"></i> กลับหน้าแรก</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-wrapper">
+        <aside class="dash-sidebar">
+            <div class="user-profile">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile">
+                <h4>Zantots</h4><p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์" data-en="Online">ระบบออนไลน์</span></p>
+            </div>
+            <ul class="dash-menu">
+                <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payment Methods">ช่องทางรับเงิน</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-laptop-house"></i> <span class="lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ต & แจ้งเตือน" data-en="Widgets & Alerts">วิดเจ็ต & แจ้งเตือน</span></a></li>
+                <li style="margin-top: 30px;"><a href="auth.html" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
+            </ul>
+        </aside>
+
+        <main class="dash-main">
+            <div id="overview" class="tab-content active">
+                <div class="page-title lang-el" data-th="การวิเคราะห์ (Analytics)" data-en="Analytics">การวิเคราะห์ (Analytics)</div>
+                <div class="stats-grid">
+                    <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-calendar-day'></i> ยอดโดเนทวันนี้" data-en="<i class='fas fa-calendar-day'></i> Today's Donation"><i class="fas fa-calendar-day"></i> ยอดโดเนทวันนี้</h4><div class="amount"><span id="dash-stat-today">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
+                    <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-wallet'></i> ยอดโดเนททั้งหมด" data-en="<i class='fas fa-wallet'></i> Total Donation"><i class="fas fa-wallet"></i> ยอดโดเนททั้งหมด</h4><div class="amount"><span id="dash-stat-total">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
+                    <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-eye'></i> จำนวนผู้เข้าชม" data-en="<i class='fas fa-eye'></i> Total Views"><i class="fas fa-eye"></i> จำนวนผู้เข้าชม</h4><div class="amount"><span id="dash-stat-views">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="ครั้ง" data-en="Views">ครั้ง</span></div></div>
+                </div>
+
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <h3 style="margin: 25px 25px 15px; font-weight: 500;" class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th><span class="lang-el" data-th="วันที่/เวลา" data-en="Date/Time">วันที่/เวลา</span></th>
+                                    <th><span class="lang-el" data-th="ชื่อผู้โดเนท" data-en="Donator">ชื่อผู้โดเนท</span></th>
+                                    <th><span class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</span></th>
+                                    <th><span class="lang-el" data-th="ข้อความ" data-en="Message">ข้อความ</span></th>
+                                    <th style="text-align: center;"><span class="lang-el" data-th="จัดการ" data-en="Action">จัดการ</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-history-list">
+                                <tr><td colspan="5" style="text-align: center; padding: 30px;" class="lang-el" data-th="กำลังโหลดข้อมูล..." data-en="Loading data...">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="payment" class="tab-content">
+                <div class="page-title"><span class="lang-el" data-th="ช่องทางการรับเงิน" data-en="Payment Methods">ช่องทางการรับเงิน</span> <span class="badge-free lang-el" data-th="ฟรีค่าธรรมเนียม 100%" data-en="100% Free Fee">ฟรีค่าธรรมเนียม 100%</span></div>
+                <div class="card">
+                    <p style="color: var(--text); margin-bottom: 20px;" class="lang-el" data-th="เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้" data-en="Enable/Disable and configure payment methods for your viewers.">เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้</p>
+                    <div class="payment-card">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fas fa-qrcode" style="font-size: 2rem; color: #1155cc;"></i>
+                            <div><h4 style="font-size: 1.1rem;" class="lang-el" data-th="พร้อมเพย์ (PromptPay)" data-en="PromptPay">พร้อมเพย์ (PromptPay)</h4><p style="color: var(--text); font-size: 0.85rem;" class="lang-el" data-th="รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที" data-en="Receive money directly to your PromptPay account.">รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที</p></div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <button class="btn-outline lang-el" onclick="openModal('modal-promptpay')" data-th="ตั้งค่า" data-en="Settings">ตั้งค่า</button>
+                            <label class="switch"><input type="checkbox" id="outer-pp-active" onchange="toggleOuterPayment('promptpay')"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                    <div class="payment-card">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <i class="fas fa-university" style="font-size: 2rem; color: #f5a623;"></i>
+                            <div><h4 style="font-size: 1.1rem;" class="lang-el" data-th="ธนาคาร (Bank Transfer)" data-en="Bank Transfer">ธนาคาร (Bank Transfer)</h4><p style="color: var(--text); font-size: 0.85rem;" class="lang-el" data-th="รองรับทุกธนาคารในประเทศไทย" data-en="Supports all banks in Thailand.">รองรับทุกธนาคารในประเทศไทย</p></div>
+                        </div>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <button class="btn-outline lang-el" onclick="openModal('modal-bank')" data-th="ตั้งค่า" data-en="Settings">ตั้งค่า</button>
+                            <label class="switch"><input type="checkbox" id="outer-bank-active" onchange="toggleOuterPayment('bank')"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-settings" class="tab-content">
+                <div class="page-title lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</div>
+                <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between;">
+                    <div><h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ</h4><a href="#" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">oceandonate.app/zantots</a></div>
+                    <button class="btn-primary lang-el" onclick="showAlert('คัดลอกลิงก์เรียบร้อยแล้ว', 'Link copied successfully!')" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link"><i class="fas fa-copy"></i> คัดลอกลิงก์</button>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="ข้อมูลโปรไฟล์" data-en="Profile Settings">ข้อมูลโปรไฟล์</h3>
+                        <div class="form-group"><label class="lang-el" data-th="ข้อความแนะนำตัว (Bio)" data-en="Biography (Bio)">ข้อความแนะนำตัว (Bio)</label><textarea id="dash-bio" class="form-control lang-el" rows="3" data-th-placeholder="ยินดีต้อนรับสู่ช่องของ Zantots!" data-en-placeholder="Welcome to Zantots channel!">ยินดีต้อนรับสู่ช่องของ Zantots!</textarea></div>
+                        <div class="form-group"><label class="lang-el" data-th="ข้อความขอบคุณหลังโดเนท" data-en="Thank You Message">ข้อความขอบคุณหลังโดเนท</label><input type="text" id="dash-thank" class="form-control" value="ขอบคุณครับ!"></div>
+                        <div class="form-group">
+                            <label class="lang-el" data-th="ธีมหน้าเว็บ (Theme)" data-en="Page Theme">ธีมหน้าเว็บ (Theme)</label>
+                            <select id="dash-theme-preset" class="form-control" style="margin-bottom: 10px;" onchange="toggleCustomBg()">
+                                <option value="" class="lang-el" data-th="Ocean Dark (สีดำ ค่าเริ่มต้น)" data-en="Ocean Dark (Default)">Ocean Dark (สีดำ ค่าเริ่มต้น)</option>
+                                <option value="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop">Cyberpunk City</option>
+                                <option value="https://images.unsplash.com/photo-1534796636912-365285027a05?q=80&w=2071&auto=format&fit=crop">Galaxy Space</option>
+                                <option value="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop">Gaming Setup</option>
+                                <option value="https://images.unsplash.com/photo-1523821741446-edb2b68bb7a0?q=80&w=2070&auto=format&fit=crop">Anime Scenery</option>
+                                <option value="custom" class="lang-el" data-th="✨ ใส่ลิงก์รูปภาพ / GIF เอง..." data-en="✨ Custom Image / GIF Link...">✨ ใส่ลิงก์รูปภาพ / GIF เอง...</option>
+                            </select>
+                            <input type="text" id="dash-bg" class="form-control lang-el" data-th-placeholder="ใส่ลิงก์รูปภาพ/GIF ที่นี่..." data-en-placeholder="Paste Image/GIF URL here..." style="display: none;">
+                        </div>
+                        <button class="btn-success w-100 lang-el" onclick="saveProfileSettings()" data-th="<i class='fas fa-save'></i> บันทึกข้อมูลและพื้นหลัง" data-en="<i class='fas fa-save'></i> Save Profile & Theme"><i class="fas fa-save"></i> บันทึกข้อมูลและพื้นหลัง</button>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="โซเชียลมีเดีย" data-en="Social Media">โซเชียลมีเดีย</h3>
+                        <div class="form-group"><label>YouTube URL</label><input type="text" id="dash-yt" class="form-control"></div>
+                        <div class="form-group"><label>Facebook URL</label><input type="text" id="dash-fb" class="form-control"></div>
+                        <div class="form-group"><label>Twitch URL</label><input type="text" id="dash-twitch" class="form-control"></div>
+                        <button class="btn-success w-100 lang-el" style="margin-top: 15px;" onclick="saveSocialSettings()" data-th="<i class='fas fa-save'></i> บันทึกโซเชียลมีเดีย" data-en="<i class='fas fa-save'></i> Save Social Links"><i class="fas fa-save"></i> บันทึกโซเชียลมีเดีย</button>
+                    </div>
+
+                    <div class="card" style="grid-column: 1 / -1;">
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="ระบบกรองคำต้องห้าม (Profanity Filter)" data-en="Profanity Filter">ระบบกรองคำต้องห้าม (Profanity Filter)</h3>
+                        <div class="form-group">
+                            <label class="lang-el" data-th="ตั้งค่าคำหยาบ (คั่นแต่ละคำด้วยลูกน้ำ <code>,</code> )" data-en="Banned Words (Comma separated <code>,</code>)">ตั้งค่าคำหยาบ (คั่นแต่ละคำด้วยลูกน้ำ <code>,</code> )</label>
+                            <textarea id="dash-banned-words" class="form-control lang-el" rows="2" data-th-placeholder="เช่น: ควย, สัส, เหี้ย, พนัน" data-en-placeholder="e.g. badword1, badword2"></textarea>
+                            <p style="font-size: 0.85rem; color: #ef4444; margin-top: 8px;" class="lang-el" data-th="* ระบบจะบล็อกไม่ให้คนสแกนจ่าย หรือไม่แสดงบนจอ OBS ทันที หากผู้ใช้พิมพ์คำเหล่านี้" data-en="* The system will block these words automatically.">* ระบบจะบล็อกไม่ให้คนสแกนจ่าย หรือไม่แสดงบนจอ OBS ทันที หากผู้ใช้พิมพ์คำเหล่านี้</p>
+                        </div>
+                        <button class="btn-success w-100 lang-el" onclick="saveBannedWords()" data-th="<i class='fas fa-save'></i> บันทึกรายการคำต้องห้าม" data-en="<i class='fas fa-save'></i> Save Banned Words"><i class="fas fa-save"></i> บันทึกรายการคำต้องห้าม</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="widgets" class="tab-content">
+                <div class="page-title">
+                    <span class="lang-el" data-th="วิดเจ็ตทั้งหมด (Widgets)" data-en="All Widgets">วิดเจ็ตทั้งหมด (Widgets)</span>
+                    <button class="btn-outline lang-el" onclick="openModal('modal-global')" data-th="<i class='fas fa-cog'></i> ตั้งค่าแสดงผลรวม" data-en="<i class='fas fa-cog'></i> Global Settings"><i class="fas fa-cog"></i> ตั้งค่าแสดงผลรวม</button>
+                </div>
+
+                <div class="widget-nav">
+                    <div class="widget-tab active" data-sub="w-alert"><i class="fas fa-bell" style="color: var(--blue);"></i> <span class="lang-el" data-th="Donate Alert" data-en="Donate Alert">Donate Alert</span></div>
+                    <div class="widget-tab" data-sub="w-goal"><i class="fas fa-bullseye" style="color: #ef4444;"></i> <span class="lang-el" data-th="Donate Goal" data-en="Donate Goal">Donate Goal</span></div>
+                    <div class="widget-tab" data-sub="w-topdonor"><i class="fas fa-trophy" style="color: #fbbf24;"></i> <span class="lang-el" data-th="Top Donator" data-en="Top Donator">Top Donator</span></div>
+                </div>
+
+                <div id="w-alert" class="widget-panel active">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <div class="preview-box transparent-bg" id="alert-bg-preview">
+                                <div id="preview-alert-content">
+                                    <img id="preview-image" src="https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png" style="width: 120px; height: 120px; border-radius: 15px; margin-bottom: 15px; object-fit: cover;">
+                                    <div>
+                                        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+                                            <span id="preview-name" style="color:#f59e0b;">โทนี่</span> 
+                                            <span id="preview-text-donate" style="color: #ffffff;" class="lang-el" data-th="โดเนทมา" data-en="donated">โดเนทมา</span> 
+                                            <span id="preview-amount" style="color: #5BC0EB;">500 <span class="lang-el" data-th="บาท" data-en="THB">บาท</span></span>
+                                        </div>
+                                        <div id="preview-msg" style="font-size: 1.1rem; color: #e2e8f0; text-shadow: 0 1px 3px rgba(0,0,0,0.8);" class="lang-el" data-th="ติดตามมานานแล้วครับ FC มากๆ ครับ" data-en="Long time fan! Love your stream.">ติดตามมานานแล้วครับ FC มากๆ ครับ</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card" style="margin-top: 20px; padding: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 class="lang-el" data-th="ทดสอบการแจ้งเตือน" data-en="Test Alert">ทดสอบการแจ้งเตือน</h4>
+                                    <button class="btn-outline lang-el" id="btn-test-alert" style="padding: 5px 15px; font-size: 0.85rem;" data-th="<i class='fas fa-play'></i> ทดสอบและเล่นเสียง" data-en="<i class='fas fa-play'></i> Test & Play Audio"><i class="fas fa-play"></i> ทดสอบและเล่นเสียง</button>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; align-items: end;">
+                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="ผู้โดเนท" data-en="Donator">ผู้โดเนท</label><input type="text" id="test-name" class="form-control" value="โทนี่"></div>
+                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</label><input type="number" id="test-amount" class="form-control" value="500"></div>
+                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="ข้อความ" data-en="Message">ข้อความ</label><input type="text" id="test-msg" class="form-control" value="ติดตามมานานแล้วครับ FC มากๆ ครับ"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="form-group">
+                                <h4 style="margin-bottom: 15px;" class="lang-el" data-th="รูปแบบ (Layout)" data-en="Layout Type">รูปแบบ (Layout)</h4>
+                                <div class="layout-selector">
+                                    <div class="layout-item active" data-layout="main"><div class="mock-img"></div><div class="mock-text"></div><span style="font-size: 0.85rem; font-weight: bold;">Main</span></div>
+                                    <div class="layout-item" data-layout="row"><div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;"><div class="mock-img" style="margin: 0; width: 30px; height: 30px;"></div><div style="flex: 1;"><div class="mock-text"></div></div></div><span style="font-size: 0.85rem; font-weight: bold;">Row</span></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="เสียง (Audio & TTS)" data-en="Audio & TTS Settings">เสียง (Audio & TTS)</h4>
+                                
+                                <label class="lang-el" data-th="เสียงการแจ้งเตือน" data-en="Alert Sound">เสียงการแจ้งเตือน</label>
+                                <select class="form-control" id="ctrl-alert-sound" style="margin-bottom: 15px;">
+                                    <option value="boing" class="lang-el" data-th="BB Spirit (ตึ๋ง!)" data-en="BB Spirit (Boing!)">BB Spirit (ตึ๋ง!)</option>
+                                    <option value="success" class="lang-el" data-th="Coin Drop (วิ้ง!)" data-en="Coin Drop (Success)">Coin Drop (วิ้ง!)</option>
+                                </select>
+
+                                <label><span class="lang-el" data-th="ระดับเสียงแจ้งเตือน" data-en="Alert Volume">ระดับเสียงแจ้งเตือน</span> (<span id="val-alert-vol">75</span>%)</label>
+                                <input type="range" id="ctrl-alert-vol" min="0" max="100" value="75" style="margin-bottom: 20px;">
+
+                                <label class="lang-el" data-th="เสียงคนพูด Text to Speech" data-en="TTS Voice">เสียงคนพูด Text to Speech</label>
+                                <select class="form-control" id="ctrl-tts-voice" style="margin-bottom: 15px;">
+                                    <option value="" class="lang-el" data-th="กำลังโหลดเสียงจากระบบ..." data-en="Loading voices...">กำลังโหลดเสียงจากระบบ...</option>
+                                </select>
+
+                                <label><span class="lang-el" data-th="ความเร็วในการพูด (Rate)" data-en="Speech Rate">ความเร็วในการพูด (Rate)</span> (<span id="val-tts-rate">1.0</span>)</label>
+                                <input type="range" id="ctrl-tts-rate" min="0.1" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;">
+
+                                <label><span class="lang-el" data-th="ระดับเสียงสูงต่ำ (Pitch)" data-en="Speech Pitch">ระดับเสียงสูงต่ำ (Pitch)</span> (<span id="val-tts-pitch">1.0</span>)</label>
+                                <input type="range" id="ctrl-tts-pitch" min="0" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;">
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <div><span style="display:block; font-weight:bold;" class="lang-el" data-th="พูดชื่อและจำนวนเงิน" data-en="Speak Name & Amount">พูดชื่อและจำนวนเงิน</span></div>
+                                    <label class="switch"><input type="checkbox" id="ctrl-tts-name-toggle" checked><span class="slider"></span></label>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <div><span style="display:block; font-weight:bold;" class="lang-el" data-th="พูดข้อความ" data-en="Speak Message">พูดข้อความ</span></div>
+                                    <label class="switch"><input type="checkbox" id="ctrl-tts-msg-toggle" checked><span class="slider"></span></label>
+                                </div>
+
+                                <label><span class="lang-el" data-th="ระดับเสียง Text to Speech" data-en="TTS Volume">ระดับเสียง Text to Speech</span> (<span id="val-tts-vol">100</span>%)</label>
+                                <input type="range" id="ctrl-tts-vol" min="0" max="100" value="100" style="margin-bottom: 15px;">
+                            </div>
+
+                            <div class="form-group">
+                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="สีและฟอนต์" data-en="Colors & Font">สีและฟอนต์</h4>
+                                <div class="form-grid">
+                                    <div>
+                                        <label class="lang-el" data-th="ฟอนต์เฉพาะ Alert" data-en="Alert Font">ฟอนต์เฉพาะ Alert</label>
+                                        <select class="form-control" id="ctrl-font">
+                                            <option value="'Kanit', sans-serif" class="lang-el" data-th="Kanit (เริ่มต้น)" data-en="Kanit (Default)">Kanit (เริ่มต้น)</option>
+                                            <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
+                                        </select>
+                                    </div>
+                                    <div><label class="lang-el" data-th="สีข้อความตรงกลาง" data-en="Middle Text Color">สีข้อความตรงกลาง</label><input type="color" id="ctrl-text-color" class="color-picker" value="#ffffff"></div>
+                                </div>
+                                <div class="form-grid" style="margin-top: 15px;">
+                                    <div><label class="lang-el" data-th="สีชื่อ" data-en="Name Color">สีชื่อ</label><input type="color" id="ctrl-name-color" class="color-picker" value="#f59e0b"></div>
+                                    <div><label class="lang-el" data-th="สีจำนวนเงิน" data-en="Amount Color">สีจำนวนเงิน</label><input type="color" id="ctrl-amount-color" class="color-picker" value="#5BC0EB"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="lang-el" data-th="URL รูปภาพ GIF/PNG" data-en="Image URL (GIF/PNG)">URL รูปภาพ GIF/PNG</label>
+                                <input type="text" id="ctrl-img-url" class="form-control" value="https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png">
+                            </div>
+                            <button class="btn-success w-100 lang-el" onclick="saveAlertSettingsToOBS()" data-th="<i class='fas fa-save'></i> บันทึกการตั้งค่า Alert" data-en="<i class='fas fa-save'></i> Save Alert Settings"><i class="fas fa-save"></i> บันทึกการตั้งค่า Alert</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="w-goal" class="widget-panel">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <div class="preview-box transparent-bg" id="goal-bg-preview" style="justify-content: flex-end; padding-bottom: 40px; font-family: 'Kanit', sans-serif;">
+                                <h3 id="preview-goal-title" style="margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,1);" class="lang-el" data-th="ค่าอาหารหมา" data-en="Dog Food Fund">ค่าอาหารหมา</h3>
+                                <div style="width: 100%; height: 35px; background: rgba(0,0,0,0.6); border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative;">
+                                    <div id="preview-goal-bar" style="width: 0%; height: 100%; background: #0EA5E9; border-radius: 20px 0 0 20px; box-shadow: 0 0 15px #0EA5E9; transition: width 0.5s;"></div>
+                                    <span id="preview-goal-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: white; text-shadow: 0 1px 3px black;">0 <span class="lang-el" data-th="บาท" data-en="THB">บาท</span> (0%)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4 style="margin-bottom: 15px;" class="lang-el" data-th="ตั้งค่าเป้าหมายหลัก" data-en="Main Goal Settings">ตั้งค่าเป้าหมายหลัก</h4>
+                            <div class="form-group"><label class="lang-el" data-th="ชื่อเป้าหมาย" data-en="Goal Title">ชื่อเป้าหมาย</label><input type="text" id="ctrl-goal-title" class="form-control" value="ค่าอาหารหมา"></div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="lang-el" data-th="เป้าหมาย (บาท)" data-en="Target (THB)">เป้าหมาย (บาท)</label><input type="number" id="ctrl-goal-target" class="form-control" value="100"></div>
+                                <div class="form-group"><label class="lang-el" data-th="ปัจจุบัน (ทดสอบ)" data-en="Current (Test)">ปัจจุบัน (ทดสอบ)</label><input type="number" id="ctrl-goal-current" class="form-control" value="50"></div>
+                            </div>
+
+                            <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="ปรับแต่งสีและฟอนต์" data-en="Colors & Font">ปรับแต่งสีและฟอนต์</h4>
+                            <div class="form-group">
+                                <label class="lang-el" data-th="ฟอนต์เฉพาะ Goal" data-en="Goal Font">ฟอนต์เฉพาะ Goal</label>
+                                <select class="form-control" id="ctrl-goal-font">
+                                    <option value="'Kanit', sans-serif" class="lang-el" data-th="Kanit (เริ่มต้น)" data-en="Kanit (Default)">Kanit (เริ่มต้น)</option>
+                                    <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
+                                </select>
+                            </div>
+                            <div class="form-grid" style="margin-top: 15px;">
+                                <div class="form-group"><label class="lang-el" data-th="สีหลอดเป้าหมาย" data-en="Bar Color">สีหลอดเป้าหมาย</label><input type="color" id="ctrl-goal-color" class="color-picker" value="#0EA5E9"></div>
+                                <div class="form-group"><label class="lang-el" data-th="สีตัวหนังสือ" data-en="Text Color">สีตัวหนังสือ</label><input type="color" id="ctrl-goal-text-color" class="color-picker" value="#ffffff"></div>
+                            </div>
+                            <button class="btn-success w-100 lang-el" style="margin-top: 10px;" onclick="saveGoalSettingsToOBS()" data-th="<i class='fas fa-save'></i> บันทึกเป้าหมายไปที่ OBS" data-en="<i class='fas fa-save'></i> Save Goal Settings"><i class="fas fa-save"></i> บันทึกเป้าหมายไปที่ OBS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="w-topdonor" class="widget-panel">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <div>
+                            <div class="preview-box transparent-bg">
+                                <div id="preview-td-box" style="background: rgba(0, 0, 0, 0.6); border: 2px solid #3A86FF; padding: 20px; border-radius: 15px; width: 100%;">
+                                    <div id="preview-td-title" style="font-size: 1.5rem; font-weight: bold; color: #5BC0EB; margin-bottom: 10px;">🏆 Top Donators</div>
+                                    <div id="preview-td-item1" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left; color: #ffffff;">1. คุณ A <span style="float:right; color:#10b981;">5,000 ฿</span></div>
+                                    <div id="preview-td-item2" style="background: transparent; padding: 10px; border-radius: 8px; text-align: left; color: #ffffff;">2. ไบค์ตัวใหญ่ <span style="float:right; color:#10b981;">50 ฿</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h4 style="margin-bottom: 15px;" class="lang-el" data-th="ตั้งค่า Top Donator" data-en="Top Donator Settings">ตั้งค่า Top Donator</h4>
+                            <div class="form-group"><label class="lang-el" data-th="หัวข้อตาราง" data-en="Title">หัวข้อตาราง</label><input type="text" id="ctrl-td-title" class="form-control" value="🏆 Top Donators"></div>
+                            <div class="form-grid">
+                                <div class="form-group"><label class="lang-el" data-th="สีหัวข้อ" data-en="Title Color">สีหัวข้อ</label><input type="color" id="ctrl-td-tcolor" class="color-picker" value="#5BC0EB"></div>
+                                <div class="form-group"><label class="lang-el" data-th="สีตัวหนังสือรายชื่อ" data-en="Name Color">สีตัวหนังสือรายชื่อ</label><input type="color" id="ctrl-td-color" class="color-picker" value="#ffffff"></div>
+                            </div>
+                            <div class="form-group"><label class="lang-el" data-th="สีพื้นหลังกล่อง (RGBA)" data-en="Background Color (RGBA)">สีพื้นหลังกล่อง (RGBA)</label><input type="text" id="ctrl-td-bg" class="form-control" value="rgba(0, 0, 0, 0.6)"></div>
+                            
+                            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+                                <label style="margin: 0; font-weight: bold; color: #10b981;" class="lang-el" data-th="พื้นหลังโปร่งใส 100%" data-en="100% Transparent Background">พื้นหลังโปร่งใส 100%</label>
+                                <label class="switch"><input type="checkbox" id="ctrl-td-transparent-toggle"><span class="slider"></span></label>
+                            </div>
+                            <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
+                                <label style="margin: 0; font-weight: bold;" class="lang-el" data-th="แสดงเส้นขอบกล่อง (Border)" data-en="Show Border">แสดงเส้นขอบกล่อง (Border)</label>
+                                <label class="switch"><input type="checkbox" id="ctrl-td-border-toggle" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="form-group"><label class="lang-el" data-th="สีเส้นขอบ" data-en="Border Color">สีเส้นขอบ</label><input type="color" id="ctrl-td-border-color" class="color-picker" value="#3A86FF"></div>
+
+                            <button class="btn-success w-100 lang-el" style="margin-top:20px;" onclick="saveTopDonorToOBS()" data-th="<i class='fas fa-save'></i> บันทึกตารางจัดอันดับ" data-en="<i class='fas fa-save'></i> Save Top Donator"><i class="fas fa-save"></i> บันทึกตารางจัดอันดับ</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="modal-global">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div><h3 class="lang-el" data-th="<i class='fas fa-cog' style='color:#3A86FF;'></i> ตั้งค่าการแสดงผลรวม" data-en="<i class='fas fa-cog' style='color:#3A86FF;'></i> Global Settings"><i class="fas fa-cog" style="color:#3A86FF;"></i> ตั้งค่าการแสดงผลรวม</h3><p style="color: var(--text); font-size: 0.85rem; margin-top: 5px;" class="lang-el" data-th="ปรับใช้การตั้งค่าเหล่านี้กับทุกวิดเจ็ตพร้อมกัน" data-en="Apply these settings to all widgets simultaneously.">ปรับใช้การตั้งค่าเหล่านี้กับทุกวิดเจ็ตพร้อมกัน</p></div>
+            </div>
+            <div class="form-group">
+                <label class="lang-el" data-th="เปลี่ยนฟอนต์ให้ตรงกันทั้งหมด" data-en="Global Font Family">เปลี่ยนฟอนต์ให้ตรงกันทั้งหมด</label>
+                <select class="form-control" id="global-font">
+                    <option value="'Kanit', sans-serif">Kanit</option>
+                    <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
+                </select>
+            </div>
+            <button class="btn-success w-100 lang-el" onclick="applyGlobalSettings()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-global')" data-th="ปิดหน้าต่าง" data-en="Close">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-promptpay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div><h3 class="lang-el" data-th="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> พร้อมเพย์" data-en="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> PromptPay"><i class="fas fa-qrcode" style="color:#3A86FF;"></i> พร้อมเพย์</h3></div>
+                <label class="switch"><input type="checkbox" id="pp-active" checked><span class="slider"></span></label>
+            </div>
+            <div class="form-group"><label class="lang-el" data-th="เบอร์โทรศัพท์" data-en="Phone Number">เบอร์โทรศัพท์</label><input type="text" class="form-control" id="pp-phone" value="0946919475"></div>
+            <button class="btn-success w-100 lang-el" onclick="savePromptPay()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')" data-th="ปิด" data-en="Close">ปิด</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-bank">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div><h3 class="lang-el" data-th="<i class='fas fa-university' style='color:#3A86FF;'></i> ธนาคาร" data-en="<i class='fas fa-university' style='color:#3A86FF;'></i> Bank Transfer"><i class="fas fa-university" style="color:#3A86FF;"></i> ธนาคาร</h3></div>
+                <label class="switch"><input type="checkbox" id="bank-active" checked><span class="slider"></span></label>
+            </div>
+            <div class="form-group">
+                <label class="lang-el" data-th="ธนาคาร" data-en="Bank Name">ธนาคาร</label>
+                <select class="form-control" id="bank-name">
+                    <option value="กสิกรไทย (KBANK)" class="lang-el" data-th="ธนาคารกสิกรไทย (KBANK)" data-en="Kasikorn Bank (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
+                    <option value="ไทยพาณิชย์ (SCB)" class="lang-el" data-th="ธนาคารไทยพาณิชย์ (SCB)" data-en="Siam Commercial Bank (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+                    <option value="กรุงเทพ (BBL)" class="lang-el" data-th="ธนาคารกรุงเทพ (BBL)" data-en="Bangkok Bank (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+                </select>
+            </div>
+            <div class="form-group"><label class="lang-el" data-th="หมายเลขบัญชี" data-en="Account Number">หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="1961746848"></div>
+            <div class="form-group"><label class="lang-el" data-th="ชื่อเจ้าของบัญชี" data-en="Account Name">ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="สันต์ทศน์ พ."></div>
+            <button class="btn-success w-100 lang-el" onclick="saveBank()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')" data-th="ปิด" data-en="Close">ปิด</button>
+        </div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const dashSocket = io('http://localhost:3000');
+
+        // ================= ระบบแปลภาษา 100% =================
+        let currentLang = 'th';
+        const langToggle = document.getElementById('langToggle');
+        const flagImg = document.getElementById('flagImg');
+        const langText = document.getElementById('langText');
+
+        langToggle.addEventListener('click', () => {
+            currentLang = currentLang === 'th' ? 'en' : 'th';
+            
+            if(currentLang === 'en') {
+                flagImg.src = "https://flagcdn.com/w20/gb.png";
+                langText.innerText = "EN";
+            } else {
+                flagImg.src = "https://flagcdn.com/w20/th.png";
+                langText.innerText = "TH";
+            }
+
+            document.querySelectorAll('.lang-el').forEach(el => {
+                if(el.hasAttribute(`data-${currentLang}`)) {
+                    el.innerHTML = el.getAttribute(`data-${currentLang}`);
+                }
+                if(el.hasAttribute(`data-${currentLang}-placeholder`)) {
+                    el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+                }
+            });
+
+            if(window.lastHistoryData) renderHistory(window.lastHistoryData);
+        });
+
+        function showAlert(msgTh, msgEn) { alert(currentLang === 'en' ? msgEn : msgTh); }
+        // ===================================================
+
+        // ระบบ Tab
+        document.querySelectorAll('.tab-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.tab-link').forEach(i => i.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); link.classList.add('active'); document.getElementById(link.getAttribute('data-tab')).classList.add('active'); }); });
+        document.querySelectorAll('.widget-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.widget-tab').forEach(i => i.classList.remove('active')); document.querySelectorAll('.widget-panel').forEach(p => p.classList.remove('active')); tab.classList.add('active'); document.getElementById(tab.getAttribute('data-sub')).classList.add('active'); }); });
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        dashSocket.on('apply_payment', (payment) => {
+            if(document.getElementById('outer-pp-active')) document.getElementById('outer-pp-active').checked = payment.promptpay.active;
+            if(document.getElementById('outer-bank-active')) document.getElementById('outer-bank-active').checked = payment.bank.active;
+            document.getElementById('pp-active').checked = payment.promptpay.active;
+            document.getElementById('pp-phone').value = payment.promptpay.phone;
+            document.getElementById('bank-active').checked = payment.bank.active;
+            document.getElementById('bank-name').value = payment.bank.bankName;
+            document.getElementById('bank-acc').value = payment.bank.acc;
+            document.getElementById('bank-owner').value = payment.bank.owner;
+        });
+
+        dashSocket.on('update_stats', (stats) => {
+            document.getElementById('dash-stat-today').innerText = stats.today.toLocaleString();
+            document.getElementById('dash-stat-total').innerText = stats.total.toLocaleString();
+            document.getElementById('dash-stat-views').innerText = stats.views.toLocaleString();
+        });
+
+        dashSocket.on('apply_goal', (goal) => {
+            let percent = (goal.current / goal.target) * 100;
+            if(percent > 100) percent = 100;
+            document.getElementById('preview-goal-percentage').innerText = `${goal.current} ${currentLang === 'en' ? 'THB' : 'บาท'} (${Math.round(percent)}%)`;
+            document.getElementById('preview-goal-bar').style.width = percent + '%';
+        });
+
+        function renderHistory(history) {
+            window.lastHistoryData = history;
+            const tbody = document.getElementById('dash-history-list');
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text);">${currentLang === 'en' ? 'No donation history yet.' : 'ยังไม่มีประวัติโดเนท'}</td></tr>`;
+                return;
+            }
+            
+            tbody.innerHTML = history.map(item => `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;">
+                    <td style="padding: 12px 10px; color: var(--text); font-size: 0.85rem;">${item.timestamp}</td>
+                    <td style="padding: 12px 10px; font-weight: 500; color: #fff;">${item.name}</td>
+                    <td style="padding: 12px 10px; color: #10b981; font-weight: bold;">${item.amount.toLocaleString()} ฿</td>
+                    <td style="padding: 12px 10px; color: #e2e8f0; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.message}</td>
+                    <td style="padding: 12px 10px; text-align: center;">
+                        <button class="btn-danger" onclick="deleteDonation(${item.id})"><i class="fas fa-trash"></i> ${currentLang === 'en' ? 'Delete' : 'ลบ'}</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        dashSocket.on('update_history', (history) => { renderHistory(history); });
+        dashSocket.on('apply_banned_words', (words) => { if(document.getElementById('dash-banned-words')) document.getElementById('dash-banned-words').value = words.join(', '); });
+
+        function deleteDonation(id) {
+            const confirmMsg = currentLang === 'en' ? 'Are you sure you want to delete this donation record? (Amount and Goal will be deducted)' : 'คุณแน่ใจหรือไม่ว่าต้องการลบประวัติโดเนทนี้? (ยอดเงินและเป้าหมายจะถูกหักออกด้วย)';
+            if(confirm(confirmMsg)) dashSocket.emit('delete_donation', id);
+        }
+
+        function saveBannedWords() {
+            const rawText = document.getElementById('dash-banned-words').value;
+            const wordsArray = rawText.split(',').map(w => w.trim()).filter(w => w.length > 0);
+            dashSocket.emit('update_banned_words', wordsArray);
+            showAlert('บันทึกรายการคำต้องห้ามเรียบร้อยแล้วครับ ระบบจะบล็อกคำเหล่านี้ทันที!', 'Banned words saved! The system will block them immediately.');
+        }
+
+        function toggleCustomBg() {
+            const preset = document.getElementById('dash-theme-preset').value;
+            const customInput = document.getElementById('dash-bg');
+            if (preset === 'custom') customInput.style.display = 'block';
+            else customInput.style.display = 'none';
+        }
+
+        function saveProfileSettings() {
+            const bio = document.getElementById('dash-bio').value;
+            const thankMsg = document.getElementById('dash-thank').value;
+            let bgUrl = document.getElementById('dash-theme-preset').value;
+            if (bgUrl === 'custom') bgUrl = document.getElementById('dash-bg').value;
+            dashSocket.emit('update_page_settings', { bio, thankMsg, bgUrl });
+            showAlert('อัปเดตข้อมูลและภาพพื้นหลังเรียบร้อย!', 'Profile and Theme updated successfully!');
+        }
+
+        function saveSocialSettings() {
+            const yt = document.getElementById('dash-yt').value;
+            const fb = document.getElementById('dash-fb').value;
+            const twitch = document.getElementById('dash-twitch').value;
+            dashSocket.emit('update_page_settings', { yt, fb, twitch });
+            showAlert('อัปเดตปุ่มโซเชียลเรียบร้อย!', 'Social links updated successfully!');
+        }
+
+        function saveAlertSettingsToOBS() {
+            const imgUrl = document.getElementById('ctrl-img-url').value;
+            const nameColor = document.getElementById('ctrl-name-color').value;
+            const amountColor = document.getElementById('ctrl-amount-color').value;
+            const textColor = document.getElementById('ctrl-text-color').value;
+            let activeLayout = 'main';
+            const layoutElement = document.querySelector('.layout-item.active');
+            if(layoutElement) activeLayout = layoutElement.getAttribute('data-layout');
+            dashSocket.emit('update_settings', { imgUrl, nameColor, amountColor, textColor, layout: activeLayout });
+            showAlert('อัปเดตไปที่ OBS เรียบร้อย!', 'Alert settings saved to OBS!');
+        }
+
+        function saveGoalSettingsToOBS() {
+            const title = document.getElementById('ctrl-goal-title').value;
+            const target = parseFloat(document.getElementById('ctrl-goal-target').value) || 1;
+            const current = parseFloat(document.getElementById('ctrl-goal-current').value) || 0; // กลับมารับค่า Current ได้
+            const barColor = document.getElementById('ctrl-goal-color').value;
+            const textColor = document.getElementById('ctrl-goal-text-color').value;
+            dashSocket.emit('update_goal', { title, target, current, barColor, textColor });
+            showAlert('อัปเดตเป้าหมายไปที่ OBS เรียบร้อยแล้วครับ!', 'Goal settings saved to OBS!');
+        }
+
+        function saveTopDonorToOBS() {
+            const title = document.getElementById('ctrl-td-title').value;
+            const titleColor = document.getElementById('ctrl-td-tcolor').value;
+            const textColor = document.getElementById('ctrl-td-color').value;
+            const boxColor = document.getElementById('ctrl-td-bg').value;
+            const hasBorder = document.getElementById('ctrl-td-border-toggle').checked;
+            const borderColor = document.getElementById('ctrl-td-border-color').value;
+            const isTransparent = document.getElementById('ctrl-td-transparent-toggle').checked;
+
+            dashSocket.emit('update_top_donor', { title, titleColor, textColor, boxColor, hasBorder, borderColor, isTransparent });
+            showAlert('อัปเดตหน้าตา Top Donator เรียบร้อยครับ!', 'Top Donator settings saved!');
+        }
+
+        function savePromptPay() {
+            const active = document.getElementById('pp-active').checked;
+            const phone = document.getElementById('pp-phone').value;
+            dashSocket.emit('update_payment', { promptpay: { active, phone } });
+            closeModal('modal-promptpay');
+            showAlert('อัปเดตพร้อมเพย์ สำเร็จ!', 'PromptPay updated successfully!');
+        }
+
+        function saveBank() {
+            const active = document.getElementById('bank-active').checked;
+            const bankName = document.getElementById('bank-name').value;
+            const acc = document.getElementById('bank-acc').value;
+            const owner = document.getElementById('bank-owner').value;
+            dashSocket.emit('update_payment', { bank: { active, bankName, acc, owner } });
+            closeModal('modal-bank');
+            showAlert('อัปเดตบัญชีธนาคาร สำเร็จ!', 'Bank updated successfully!');
+        }
+
+        function toggleOuterPayment(method) {
+            if (method === 'promptpay') {
+                const active = document.getElementById('outer-pp-active').checked;
+                const phone = document.getElementById('pp-phone').value;
+                dashSocket.emit('update_payment', { promptpay: { active, phone } });
+            } else if (method === 'bank') {
+                const active = document.getElementById('outer-bank-active').checked;
+                const bankName = document.getElementById('bank-name').value;
+                const acc = document.getElementById('bank-acc').value;
+                const owner = document.getElementById('bank-owner').value;
+                dashSocket.emit('update_payment', { bank: { active, bankName, acc, owner } });
+            }
+        }
+
+        function applyGlobalSettings() { 
+            const globalFont = document.getElementById('global-font').value;
+            document.getElementById('preview-alert-content').style.fontFamily = globalFont;
+            document.getElementById('ctrl-font').value = globalFont;
+            document.getElementById('goal-bg-preview').style.fontFamily = globalFont;
+            document.getElementById('ctrl-goal-font').value = globalFont;
+            closeModal('modal-global'); 
+            showAlert('ปรับใช้ฟอนต์กับทุกวิดเจ็ตเรียบร้อยแล้ว!', 'Global font applied successfully!');
+        }
+
+        // ================= WIDGET PREVIEW & TTS =================
+        const layoutItems = document.querySelectorAll('.layout-item');
+        layoutItems.forEach(item => {
+            item.addEventListener('click', function() {
+                layoutItems.forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                const layoutType = this.getAttribute('data-layout');
+                const contentBox = document.getElementById('preview-alert-content');
+                if (layoutType === 'row') contentBox.classList.add('layout-row');
+                else contentBox.classList.remove('layout-row');
+            });
+        });
+
+        document.getElementById('test-name').addEventListener('input', e => document.getElementById('preview-name').innerText = e.target.value);
+        document.getElementById('test-amount').addEventListener('input', e => document.getElementById('preview-amount').innerHTML = `${e.target.value} <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span>`);
+        document.getElementById('test-msg').addEventListener('input', e => document.getElementById('preview-msg').innerText = e.target.value);
+        document.getElementById('ctrl-name-color').addEventListener('input', e => document.getElementById('preview-name').style.color = e.target.value);
+        document.getElementById('ctrl-amount-color').addEventListener('input', e => document.getElementById('preview-amount').style.color = e.target.value);
+        document.getElementById('ctrl-text-color').addEventListener('input', e => document.getElementById('preview-text-donate').style.color = e.target.value);
+        document.getElementById('ctrl-img-url').addEventListener('input', e => { if(e.target.value) document.getElementById('preview-image').src = e.target.value; });
+        document.getElementById('ctrl-font').addEventListener('change', e => document.getElementById('preview-alert-content').style.fontFamily = e.target.value);
+
+        // TTS System
+        document.getElementById('ctrl-alert-vol').addEventListener('input', e => document.getElementById('val-alert-vol').innerText = e.target.value);
+        document.getElementById('ctrl-tts-rate').addEventListener('input', e => document.getElementById('val-tts-rate').innerText = e.target.value);
+        document.getElementById('ctrl-tts-pitch').addEventListener('input', e => document.getElementById('val-tts-pitch').innerText = e.target.value);
+        document.getElementById('ctrl-tts-vol').addEventListener('input', e => document.getElementById('val-tts-vol').innerText = e.target.value);
+
+        let voices = [];
+        let voiceLoadInterval;
+        function populateVoices() {
+            voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('ctrl-tts-voice');
+            if (!voiceSelect) return;
+            if (voices.length > 0) {
+                clearInterval(voiceLoadInterval);
+                voiceSelect.innerHTML = ''; 
+                let hasThai = false;
+                voices.forEach((voice, i) => {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    if(voice.lang.includes('th') || voice.name.toLowerCase().includes('thai')) {
+                        option.selected = true; hasThai = true;
+                    }
+                    voiceSelect.appendChild(option);
+                });
+                if(!hasThai) {
+                    const option = document.createElement('option');
+                    option.textContent = "⚠️ ไม่พบเสียงภาษาไทยในเครื่องนี้";
+                    option.disabled = true;
+                    voiceSelect.appendChild(option);
+                }
+            }
+        }
+        populateVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
+        if (voices.length === 0) { voiceLoadInterval = setInterval(populateVoices, 500); }
+
+        document.getElementById('btn-test-alert').addEventListener('click', () => {
+            const el = document.getElementById('preview-alert-content');
+            el.style.animation = 'none'; el.offsetHeight; el.style.animation = 'fadeIn 0.6s ease-out';
+            
+            const soundType = document.getElementById('ctrl-alert-sound').value;
+            const alertVol = document.getElementById('ctrl-alert-vol').value / 100;
+            let audioUrl = 'https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'; 
+            if (soundType === 'success') audioUrl = 'https://actions.google.com/sounds/v1/cartoon/pop.ogg'; 
+            
+            const alertSound = new Audio(audioUrl);
+            alertSound.volume = alertVol;
+            alertSound.play();
+
+            alertSound.onended = () => {
+                const ttsVol = document.getElementById('ctrl-tts-vol').value / 100;
+                if (ttsVol === 0) return;
+
+                const speakName = document.getElementById('ctrl-tts-name-toggle').checked;
+                const speakMsg = document.getElementById('ctrl-tts-msg-toggle').checked;
+                const name = document.getElementById('test-name').value;
+                const amount = document.getElementById('test-amount').value;
+                const msg = document.getElementById('test-msg').value;
+
+                let textToSpeak = '';
+                if (speakName) textToSpeak += `${name} โดเนทมา ${amount} บาท `;
+                if (speakMsg) textToSpeak += msg;
+                if (textToSpeak.trim() === '') return;
+
+                const speech = new SpeechSynthesisUtterance(textToSpeak);
+                speech.volume = ttsVol;
+                speech.rate = parseFloat(document.getElementById('ctrl-tts-rate').value);
+                speech.pitch = parseFloat(document.getElementById('ctrl-tts-pitch').value);
+                const voiceIdx = document.getElementById('ctrl-tts-voice').value;
+                if (voiceIdx && voices[voiceIdx]) { speech.voice = voices[voiceIdx]; } else { speech.lang = 'th-TH'; }
+                window.speechSynthesis.speak(speech);
+            };
+        });
+
+        // Goal Preview
+        function updateGoalPreview() {
+            const title = document.getElementById('ctrl-goal-title').value;
+            const target = parseFloat(document.getElementById('ctrl-goal-target').value) || 1;
+            const current = parseFloat(document.getElementById('ctrl-goal-current').value) || 0;
+            let percent = (current / target) * 100;
+            if(percent > 100) percent = 100;
+            document.getElementById('preview-goal-title').innerText = title;
+            document.getElementById('preview-goal-bar').style.width = percent + '%';
+            document.getElementById('preview-goal-percentage').innerHTML = `${current} <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span> (${Math.round(percent)}%)`;
+        }
+        document.getElementById('ctrl-goal-title').addEventListener('input', updateGoalPreview);
+        document.getElementById('ctrl-goal-target').addEventListener('input', updateGoalPreview);
+        document.getElementById('ctrl-goal-current').addEventListener('input', updateGoalPreview);
+        document.getElementById('ctrl-goal-color').addEventListener('input', e => { document.getElementById('preview-goal-bar').style.background = e.target.value; document.getElementById('preview-goal-bar').style.boxShadow = `0 0 15px ${e.target.value}`; });
+        document.getElementById('ctrl-goal-text-color').addEventListener('input', e => document.getElementById('goal-bg-preview').style.color = e.target.value);
+        document.getElementById('ctrl-goal-font').addEventListener('change', e => document.getElementById('goal-bg-preview').style.fontFamily = e.target.value);
+
+        // Top Donor Preview
+        document.getElementById('ctrl-td-title').addEventListener('input', e => document.getElementById('preview-td-title').innerText = e.target.value);
+        document.getElementById('ctrl-td-tcolor').addEventListener('input', e => document.getElementById('preview-td-title').style.color = e.target.value);
+        document.getElementById('ctrl-td-color').addEventListener('input', e => {
+            document.getElementById('preview-td-item1').style.color = e.target.value;
+            document.getElementById('preview-td-item2').style.color = e.target.value;
+        });
+
+        document.getElementById('ctrl-td-transparent-toggle').addEventListener('change', e => {
+            const box = document.getElementById('preview-td-box');
+            if(e.target.checked) box.style.background = 'transparent';
+            else box.style.background = document.getElementById('ctrl-td-bg').value;
+        });
+
+        document.getElementById('ctrl-td-bg').addEventListener('input', e => {
+            if(!document.getElementById('ctrl-td-transparent-toggle').checked) {
+                document.getElementById('preview-td-box').style.background = e.target.value;
+            }
+        });
+        
+        document.getElementById('ctrl-td-border-toggle').addEventListener('change', e => {
+            const box = document.getElementById('preview-td-box');
+            if(e.target.checked) box.style.border = `2px solid ${document.getElementById('ctrl-td-border-color').value}`;
+            else box.style.border = 'none';
+        });
+
+        document.getElementById('ctrl-td-border-color').addEventListener('input', e => {
+            if(document.getElementById('ctrl-td-border-toggle').checked) {
+                document.getElementById('preview-td-box').style.border = `2px solid ${e.target.value}`;
+            }
+        });
+    </script>
+</body>
+</html>

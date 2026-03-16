@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; }
+        #alert-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; transition: all 0.5s ease; }
+        
+        #alert-box.layout-row { flex-direction: row; gap: 20px; text-align: left; }
+        #alert-box.layout-row .image-box img { width: 100px; height: 100px; margin-bottom: 0; }
+
+        @keyframes popIn { 0% { transform: translate(-50%, -40%) scale(0.8); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+        .show-alert { animation: popIn 0.8s forwards; opacity: 1 !important; }
+        .image-box img { width: 150px; height: 150px; border-radius: 15px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.5); margin-bottom: 15px; transition: 0.3s; }
+        .text-main { font-size: 2rem; font-weight: bold; color: white; text-shadow: 0 3px 5px rgba(0,0,0,1); transition: 0.3s; }
+        .text-msg { font-size: 1.5rem; color: #e2e8f0; text-shadow: 0 2px 4px rgba(0,0,0,1); margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="alert-box">
+        <div class="image-box"><img id="alert-img" src="" alt="img"></div>
+        <div class="text-main"><span id="donator-name">Name</span> <span id="text-donate">โดเนทมา</span> <span id="donate-amount">0 บาท</span></div>
+        <div class="text-msg" id="donate-message">Message here</div>
+    </div>
+
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:3000');
+        
+        // 📌 1. สร้างระบบคิว (Queue)
+        let alertQueue = [];
+        let isAlertActive = false; 
+
+        socket.on('apply_settings', (settings) => {
+            if(!settings) return;
+            document.getElementById('alert-img').src = settings.imgUrl;
+            document.getElementById('donator-name').style.color = settings.nameColor;
+            document.getElementById('donate-amount').style.color = settings.amountColor;
+            document.getElementById('text-donate').style.color = settings.textColor;
+
+            const alertBox = document.getElementById('alert-box');
+            if(settings.layout === 'row') alertBox.classList.add('layout-row');
+            else alertBox.classList.remove('layout-row');
+        });
+
+        // 📌 2. รับโดเนทเข้าแถว
+        socket.on('show_alert', (data) => {
+            alertQueue.push(data); // เอาเข้าคิวไว้ก่อน
+            if (!isAlertActive) {
+                processNextAlert(); // ถ้าจอว่างอยู่ ให้เรียกแสดงผลเลย
+            }
+        });
+
+        // 📌 3. ระบบแสดงผลทีละคิวแบบอัตโนมัติ
+        function processNextAlert() {
+            if (alertQueue.length === 0) {
+                isAlertActive = false; // คิวว่างแล้ว ปลดล็อก
+                return;
+            }
+
+            isAlertActive = true; 
+            const data = alertQueue.shift(); // ดึงคิวแรกออกมาแสดง
+
+            document.getElementById('donator-name').innerText = data.name;
+            document.getElementById('donate-amount').innerText = data.amount + ' บาท';
+            document.getElementById('donate-message').innerText = data.message;
+
+            const alertBox = document.getElementById('alert-box');
+            alertBox.classList.remove('show-alert');
+            alertBox.style.opacity = '0';
+            void alertBox.offsetWidth; // รีเฟรช CSS
+            alertBox.classList.add('show-alert');
+
+            const alertSound = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg');
+            alertSound.volume = 0.8;
+            alertSound.play();
+
+            alertSound.onended = () => {
+                const textToSpeak = `${data.name} โดเนทมา ${data.amount} บาท บอกว่า ${data.message}`;
+                const speech = new SpeechSynthesisUtterance(textToSpeak);
+                speech.lang = 'th-TH';
+                window.speechSynthesis.speak(speech);
+                
+                // โชว์ค้างไว้ 5 วินาที
+                setTimeout(() => { 
+                    alertBox.style.opacity = '0'; 
+                    alertBox.classList.remove('show-alert'); 
+                    
+                    // รอให้ภาพจางหายสนิท (0.5วิ) ค่อยเรียกคิวต่อไป
+                    setTimeout(processNextAlert, 500); 
+                }, 5000);
+            };
+        }
+    </script>
+</body>
+</html>

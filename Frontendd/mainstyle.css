@@ -1,0 +1,250 @@
+/* --- Base --- */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+:root { --dark: #050811; --blue: #3A86FF; --text: #a0aec0; }
+body { background: var(--dark); color: white; overflow-x: hidden; position: relative; }
+
+/* แสง Glow ตกแต่ง */
+.bg-glow { position: fixed; width: 400px; height: 400px; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.2; pointer-events: none; }
+.top-left { top: -100px; left: -100px; background: var(--blue); }
+.bottom-right { bottom: -100px; right: -100px; background: #5BC0EB; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* --- Nav & Sidebar --- */
+nav { padding: 15px 0; position: fixed; width: 100%; top: 0; z-index: 2000; background: rgba(5, 8, 17, 0.7); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.03); }
+.nav-wrapper { display: flex; justify-content: space-between; align-items: center; }
+.logo-group { display: flex; align-items: center; gap: 15px; }
+.logo { font-weight: 700; font-size: 1.2rem; }
+.logo span { color: var(--blue); opacity: 0.8; }
+.mobile-toggle { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
+
+/* Sidebar */
+.nav-content { position: fixed; top: 0; left: -100%; width: 280px; height: 100vh; background: #0d111a; padding: 30px; transition: 0.4s ease-in-out; z-index: 2001; display: flex; flex-direction: column; gap: 25px; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+.nav-content.active { left: 0; }
+.close-sidebar { background: none; border: none; color: white; font-size: 1.2rem; align-self: flex-end; cursor: pointer; }
+.sidebar-header { font-weight: 700; font-size: 1.2rem; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+.menu-list, .auth-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.menu-list a, .auth-list a { text-decoration: none; color: var(--text); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+.menu-list a:hover { background: rgba(58, 134, 255, 0.1); color: var(--blue); }
+.reg-btn { background: var(--blue); color: white !important; font-weight: 600; justify-content: center; }
+.lang-item { font-size: 0.85rem; color: var(--text); padding: 10px; display: flex; align-items: center; gap: 10px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+/* Overlay แก้ไขให้ไม่ดำมืดจนเกินไป */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 1500; backdrop-filter: blur(2px); }
+.overlay.active { opacity: 1; pointer-events: auto; }
+
+/* --- Hero --- */
+.hero-section { min-height: 100vh; padding: 140px 0 60px; position: relative; }
+/* ลายตาราง Grid */
+.hero-section::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 45px 45px; z-index: -2; pointer-events: none; }
+
+.hero-content { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.version-badge { background: rgba(58, 134, 255, 0.1); color: var(--blue); padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; border: 1px solid rgba(58, 134, 255, 0.2); margin-bottom: 20px; }
+.hero-text h3 { font-size: clamp(1.8rem, 5vw, 3.8rem); line-height: 1.2; margin-bottom: 15px; }
+.hero-text p { color: var(--text); font-size: 1rem; max-width: 750px; margin-bottom: 35px; line-height: 1.6; }
+
+.cta-group { display: flex; flex-direction: column; gap: 12px; align-items: center; width: 100%; }
+.url-box { background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-size: 0.85rem; }
+.url-box span { color: #444; }
+.btn-primary { background: var(--blue); color: white; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+
+/* --- โซนจัดเรียงรูปภาพ Preview ในหน้าแรก --- */
+.hero-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 60px; /* 📌 จุดที่ 1: เพิ่มระยะห่างระหว่างรูป (เปลี่ยนจาก 20px เป็น 50px หรือ 60px) */
+    align-items: center;
+    width: 100%;
+    max-width: 2400px; /* 📌 จุดที่ 2: ขยายขนาดกล่องรวมให้กว้างขึ้น รูปจะใหญ่ตาม (เปลี่ยนจาก 1100px เป็น 1400px หรือ 1500px) */
+    margin: 60px auto 0;
+}
+
+/* 📌 ลูกเล่น 1: ให้รูปตรงกลางใหญ่กว่าซ้ายขวา */
+.preview-card:nth-child(2) {
+    transform: scale(1.15); /* 📌 จุดที่ 3 (เสริม): อยากให้รูปกลางเด้งใหญ่ขึ้นอีกนิด ปรับจาก 1.1 เป็น 1.15 หรือ 1.2 ได้ครับ */
+    z-index: 2;
+    position: relative;
+}
+
+.preview-card img {
+    width: 100%; 
+    border-radius: 15px; 
+    border: 1px solid rgba(255,255,255,0.05); 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4); 
+    transition: all 0.4s ease;
+}
+
+/* 📌 ลูกเล่น 2: เวลาเอาเมาส์ไปชี้ ให้รูปเด้งขยายขึ้นมาอีก */
+.preview-card:hover img {
+    transform: translateY(-10px);
+    box-shadow: 0 30px 60px rgba(58, 134, 255, 0.4);
+    border-color: rgba(58, 134, 255, 0.5);
+}
+
+/* 📌 จัดการการแสดงผลบนมือถือ (ให้กลับมาเรียงแนวตั้งและไม่ล้นจอ) */
+@media (max-width: 768px) {
+    .hero-preview-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .preview-card:nth-child(2) {
+        transform: scale(1); /* มือถือไม่ต้องขยายรูปกลาง */
+    }
+}
+
+.lang-item {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 5px 12px !important;
+}
+
+.lang-item:hover {
+    background: rgba(58, 134, 255, 0.15);
+    border-color: var(--blue);
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+/* 2. เอฟเฟกต์ปุ่มเข้าสู่ระบบ (Login) */
+.lang-login {
+    position: relative;
+    transition: all 0.3s ease !important;
+}
+
+.lang-login:hover {
+    color: white !important;
+    text-shadow: 0 0 15px var(--blue);
+}
+
+/* เพิ่มเส้นใต้เลื่อนได้เวลา Hover */
+.lang-login::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--blue);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.lang-login:hover::after {
+    width: 70%;
+}
+
+/* 3. เอฟเฟกต์ปุ่มสมัครสมาชิก (Register) */
+.reg-btn {
+    background: var(--blue);
+    color: white !important;
+    font-weight: 600;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    box-shadow: 0 4px 15px rgba(58, 134, 255, 0.2);
+}
+
+.reg-btn:hover {
+    transform: scale(1.05) translateY(-3px);
+    background: #4a90ff; /* สีฟ้าสว่างขึ้นนิดหน่อย */
+    box-shadow: 0 8px 25px rgba(58, 134, 255, 0.5);
+}
+
+/* 4. เพิ่มลูกเล่นให้ Menu อื่นๆ ในหน้าคอม */
+@media (min-width: 992px) {
+    .menu-list a:hover {
+        color: var(--blue) !important;
+        transform: translateY(-2px);
+    }
+}
+
+
+/* --- Desktop --- */
+@media (min-width: 992px) {
+    .mobile-toggle, .close-sidebar, .sidebar-header { display: none; }
+    .nav-content { position: static; width: auto; height: auto; flex-direction: row; background: none; padding: 0; transition: none; box-shadow: none; z-index: auto; }
+    .menu-list { flex-direction: row; background: rgba(255,255,255,0.03); padding: 4px 12px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); }
+    .menu-list a i { display: none; }
+    .auth-list { flex-direction: row; align-items: center; gap: 15px; }
+    .auth-list a i { display: none; }
+    .lang-item { border-top: none; margin-top: 0; padding: 0 0 0 15px; border-left: 1px solid rgba(255,255,255,0.1); }
+    .cta-group { flex-direction: row; justify-content: center; gap: 20px; }
+}
+
+/* --- เลื่อนจอแบบนุ่มนวล --- */
+html { scroll-behavior: smooth; }
+
+/* จัดการระยะห่างตอนกดเมนูไม่ให้โดน Nav บัง */
+section { scroll-margin-top: 80px; }
+
+/* --- โครงสร้างพื้นฐานของ Section ย่อย --- */
+.content-section { padding: 100px 0; }
+.discovery-bg { background: rgba(255,255,255,0.01); border-top: 1px solid rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.02); }
+.section-header { text-align: center; margin-bottom: 50px; }
+.section-header h2 { font-size: 2.5rem; margin-bottom: 15px; color: white; }
+.section-header p { color: var(--text); font-size: 1.1rem; }
+
+/* --- Discovery Grid --- */
+.streamer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+.streamer-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 25px 20px; text-align: center; transition: 0.3s; }
+.streamer-card:hover { transform: translateY(-5px); border-color: rgba(58, 134, 255, 0.3); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4); }
+.streamer-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; border: 3px solid rgba(255, 255, 255, 0.1); }
+.streamer-name { font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; }
+.streamer-category { color: var(--text); font-size: 0.85rem; margin-bottom: 20px; background: rgba(0,0,0,0.3); display: inline-block; padding: 3px 10px; border-radius: 10px; }
+.btn-donate { display: block; width: 100%; border: 1px solid var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; text-decoration: none; font-weight: 600; transition: 0.3s; }
+.btn-donate:hover { background: var(--blue); color: white; }
+
+/* --- How to use --- */
+.how-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+.step-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 30px; text-align: center; position: relative; }
+.step-number { width: 50px; height: 50px; background: var(--blue); color: white; font-size: 1.5rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 20px; box-shadow: 0 0 20px rgba(58, 134, 255, 0.4); }
+.step-card h4 { font-size: 1.2rem; margin-bottom: 10px; }
+.step-card p { color: var(--text); font-size: 0.95rem; line-height: 1.6; }
+
+/* --- Package --- */
+.package-wrapper { display: flex; justify-content: center; }
+.package-card { background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); border: 1px solid var(--blue); border-radius: 20px; padding: 40px; width: 100%; max-width: 400px; position: relative; overflow: hidden; }
+.package-card::before { content: 'Best Value'; position: absolute; top: 15px; right: -30px; background: var(--blue); color: white; font-size: 0.7rem; font-weight: bold; padding: 5px 30px; transform: rotate(45deg); }
+.pkg-header { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 15px; }
+.pkg-header span { color: var(--blue); }
+.pkg-price { font-size: 3.5rem; font-weight: bold; text-align: center; margin-bottom: 30px; }
+.pkg-price span { font-size: 1rem; color: var(--text); font-weight: normal; }
+.pkg-features { list-style: none; margin-bottom: 30px; }
+.pkg-features li { margin-bottom: 15px; color: var(--text); display: flex; gap: 10px; align-items: center; }
+.pkg-features i { color: var(--blue); font-size: 1.2rem; }
+
+/* --- Contact --- */
+.contact-box { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto; }
+.contact-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 15px 20px; border-radius: 10px; display: flex; align-items: center; gap: 15px; font-size: 1.1rem; }
+.contact-item i { color: var(--blue); font-size: 1.5rem; }
+
+/* --- Scroll Reveal Animation (เอฟเฟกต์เลื่อนจอ) --- */
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+}
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ตั้งค่า Delay ให้กล่องโผล่มาทีละอันเรียงกัน */
+.delay-1 { transition-delay: 0.1s; }
+.delay-2 { transition-delay: 0.2s; }
+.delay-3 { transition-delay: 0.3s; }
+
+/* --- พรีเมียม Hover Effect เพิ่มมิติ --- */
+.streamer-card:hover, .step-card:hover, .package-card:hover, .contact-item:hover {
+    box-shadow: 0 15px 40px rgba(58, 134, 255, 0.15);
+    border-color: rgba(58, 134, 255, 0.4);
+    transform: translateY(-5px);
+}
+
+/* ทำให้ปุ่มหลักมีแสงเปล่งประกายตอน Hover */
+.btn-primary:hover {
+    box-shadow: 0 0 20px rgba(58, 134, 255, 0.6);
+    background: #4a90ff;
+}

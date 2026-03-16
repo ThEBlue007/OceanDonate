@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Donate | ผลงานโดย สันต์ทศน์</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="mainstyle.css">
+</head>
+<body>
+    <div class="bg-glow top-left"></div>
+    <div class="bg-glow bottom-right"></div>
+
+    <nav>
+        <div class="container nav-wrapper">
+            <div class="logo-group">
+                <button class="mobile-toggle" id="openBtn"><i class="fas fa-bars"></i></button>
+                <div class="logo">OCEAN<span>DONATE</span></div>
+            </div>
+
+            <div class="nav-content" id="sidebar">
+                <button class="close-sidebar" id="closeBtn"><i class="fas fa-times"></i></button>
+                <div class="sidebar-header">OCEAN<span>DONATE</span></div>
+                <ul class="menu-list">
+                    <li><a href="#home" class="lang-home"><i class="fas fa-home"></i> หน้าแรก</a></li>
+                    <li><a href="#discovery" class="lang-discovery"><i class="fas fa-search"></i> Discovery</a></li>
+                    <li><a href="#how" class="lang-how"><i class="fas fa-book-open"></i> วิธีใช้งาน</a></li>
+                    <li><a href="#package" class="lang-package"><i class="fas fa-credit-card"></i> แพ็กเกจ</a></li>
+                    <li><a href="#contact" class="lang-contact"><i class="fas fa-comment"></i> ติดต่อ</a></li>
+                </ul>
+                <ul class="auth-list">
+                    <li><a href="auth.html" class="lang-login"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</a></li>
+                    <li><a href="auth.html" class="reg-btn lang-register"><i class="fas fa-user-plus"></i> สมัครสมาชิก</a></li>
+                    <li class="lang-item" id="langToggle" style="cursor:pointer">
+                        <img src="https://flagcdn.com/w20/th.png" id="flagImg" alt="TH"> <span id="langText">TH - ภาษาไทย</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="overlay" id="overlay"></div>
+
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text reveal">
+                    <span class="version-badge">Version 1.0</span>
+                    <h3 id="main-title">รับเงินโดเนทของคุณ<br>เข้าบัญชีตรง ๆ ทันที</h3>
+                    <p id="main-desc">ระบบโดเนทสำหรับสตรีมเมอร์ยุคใหม่ รับเงินเข้าบัญชีทันที ไม่มีหักค่าธรรมเนียม พร้อมหน้าตาที่สวยงาม ใช้งานง่าย และปรับแต่งได้อิสระตามสไตล์คุณ<br>เพื่อการศึกษาและเป็น Project ยืนสมัครมหาลัยของ นายสันต์ทศน์ พาประเสริฐ</p>
+                    <div class="cta-group">
+                        <div class="url-box"><span>oceandonate.app/</span>your-name</div>
+                        <a href="auth.html" class="btn-primary" id="btn-join">เข้าร่วมกับเรา <i class="fas fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+                <div class="hero-preview-grid reveal delay-1">
+                    <div class="preview-card"><img src="https://media.discordapp.net/attachments/797805853977083935/1483109321117270026/image.png?ex=69b964b0&is=69b81330&hm=54653ddcc0abddaffabce7800ca260dd9015769c7e75b86b2226ee6ad83fe71b&=&format=webp&quality=lossless" alt="Preview"></div>
+                    <div class="preview-card"><img src="https://media.discordapp.net/attachments/797805853977083935/1483109119626973264/image.png?ex=69b96480&is=69b81300&hm=b23554a04114552235d2eab198345d2a20b79f1d2c8d80687744e48bdcd508bc&=&format=webp&quality=lossless" alt="Preview"></div>
+                    <div class="preview-card"><img src="https://media.discordapp.net/attachments/797805853977083935/1483109170873106585/image.png?ex=69b9648d&is=69b8130d&hm=2797a1f2c194043af0a6df49fdb2392a5d2d87145319721a5db628600e3a5153&=&format=webp&quality=lossless" alt="Preview"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="discovery" class="content-section discovery-bg">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2>ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ</h2>
+                <p>สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate</p>
+            </div>
+            <div class="streamer-grid">
+                <div class="streamer-card reveal delay-1">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="streamer-avatar">
+                    <div class="streamer-name">Zantots Gaming</div>
+                    <div class="streamer-category">🎮 เกมมิ่ง</div>
+                    <a href="#" class="btn-donate">โดเนทเลย</a>
+                </div>
+                <div class="streamer-card reveal delay-2">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Luna" alt="Avatar" class="streamer-avatar">
+                    <div class="streamer-name">Luna Channel</div>
+                    <div class="streamer-category">🌸 VTuber</div>
+                    <a href="#" class="btn-donate">โดเนทเลย</a>
+                </div>
+                <div class="streamer-card reveal delay-3">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Jack" alt="Avatar" class="streamer-avatar">
+                    <div class="streamer-name">P'Jack พูดไปเรื่อย</div>
+                    <div class="streamer-category">🎤 พูดคุย (IRL)</div>
+                    <a href="#" class="btn-donate">โดเนทเลย</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how" class="content-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2>เริ่มต้นใช้งานใน 3 ขั้นตอน</h2>
+                <p>ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที</p>
+            </div>
+            <div class="how-grid">
+                <div class="step-card reveal delay-1">
+                    <div class="step-number">1</div>
+                    <h4>สมัครสมาชิกฟรี</h4>
+                    <p>สร้างบัญชีด้วยอีเมล หรือล็อกอินผ่าน Discord / Google สะดวกสุดๆ</p>
+                </div>
+                <div class="step-card reveal delay-2">
+                    <div class="step-number">2</div>
+                    <h4>ตั้งค่าช่องทางรับเงิน</h4>
+                    <p>เชื่อมต่อบัญชีธนาคาร หรือพร้อมเพย์ รับเงินตรงไม่ผ่านคนกลาง</p>
+                </div>
+                <div class="step-card reveal delay-3">
+                    <div class="step-number">3</div>
+                    <h4>นำลิงก์ไปใส่ OBS</h4>
+                    <p>คัดลอก Overlay Link ไปใส่ในโปรแกรมสตรีม แล้วเริ่มรับโดเนทได้เลย!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="package" class="content-section discovery-bg">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2>ฟรี 100% ไม่มีกั๊กฟีเจอร์</h2>
+                <p>เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน</p>
+            </div>
+            <div class="package-wrapper reveal delay-1">
+                <div class="package-card">
+                    <div class="pkg-header">Ocean <span>FREE</span></div>
+                    <div class="pkg-price">0฿ <span>/ เดือน</span></div>
+                    <ul class="pkg-features">
+                        <li><i class="fas fa-check-circle"></i> รับเงินโดเนท 0% ค่าธรรมเนียม</li>
+                        <li><i class="fas fa-check-circle"></i> ปรับแต่ง Alert ได้อิสระ</li>
+                        <li><i class="fas fa-check-circle"></i> มีหน้าโปรไฟล์สตรีมเมอร์ส่วนตัว</li>
+                        <li><i class="fas fa-check-circle"></i> รองรับเสียงอ่านโดเนท (TTS)</li>
+                    </ul>
+                    <a href="auth.html" class="btn-primary" style="display: block; text-align: center; margin-top: 20px;">เริ่มใช้งานเลย</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="content-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2>ติดต่อเรา</h2>
+                <p>มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ</p>
+            </div>
+            <div class="contact-box">
+                <div class="contact-item reveal delay-1"><i class="fas fa-envelope"></i> santod0946919475@gmail.com</div>
+                <div class="contact-item reveal delay-2"><i class="fab fa-discord"></i> ocean1145</div>
+                <div class="contact-item reveal delay-3"><i class="fab fa-github"></i> github.com/sontod</div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // --- 1. ระบบเมนู Mobile & เลื่อนหน้าจอ ---
+        const sidebar = document.getElementById('sidebar');
+        const openBtn = document.getElementById('openBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const overlay = document.getElementById('overlay');
+        
+        const toggleMenu = () => { 
+            sidebar.classList.toggle('active'); 
+            overlay.classList.toggle('active'); 
+        };
+        
+        openBtn.onclick = toggleMenu; 
+        closeBtn.onclick = toggleMenu; 
+        overlay.onclick = toggleMenu;
+
+        document.querySelectorAll('.menu-list a').forEach(link => {
+            link.addEventListener('click', () => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        });
+
+        // --- 2. ระบบแปลภาษา ---
+        const langToggle = document.getElementById('langToggle');
+        const langText = document.getElementById('langText');
+        const flagImg = document.getElementById('flagImg');
+        let currentLang = 'th';
+
+        const translations = {
+            th: {
+                home: "หน้าแรก", discovery: "Discovery", how: "วิธีใช้งาน", package: "แพ็กเกจ", contact: "ติดต่อ",
+                login: "เข้าสู่ระบบ", register: "สมัครสมาชิก", lang: "TH - ภาษาไทย",
+                title: "รับเงินโดเนทของคุณ<br>เข้าบัญชีตรง ๆ ทันที",
+                desc: "ระบบโดเนทสำหรับสตรีมเมอร์ยุคใหม่ รับเงินเข้าบัญชีทันที ไม่มีหักค่าธรรมเนียม พร้อมหน้าตาที่สวยงาม ใช้งานง่าย และปรับแต่งได้อิสระตามสไตล์คุณ<br>เพื่อการศึกษาและเป็น Project ยืนสมัครมหาลัยของ นายสันต์ทศน์ พาประเสริฐ",
+                join: "เข้าร่วมกับเรา", flag: "https://flagcdn.com/w20/th.png"
+            },
+            en: {
+                home: "Home", discovery: "Discovery", how: "How to use", package: "Pricing", contact: "Contact",
+                login: "Login", register: "Register", lang: "EN - English",
+                title: "Receive Donations<br>Directly & Instantly",
+                desc: "Modern donation system for streamers. Instant transfers, 0% fees, beautiful UI, and fully customizable.<br>Educational project for university admission by Santat Pa-prasert",
+                join: "Join Us", flag: "https://flagcdn.com/w20/gb.png"
+            }
+        };
+
+        langToggle.onclick = () => {
+            currentLang = currentLang === 'th' ? 'en' : 'th';
+            const t = translations[currentLang];
+            document.querySelector('.lang-home').innerHTML = `<i class="fas fa-home"></i> ${t.home}`;
+            document.querySelector('.lang-discovery').innerHTML = `<i class="fas fa-search"></i> ${t.discovery}`;
+            document.querySelector('.lang-how').innerHTML = `<i class="fas fa-book-open"></i> ${t.how}`;
+            document.querySelector('.lang-package').innerHTML = `<i class="fas fa-credit-card"></i> ${t.package}`;
+            document.querySelector('.lang-contact').innerHTML = `<i class="fas fa-comment"></i> ${t.contact}`;
+            document.querySelector('.lang-login').innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.login}`;
+            document.querySelector('.lang-register').innerHTML = `<i class="fas fa-user-plus"></i> ${t.register}`;
+            langText.innerText = t.lang;
+            flagImg.src = t.flag;
+            document.getElementById('main-title').innerHTML = t.title;
+            document.getElementById('main-desc').innerHTML = t.desc;
+            document.getElementById('btn-join').innerHTML = `${t.join} <i class="fas fa-arrow-up-right-from-square"></i>`;
+        };
+
+        // --- 3. ระบบ Scroll Reveal แอนิเมชันเลื่อนจอ (ใหม่ล่าสุด!) ---
+        const reveals = document.querySelectorAll('.reveal');
+        
+        // ใช้ IntersectionObserver ในการจับว่าเลื่อนมาถึงกล่องนั้นหรือยัง
+        const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                } else {
+                    // ถ้าอยากให้กล่องหายไปตอนเลื่อนขึ้นแล้วโผล่ใหม่ตอนเลื่อนลง ให้ปล่อยบรรทัดนี้ไว้
+                    // แต่ถ้าอยากให้โหลดครั้งเดียวโชว์ค้างไปเลย ให้ลบบรรทัดล่างนี้ออกครับ
+                    // entry.target.classList.remove('active'); 
+                }
+            });
+        }, { threshold: 0.15 }); // 0.15 หมายถึง ให้แสดงผลเมื่อเลื่อนมาเห็นกล่องนั้น 15%
+
+        reveals.forEach(reveal => {
+            revealOnScroll.observe(reveal);
+        });
+    </script>
+</body>
+</html>
