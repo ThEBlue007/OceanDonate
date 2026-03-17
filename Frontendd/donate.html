@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โดเนทให้ Zantots | Ocean Donate</title>
+    <title>ระบบรับโดเนท | Ocean Donate</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -50,9 +50,8 @@
         .form-control:focus { border-color: var(--blue); box-shadow: 0 0 15px rgba(58, 134, 255, 0.2); }
         
         .amount-presets { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .preset-btn { flex: 1; min-width: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: white; padding: 10px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 500; }
-        .preset-btn:hover { background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
-        .preset-btn.active { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 15px rgba(58, 134, 255, 0.4); }
+        .amount-btn { flex: 1; min-width: 60px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: normal; }
+        .amount-btn:hover { background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
 
         .amount-input-wrapper { position: relative; display: flex; align-items: center; }
         .amount-input-wrapper input { padding-right: 50px; font-size: 1.2rem; font-weight: bold; color: var(--blue); }
@@ -72,8 +71,13 @@
         .qr-modal.active { display: flex; opacity: 1; }
         .qr-box { background: white; color: black; padding: 30px; border-radius: 20px; text-align: center; max-width: 350px; width: 90%; transform: translateY(-20px); transition: 0.3s; }
         .qr-modal.active .qr-box { transform: translateY(0); }
-        .qr-box img { width: 200px; height: 200px; margin: 20px 0; border: 1px solid #ccc; padding: 10px; border-radius: 10px; }
-        .btn-close-qr { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .qr-box img { width: 200px; height: 200px; margin: 20px 0; border: 1px solid #ccc; padding: 10px; border-radius: 10px; object-fit: contain; }
+        .btn-close-qr { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s;}
+        .btn-close-qr:hover { opacity: 0.9; }
+
+        /* ปุ่มเปลี่ยนภาษา */
+        .lang-toggle-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+        .lang-toggle-btn:hover { background: rgba(255,255,255,0.15); }
     </style>
 </head>
 <body>
@@ -83,7 +87,15 @@
 
     <nav class="simple-nav">
         <a href="index.html" class="logo">OCEAN<span>DONATE</span></a>
-        <div style="color: var(--text); font-size: 0.9rem;"><i class="fas fa-shield-alt" style="color: var(--success);"></i> ปลอดภัย 100%</div>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <div style="color: var(--text); font-size: 0.9rem;" class="lang-el" data-th="<i class='fas fa-shield-alt' style='color: var(--success);'></i> ปลอดภัย 100%" data-en="<i class='fas fa-shield-alt' style='color: var(--success);'></i> 100% Secure">
+                <i class="fas fa-shield-alt" style="color: var(--success);"></i> ปลอดภัย 100%
+            </div>
+            <button id="langToggle" class="lang-toggle-btn">
+                <img src="https://flagcdn.com/w20/th.png" id="flagImg" alt="TH" width="20" style="border-radius: 3px;">
+                <span id="langText">TH</span>
+            </button>
+        </div>
     </nav>
 
     <div class="donate-container">
@@ -94,8 +106,8 @@
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile" class="profile-avatar">
                 
                 <div style="padding: 0 20px;">
-                    <h2 class="profile-name">Zantots</h2>
-                    <p class="profile-bio" id="view-bio">กำลังโหลดข้อมูล...</p>
+                    <h2 class="profile-name" id="streamer-name">Zantots</h2>
+                    <p id="streamer-bio" style="color: var(--text); font-size: 0.95rem; margin-top: 5px;">กำลังโหลดข้อมูล...</p>
                     
                     <div class="social-links">
                         <a href="#" id="view-yt" target="_blank"><i class="fab fa-youtube" style="color:#ff0000;"></i></a>
@@ -106,7 +118,7 @@
                     <div class="top-donor-box">
                         <div class="top-donor-icon"><i class="fas fa-crown"></i></div>
                         <div>
-                            <div style="font-size: 0.8rem; color: var(--text);">ผู้สนับสนุนสูงสุด (Top Donor)</div>
+                            <div style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="ผู้สนับสนุนสูงสุด (Top Donor)" data-en="Top Donor">ผู้สนับสนุนสูงสุด (Top Donor)</div>
                             <div style="font-weight: 600;"><span id="top-donor-name">-</span> <span style="color: var(--blue);" id="top-donor-amount">0 ฿</span></div>
                         </div>
                     </div>
@@ -116,56 +128,63 @@
 
         <div class="form-section">
             <div class="card">
-                <h3 class="form-title">สนับสนุนสตรีมเมอร์</h3>
+                <h3 class="form-title lang-el" data-th="สนับสนุนสตรีมเมอร์" data-en="Support Streamer">สนับสนุนสตรีมเมอร์</h3>
                 
-                <div class="form-group">
-                    <label>ระบุจำนวนเงิน</label>
-                    <div class="amount-presets">
-                        <button class="preset-btn" onclick="setAmount(20)">20</button>
-                        <button class="preset-btn active" onclick="setAmount(50)">50</button>
-                        <button class="preset-btn" onclick="setAmount(100)">100</button>
-                        <button class="preset-btn" onclick="setAmount(300)">300</button>
-                        <button class="preset-btn" onclick="setAmount(500)">500</button>
+                <div style="margin-bottom: 25px;">
+                    <label style="color: var(--text); font-size: 0.95rem; margin-bottom: 10px; display: block; font-weight: 500;" class="lang-el" data-th="ระบุจำนวนเงิน (พิมพ์ตัวเลขได้เลย)" data-en="Amount (Enter a number)">
+                        ระบุจำนวนเงิน (พิมพ์ตัวเลขได้เลย)
+                    </label>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="amount-btn" onclick="setAmount(20)">20</button>
+                        <button class="amount-btn" onclick="setAmount(50)" style="background: var(--blue); border-color: var(--blue); font-weight: bold;">50</button>
+                        <button class="amount-btn" onclick="setAmount(100)">100</button>
+                        <button class="amount-btn" onclick="setAmount(300)">300</button>
+                        <button class="amount-btn" onclick="setAmount(500)">500</button>
                     </div>
-                    <div class="amount-input-wrapper">
-                        <input type="number" id="donate-amount" class="form-control" value="50" min="10">
-                        <span>บาท</span>
+
+                    <div style="position: relative;">
+                        <input type="number" id="input-amount" value="50" min="1" oninput="setAmount(this.value)" 
+                            style="width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; outline: none; font-size: 1.1rem; font-family: 'Kanit', sans-serif; transition: 0.3s;"
+                            onfocus="this.style.borderColor='#3A86FF'; this.style.boxShadow='0 0 10px rgba(58, 134, 255, 0.2)';" 
+                            onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none';">
+                        <span style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text); font-weight: 500;" class="lang-el" data-th="บาท" data-en="THB">บาท</span>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>ชื่อของคุณ (แสดงบนหน้าจอไลฟ์)</label>
-                    <input type="text" id="donate-name" class="form-control" placeholder="นามแฝงของคุณ" required>
+                    <label class="lang-el" data-th="ชื่อของคุณ (แสดงบนหน้าจอไลฟ์)" data-en="Your Name (Shows on live screen)">ชื่อของคุณ (แสดงบนหน้าจอไลฟ์)</label>
+                    <input type="text" id="donate-name" class="form-control lang-el" data-th-placeholder="นามแฝงของคุณ" data-en-placeholder="Your Nickname" placeholder="นามแฝงของคุณ" required>
                 </div>
 
                 <div class="form-group">
-                    <label>ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)</label>
-                    <textarea id="donate-msg" class="form-control" rows="3" placeholder="พิมพ์ข้อความให้กำลังใจ..."></textarea>
+                    <label class="lang-el" data-th="ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)" data-en="Message to streamer (TTS will read this)">ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)</label>
+                    <textarea id="donate-msg" class="form-control lang-el" rows="3" data-th-placeholder="พิมพ์ข้อความให้กำลังใจ..." data-en-placeholder="Type a supportive message..." placeholder="พิมพ์ข้อความให้กำลังใจ..."></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>เลือกช่องทางชำระเงิน</label>
+                    <label class="lang-el" data-th="เลือกช่องทางชำระเงิน" data-en="Select Payment Method">เลือกช่องทางชำระเงิน</label>
                     
                     <div id="no-payment-msg" style="display: none; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 5px; display: block;"></i>
-                        <strong style="font-size: 1.1rem;">ปิดรับโดเนทชั่วคราว</strong><br>
-                        <span style="font-size: 0.9rem;">สตรีมเมอร์ยังไม่ได้เปิดช่องทางการรับเงินครับ</span>
+                        <strong style="font-size: 1.1rem;" class="lang-el" data-th="ปิดรับโดเนทชั่วคราว" data-en="Donations Temporarily Closed">ปิดรับโดเนทชั่วคราว</strong><br>
+                        <span style="font-size: 0.9rem;" class="lang-el" data-th="สตรีมเมอร์ยังไม่ได้เปิดช่องทางการรับเงินครับ" data-en="The streamer hasn't enabled any payment methods.">สตรีมเมอร์ยังไม่ได้เปิดช่องทางการรับเงินครับ</span>
                     </div>
 
                     <div class="payment-methods" id="payment-methods-container">
                         <div class="pay-method-card active" id="pay-promptpay" onclick="selectPayment('promptpay')">
                             <i class="fas fa-qrcode" style="color: #1155cc;"></i>
-                            <span>สแกนพร้อมเพย์</span>
+                            <span class="lang-el" data-th="สแกนพร้อมเพย์" data-en="PromptPay Scan">สแกนพร้อมเพย์</span>
                         </div>
                         <div class="pay-method-card" id="pay-bank" onclick="selectPayment('bank')">
                             <i class="fas fa-university" style="color: #f5a623;"></i>
-                            <span>โอนผ่านธนาคาร</span>
+                            <span class="lang-el" data-th="โอนผ่านธนาคาร" data-en="Bank Transfer">โอนผ่านธนาคาร</span>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn-donate" id="btn-submit-donate" onclick="processDonation()">
-                    <i class="fas fa-heart"></i> โดเนทเลย <span id="btn-amount-text">50</span> บาท
+                <button class="btn-donate" id="btn-submit-donate" onclick="openPaymentModal()">
+                    <i class="fas fa-heart"></i> <span class="lang-el" data-th="โดเนทเลย" data-en="Donate">โดเนทเลย</span> <span id="btn-amount-text">50</span> <span class="lang-el" data-th="บาท" data-en="THB">บาท</span>
                 </button>
             </div>
         </div>
@@ -173,12 +192,28 @@
 
     <div class="qr-modal" id="qr-modal">
         <div class="qr-box">
-            <h3 style="color: #1155cc; margin-bottom: 10px;"><i class="fas fa-qrcode"></i> สแกนเพื่อจ่ายเงิน</h3>
-            <p style="font-size: 0.9rem; color: #555;">โอนเงินให้: <strong id="qr-account-name">กำลังโหลดข้อมูล...</strong></p>
+            <h3 style="color: #1155cc; margin-bottom: 10px;"><i class="fas fa-qrcode"></i> <span class="lang-el" data-th="สแกนเพื่อจ่ายเงิน" data-en="Scan to Pay">สแกนเพื่อจ่ายเงิน</span></h3>
+            <p style="font-size: 0.9rem; color: #555;"><span class="lang-el" data-th="โอนเงินให้:" data-en="Transfer to:">โอนเงินให้:</span> <strong id="qr-account-name">กำลังโหลดข้อมูล...</strong></p>
             <p style="font-size: 1.2rem; font-weight: bold; color: #e11d48; margin-top: 5px;" id="qr-amount-text">50.00 บาท</p>
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="QR Code">
-            <button class="btn-close-qr" onclick="closeQRModal()">ยกเลิก / ปิดหน้าต่าง</button>
-            <button class="btn-close-qr" style="background: #10b981; margin-top: 10px;" onclick="successMockup()">จำลองว่าโอนสำเร็จแล้ว</button>
+            <button class="btn-close-qr lang-el" onclick="closeQRModal()" data-th="ยกเลิก / ปิดหน้าต่าง" data-en="Cancel / Close">ยกเลิก / ปิดหน้าต่าง</button>
+            <button class="btn-close-qr lang-el" style="background: #10b981; margin-top: 10px;" onclick="successMockup()" data-th="จำลองว่าโอนสำเร็จแล้ว" data-en="Mock Successful Transfer">จำลองว่าโอนสำเร็จแล้ว</button>
+        </div>
+    </div>
+
+    <div class="qr-modal" id="bank-modal">
+        <div class="qr-box">
+            <h3 style="color: #f5a623; margin-bottom: 10px;"><i class="fas fa-university"></i> <span class="lang-el" data-th="โอนเงินผ่านธนาคาร" data-en="Bank Transfer">โอนเงินผ่านธนาคาร</span></h3>
+            <p style="font-size: 0.9rem; color: #555;"><span class="lang-el" data-th="โอนเงินจำนวน:" data-en="Transfer Amount:">โอนเงินจำนวน:</span> <strong id="bank-amount-text" style="color: #e11d48; font-size: 1.2rem;">50.00 บาท</strong></p>
+            
+            <div style="background: rgba(245, 166, 35, 0.1); border: 1px solid rgba(245, 166, 35, 0.3); border-radius: 10px; padding: 15px; margin: 15px 0; text-align: left;">
+                <p style="margin-bottom: 8px; font-size: 0.9rem; color: #333;"><span class="lang-el" data-th="ธนาคาร:" data-en="Bank:">ธนาคาร:</span> <strong id="bank-name-display">-</strong></p>
+                <p style="margin-bottom: 8px; font-size: 0.9rem; color: #333;"><span class="lang-el" data-th="ชื่อบัญชี:" data-en="Account Name:">ชื่อบัญชี:</span> <strong id="bank-owner-display">-</strong></p>
+                <p style="margin: 0; font-size: 1.1rem; color: #111;"><span class="lang-el" data-th="เลขบัญชี:" data-en="Account Number:">เลขบัญชี:</span> <strong id="bank-acc-display" style="color: #f5a623; letter-spacing: 1px;">-</strong></p>
+            </div>
+            
+            <button class="btn-close-qr lang-el" onclick="closeBankModal()" style="background: #ef4444;" data-th="ยกเลิก / ปิดหน้าต่าง" data-en="Cancel / Close">ยกเลิก / ปิดหน้าต่าง</button>
+            <button class="btn-close-qr lang-el" style="background: #10b981; margin-top: 10px;" onclick="successMockup()" data-th="จำลองว่าโอนสำเร็จแล้ว" data-en="Mock Successful Transfer">จำลองว่าโอนสำเร็จแล้ว</button>
         </div>
     </div>
 
@@ -187,181 +222,274 @@
             <div style="font-size: 3.5rem; color: #10b981; margin-bottom: 10px;">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h2 style="color: #10b981; margin-bottom: 15px; font-weight: bold;">โอนเงินสำเร็จ!</h2>
+            <h2 style="color: #10b981; margin-bottom: 15px; font-weight: bold;" class="lang-el" data-th="โอนเงินสำเร็จ!" data-en="Transfer Successful!">โอนเงินสำเร็จ!</h2>
             <p style="font-size: 1.1rem; color: #333; margin-bottom: 25px; line-height: 1.5;" id="thankyou-text">ขอบคุณสำหรับการสนับสนุนมากๆ ครับ!</p>
-            <button class="btn-close-qr" style="background: var(--blue); width: 100%; font-size: 1.1rem; padding: 12px;" onclick="closeThankYouModal()">ตกลง / ปิดหน้าต่าง</button>
+            <button class="btn-close-qr lang-el" style="background: var(--blue); width: 100%; font-size: 1.1rem; padding: 12px;" onclick="closeThankYouModal()" data-th="ตกลง / ปิดหน้าต่าง" data-en="OK / Close">ตกลง / ปิดหน้าต่าง</button>
         </div>
     </div>
 
-    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io('http://localhost:3000');
-        let thankYouMessage = 'ขอบคุณสำหรับการสนับสนุนมากๆ ครับ!'; 
-        const amountInput = document.getElementById('donate-amount');
-        const presetBtns = document.querySelectorAll('.preset-btn');
-        let selectedPaymentMethod = 'promptpay';
-        let activePaymentData = null; 
+        const urlParams = new URLSearchParams(window.location.search);
+        const streamerName = urlParams.get('u') || 'OceanDIWa';
         
-        // 📌 ตัวแปรเก็บรายชื่อคำหยาบ (ดึงจาก Server)
-        let bannedWordsList = [];
+        // อัปเดตชื่อ รูปภาพ และ Title
+        const nameEl = document.getElementById('streamer-name');
+        const avatarEl = document.querySelector('.profile-avatar');
+        if(nameEl) nameEl.innerText = streamerName;
+        if(avatarEl) avatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${streamerName}`;
+        document.title = `โดเนทให้ ${streamerName} | Ocean Donate`;
+        
+        const socket = io(); 
 
-        function updateBtnText() { 
-            const textSpan = document.getElementById('btn-amount-text');
-            if (textSpan) {
-                textSpan.innerText = amountInput.value || 0; 
+        socket.on('connect', () => {
+            socket.emit('join_profile', streamerName);
+        });
+
+        let paymentSettings = null;
+        let selectedPayment = 'promptpay';
+
+        // ================= 📌 ระบบแปลภาษา =================
+        let currentLang = 'th';
+        const langToggle = document.getElementById('langToggle');
+        const flagImg = document.getElementById('flagImg');
+        const langText = document.getElementById('langText');
+
+        function updateLanguage() {
+            if(flagImg) flagImg.src = currentLang === 'en' ? "https://flagcdn.com/w20/gb.png" : "https://flagcdn.com/w20/th.png";
+            if(langText) langText.innerText = currentLang === 'en' ? "EN" : "TH";
+
+            document.querySelectorAll('.lang-el').forEach(el => {
+                if(el.hasAttribute(`data-${currentLang}`)) {
+                    el.innerHTML = el.getAttribute(`data-${currentLang}`);
+                }
+                if(el.hasAttribute(`data-${currentLang}-placeholder`)) {
+                    el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+                }
+            });
+
+            // อัปเดตปุ่มโดเนทและ Text ต่างๆ ที่ถูกผสมด้วย JS
+            const amount = document.getElementById('input-amount').value || 50;
+            updateDonateButton(amount);
+            
+            // อัปเดต Top Donor
+            const tdAmount = document.getElementById('top-donor-amount');
+            if (tdAmount && tdAmount.innerText !== '0 ฿') {
+                const val = tdAmount.innerText.replace(/[^0-9,.]/g, '');
+                tdAmount.innerText = `${val} ${currentLang === 'en' ? 'THB' : '฿'}`;
             }
         }
 
-        amountInput.addEventListener('input', function() {
-            presetBtns.forEach(btn => btn.classList.remove('active'));
-            updateBtnText();
-        });
-
-        function setAmount(amount) {
-            amountInput.value = amount;
-            updateBtnText();
-            presetBtns.forEach(btn => {
-                if(parseInt(btn.innerText) === amount) btn.classList.add('active');
-                else btn.classList.remove('active');
+        if(langToggle) {
+            langToggle.addEventListener('click', () => {
+                currentLang = currentLang === 'th' ? 'en' : 'th';
+                updateLanguage();
             });
         }
 
-        function selectPayment(method) {
-            selectedPaymentMethod = method;
-            document.getElementById('pay-promptpay').classList.remove('active');
-            document.getElementById('pay-bank').classList.remove('active');
-            if (method) {
-                document.getElementById('pay-' + method).classList.add('active');
-            }
-        }
-
+        // 🟢 1. ระบบจัดการธีมและ Bio
         socket.on('apply_page_settings', (settings) => {
-            document.getElementById('view-bio').innerText = settings.bio;
-            if(settings.thankMsg) thankYouMessage = settings.thankMsg;
-            
-            if (settings.bgUrl && settings.bgUrl.trim() !== "") {
+            const bioEl = document.getElementById('streamer-bio');
+            if(settings && settings.bio) {
+                if(bioEl) bioEl.innerText = settings.bio;
+            } else {
+                if(bioEl) bioEl.innerText = `ยินดีต้อนรับสู่ช่องของ ${streamerName}!`;
+            }
+
+            if(settings && settings.bgUrl) {
                 document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
-                document.querySelectorAll('.bg-glow').forEach(el => el.style.display = 'none');
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundAttachment = 'fixed';
             } else {
                 document.body.style.backgroundImage = 'none';
-                document.querySelectorAll('.bg-glow').forEach(el => el.style.display = 'block');
             }
 
-            const ytBtn = document.getElementById('view-yt');
-            const fbBtn = document.getElementById('view-fb');
-            const twitchBtn = document.getElementById('view-twitch');
-
-            if(settings.yt) { ytBtn.href = settings.yt; ytBtn.style.display = 'inline-block'; } else { ytBtn.style.display = 'none'; }
-            if(settings.fb) { fbBtn.href = settings.fb; fbBtn.style.display = 'inline-block'; } else { fbBtn.style.display = 'none'; }
-            if(settings.twitch) { twitchBtn.href = settings.twitch; twitchBtn.style.display = 'inline-block'; } else { twitchBtn.style.display = 'none'; }
-        });
-
-        socket.on('apply_payment', (payment) => {
-            activePaymentData = payment; 
-            const ppActive = payment.promptpay.active;
-            const bankActive = payment.bank.active;
-            
-            document.getElementById('pay-promptpay').style.display = ppActive ? 'flex' : 'none';
-            document.getElementById('pay-bank').style.display = bankActive ? 'flex' : 'none';
-            
-            const btnDonate = document.getElementById('btn-submit-donate');
-            const noPayMsg = document.getElementById('no-payment-msg');
-            const payContainer = document.getElementById('payment-methods-container');
-
-            if (!ppActive && !bankActive) {
-                payContainer.style.display = 'none';
-                noPayMsg.style.display = 'block';
-                
-                btnDonate.disabled = true;
-                btnDonate.style.opacity = '0.5';
-                btnDonate.style.cursor = 'not-allowed';
-                btnDonate.style.background = '#475569';
-                btnDonate.innerHTML = '<i class="fas fa-lock"></i> สตรีมเมอร์ปิดรับโดเนท';
-                selectedPaymentMethod = null;
+            // ถ้าสตรีมเมอร์ตั้งคำขอบคุณไว้
+            if(settings && settings.thankMsg) {
+                document.getElementById('thankyou-text').innerText = settings.thankMsg;
             } else {
-                payContainer.style.display = 'grid';
-                noPayMsg.style.display = 'none';
+                document.getElementById('thankyou-text').innerText = "ขอบคุณสำหรับการสนับสนุนมากๆ ครับ!";
+            }
+        });
+
+        // 🟢 2. ระบบซ่อน/แสดงช่องทางชำระเงิน
+        socket.on('apply_payment', (settings) => {
+            paymentSettings = settings;
+            const ppCard = document.getElementById('pay-promptpay');
+            const bankCard = document.getElementById('pay-bank');
+            const noPayMsg = document.getElementById('no-payment-msg');
+            const btnDonate = document.getElementById('btn-submit-donate');
+
+            let hasActiveMethod = false;
+
+            if(settings && settings.promptpay && settings.promptpay.active) {
+                if(ppCard) ppCard.style.display = 'flex';
+                hasActiveMethod = true;
+                selectPayment('promptpay');
+            } else {
+                if(ppCard) ppCard.style.display = 'none';
+            }
+
+            if(settings && settings.bank && settings.bank.active) {
+                if(bankCard) bankCard.style.display = 'flex';
+                if(!hasActiveMethod) {
+                    hasActiveMethod = true;
+                    selectPayment('bank');
+                }
+            } else {
+                if(bankCard) bankCard.style.display = 'none';
+            }
+
+            if(!hasActiveMethod) {
+                if(noPayMsg) noPayMsg.style.display = 'block';
+                if(btnDonate) {
+                    btnDonate.style.opacity = '0.5';
+                    btnDonate.style.pointerEvents = 'none';
+                    btnDonate.innerHTML = `<i class="fas fa-lock"></i> <span class="lang-el" data-th="ปิดรับโดเนทชั่วคราว" data-en="Donations Closed">${currentLang === 'en' ? 'Donations Closed' : 'ปิดรับโดเนทชั่วคราว'}</span>`;
+                }
+            } else {
+                if(noPayMsg) noPayMsg.style.display = 'none';
+                if(btnDonate) {
+                    btnDonate.style.opacity = '1';
+                    btnDonate.style.pointerEvents = 'auto';
+                    updateDonateButton(document.getElementById('input-amount').value || 50);
+                }
+            }
+        });
+
+        // 🟢 3. ระบบอัปเดตตัวเลขและสีปุ่ม
+        window.setAmount = function(amount) {
+            const amountInput = document.getElementById('input-amount');
+            if(amountInput && amountInput.value != amount) {
+                amountInput.value = amount;
+            }
+            updateDonateButton(amount);
+
+            // อัปเดตสีปุ่ม
+            document.querySelectorAll('.amount-btn').forEach(btn => {
+                if(parseInt(btn.innerText) === parseInt(amount)) {
+                    btn.style.background = 'var(--blue)';
+                    btn.style.borderColor = 'var(--blue)';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.style.background = 'rgba(255,255,255,0.05)';
+                    btn.style.borderColor = 'rgba(255,255,255,0.1)';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
+        }
+
+        function updateDonateButton(amount) {
+            const btnDonate = document.getElementById('btn-submit-donate');
+            // เช็คก่อนว่าปุ่มไม่ได้โดนล็อกอยู่
+            if(btnDonate && btnDonate.style.pointerEvents !== 'none') {
+                btnDonate.innerHTML = `
+                    <i class="fas fa-heart"></i> 
+                    <span class="lang-el" data-th="โดเนทเลย" data-en="Donate">${currentLang === 'en' ? 'Donate' : 'โดเนทเลย'}</span> 
+                    <span id="btn-amount-text">${amount}</span> 
+                    <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span>
+                `;
+            }
+        }
+
+        const amountInput = document.getElementById('input-amount');
+        if(amountInput) {
+            amountInput.addEventListener('input', function(e) {
+                setAmount(e.target.value || 0);
+            });
+        }
+
+        // ฟังก์ชันสลับวิธีชำระเงิน
+        window.selectPayment = function(method) {
+            selectedPayment = method;
+            document.querySelectorAll('.pay-method-card').forEach(card => card.classList.remove('active'));
+            const targetCard = document.getElementById('pay-' + method);
+            if(targetCard) targetCard.classList.add('active');
+        };
+
+        // ฟังก์ชันเปิดหน้าต่าง
+        window.openPaymentModal = function() {
+            const amount = document.getElementById('input-amount').value || 50;
+            const nameInput = document.getElementById('donate-name').value;
+            
+            if(!amount || amount <= 0) return alert(currentLang === 'en' ? 'Please enter an amount.' : 'กรุณาระบุจำนวนเงินครับ');
+            if(!nameInput) return alert(currentLang === 'en' ? 'Please enter your name.' : 'กรุณาระบุชื่อของคุณครับ');
+
+            const currencyStr = currentLang === 'en' ? ' THB' : ' บาท';
+
+            if(selectedPayment === 'promptpay') {
+                const modal = document.getElementById('qr-modal');
+                const qrAmountText = document.getElementById('qr-amount-text');
+                const qrName = document.getElementById('qr-account-name');
+                const phone = paymentSettings?.promptpay?.phone || '0946919475';
                 
-                btnDonate.disabled = false;
-                btnDonate.style.opacity = '1';
-                btnDonate.style.cursor = 'pointer';
-                btnDonate.style.background = 'linear-gradient(135deg, var(--blue), #5BC0EB)';
-                btnDonate.innerHTML = `<i class="fas fa-heart"></i> โดเนทเลย <span id="btn-amount-text">${amountInput.value || 0}</span> บาท`;
+                if(qrAmountText) qrAmountText.innerText = parseFloat(amount).toFixed(2) + currencyStr;
+                if(qrName) qrName.innerText = phone;
+                
+                const qrImg = modal.querySelector('img');
+                if(qrImg) qrImg.src = `https://promptpay.io/${phone}/${amount}.png`;
 
-                if(ppActive) selectPayment('promptpay');
-                else if(bankActive) selectPayment('bank');
+                modal.classList.add('active');
+
+            } else if(selectedPayment === 'bank') {
+                const modal = document.getElementById('bank-modal');
+                const bankAmt = document.getElementById('bank-amount-text');
+                const bName = document.getElementById('bank-name-display');
+                const bOwner = document.getElementById('bank-owner-display');
+                const bAcc = document.getElementById('bank-acc-display');
+
+                if(bankAmt) bankAmt.innerText = parseFloat(amount).toFixed(2) + currencyStr;
+                if(bName) bName.innerText = paymentSettings?.bank?.bankName || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
+                if(bOwner) bOwner.innerText = paymentSettings?.bank?.accountName || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
+                if(bAcc) bAcc.innerText = paymentSettings?.bank?.accountNumber || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
+
+                if(modal) modal.classList.add('active');
             }
-        });
+        };
 
-        socket.on('update_leaderboard', (donators) => {
-            if(donators.length > 0) {
-                document.getElementById('top-donor-name').innerText = donators[0].name;
-                document.getElementById('top-donor-amount').innerText = donators[0].amount.toLocaleString() + ' ฿';
-            }
-        });
+        window.closeQRModal = function() { document.getElementById('qr-modal').classList.remove('active'); };
+        window.closeBankModal = function() { document.getElementById('bank-modal').classList.remove('active'); };
+        window.closeThankYouModal = function() { document.getElementById('thankyou-modal').classList.remove('active'); };
 
-        // 📌 โหลดคำต้องห้ามมาเก็บไว้ในฝั่งเครื่องคนโดเนท
-        socket.on('apply_banned_words', (words) => {
-            bannedWordsList = words;
-        });
-
-        function processDonation() {
-            if (!selectedPaymentMethod) return alert('สตรีมเมอร์ปิดรับโดเนทชั่วคราวครับ ไม่สามารถโอนได้');
-
-            const name = document.getElementById('donate-name').value;
-            const amount = amountInput.value;
+        window.successMockup = function() {
+            const amount = document.getElementById('input-amount').value || 50;
+            const name = document.getElementById('donate-name').value || 'Anonymous';
             const msg = document.getElementById('donate-msg').value || '';
 
-            if(!name) { alert('กรุณากรอกชื่อของคุณด้วยครับ!'); return; }
-            if(amount < 10) { alert('จำนวนเงินขั้นต่ำในการโดเนทคือ 10 บาทครับ'); return; }
+            socket.emit('new_donation', {
+                username: streamerName,
+                name: name,
+                amount: parseFloat(amount),
+                message: msg
+            });
 
-            // 📌 ระบบคัดกรองคำต้องห้ามก่อนเด้ง QR Code!
-            const isBanned = bannedWordsList.some(word => name.includes(word) || msg.includes(word));
-            if (isBanned) {
-                alert('❌ ปฏิเสธการทำรายการ: ข้อความหรือชื่อของคุณมี "คำต้องห้าม" กรุณาลบออกก่อนครับ');
-                return; // สั่งหยุด ไม่ให้เปิด QR Code เด็ดขาด!
-            }
-
-            let accountShow = 'กำลังโหลดข้อมูล...';
-            if (activePaymentData) {
-                if (selectedPaymentMethod === 'promptpay') accountShow = `พร้อมเพย์: ${activePaymentData.promptpay.phone}`;
-                else if (selectedPaymentMethod === 'bank') accountShow = `ธนาคาร ${activePaymentData.bank.bankName}\nเลขบัญชี: ${activePaymentData.bank.acc}\nชื่อ: ${activePaymentData.bank.owner}`;
-            }
-
-            document.getElementById('qr-account-name').innerText = accountShow;
-            document.getElementById('qr-amount-text').innerText = amount + '.00 บาท';
-            document.getElementById('qr-modal').classList.add('active');
-        }
-
-        function closeQRModal() { document.getElementById('qr-modal').classList.remove('active'); }
-        function closeThankYouModal() { document.getElementById('thankyou-modal').classList.remove('active'); }
-
-        // 📌 ระบบจำลองโอนสำเร็จ ที่ปลอดภัยขึ้น (รอ Server อนุมัติ)
-        function successMockup() {
             closeQRModal();
-            const donatorName = document.getElementById('donate-name').value;
-            const donateAmount = amountInput.value;
-            const donateMsg = document.getElementById('donate-msg').value || ''; 
+            closeBankModal();
             
-            // ส่งไปให้ Server ตรวจสอบอีกชั้นก่อนโชว์
-            socket.emit('new_donation', { name: donatorName, amount: donateAmount, message: donateMsg });
-        }
-
-        // 📌 ถ้า Server ตรวจสอบผ่าน
-        socket.on('donation_success', () => {
-            document.getElementById('thankyou-text').innerText = thankYouMessage;
-            document.getElementById('thankyou-modal').classList.add('active');
+            const tkModal = document.getElementById('thankyou-modal');
+            if(tkModal) tkModal.classList.add('active');
+            
             document.getElementById('donate-name').value = '';
             document.getElementById('donate-msg').value = '';
             setAmount(50);
-        });
+        };
 
-        // 📌 ถ้า Server จับได้ว่าพยายามเลี่ยงคำหยาบเข้ามา
-        socket.on('donation_rejected', (data) => {
-            alert('❌ ไม่สามารถโดเนทได้: ' + data.reason);
-        });
+        // 🟢 ระบบอัปเดต Top Donator หน้าโดเนทแบบ Real-time
+        socket.on('update_leaderboard', (topDonators) => {
+            const tdName = document.getElementById('top-donor-name');
+            const tdAmount = document.getElementById('top-donor-amount');
+            
+            const currSymbol = currentLang === 'en' ? 'THB' : '฿';
 
+            if (topDonators && topDonators.length > 0) {
+                tdName.innerText = topDonators[0].name;
+                tdAmount.innerText = `${topDonators[0].amount.toLocaleString()} ${currSymbol}`;
+            } else {
+                tdName.innerText = '-';
+                tdAmount.innerText = `0 ${currSymbol}`;
+            }
+        });
     </script>
 </body>
 </html>

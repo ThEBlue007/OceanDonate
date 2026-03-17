@@ -2,55 +2,86 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <title>Donate Goal Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ตั้งค่าให้พื้นหลังโปร่งใสสำหรับ OBS */
-        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; }
+        /* รูปแบบพื้นฐานของ Widget ต้องโปร่งใส */
+        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; background: transparent; color: white; }
         
-        .goal-container { width: 100%; max-width: 600px; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; color: white; }
-        .goal-title { margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,1); font-size: 1.5rem; font-weight: bold; }
-        .goal-bar-bg { width: 100%; height: 40px; background: rgba(0,0,0,0.6); border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .goal-container { width: 100%; max-width: 600px; text-align: center; padding: 15px; }
         
-        /* หลอดสีฟ้าที่มีแอนิเมชันวิ่งแบบสมูทๆ */
-        .goal-bar-fill { height: 100%; border-radius: 20px 0 0 20px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
+        .goal-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         
-        .goal-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; text-shadow: 0 1px 3px black; font-size: 1.1rem; white-space: nowrap; }
-        .goal-info { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; font-size: 1rem; text-shadow: 0 1px 3px black; font-weight: 500; }
+        .goal-bar-bg { 
+            width: 100%; height: 40px; background: rgba(0,0,0,0.6); 
+            border: 3px solid rgba(255,255,255,0.2); border-radius: 25px; 
+            overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+        }
+        
+        /* แอนิเมชันหลอดวิ่ง */
+        .goal-bar-fill { 
+            height: 100%; width: 0%; background: #ff0000; 
+            border-radius: 25px; 
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; 
+        }
+        
+        .goal-text { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            font-weight: bold; font-size: 18px; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); width: 100%; 
+        }
     </style>
 </head>
 <body>
-    <div class="goal-container" id="goal-box">
-        <div class="goal-title" id="obs-goal-title">เป้าหมายโดเนท</div>
+    <div class="goal-container">
+        <div class="goal-title" id="goal-title">เป้าหมายโดเนท</div>
         <div class="goal-bar-bg">
-            <div class="goal-bar-fill" id="obs-goal-bar" style="width: 0%; background: #0EA5E9; box-shadow: 0 0 15px #0EA5E9;"></div>
-            <div class="goal-text" id="obs-goal-percentage">0 บาท (0%)</div>
-        </div>
-        <div class="goal-info">
-            <span>จากเป้าหมาย <span id="obs-goal-target">100</span> บาท</span>
+            <div class="goal-bar-fill" id="goal-bar"></div>
+            <div class="goal-text" id="goal-text">0 บาท (0%)</div>
         </div>
     </div>
 
-    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io('http://localhost:3000');
+        const urlParams = new URLSearchParams(window.location.search);
+        const streamerName = urlParams.get('u');
+        
+        // 1. เชื่อมต่อ Server (ไม่มี localhost เพราะเตรียมขึ้นโฮสต์)
+        const socket = io(); 
 
+        // 🟢 2. ท่าไม้ตายแก้บั๊ก "ไม่ต้องกด Refresh": ทันทีที่เน็ตต่อติด ให้ดึงข้อมูลทันที!
+        socket.on('connect', () => {
+            console.log("เชื่อมต่อเซิร์ฟเวอร์สำเร็จ!");
+            socket.emit('join_profile', streamerName);
+        });
+
+        // 🟢 3. รับข้อมูลจาก Dashboard / Server มาอัปเดตหลอด Goal
         socket.on('apply_goal', (goal) => {
-            // อัปเดตข้อความ
-            document.getElementById('obs-goal-title').innerText = goal.title;
-            document.getElementById('obs-goal-target').innerText = goal.target;
-            document.getElementById('goal-box').style.color = goal.textColor;
+            if (!goal) return;
+
+            // แปลงตัวเลข
+            const current = parseFloat(goal.current) || 0;
+            const target = parseFloat(goal.target) || 100;
             
-            // อัปเดตสีหลอด
-            const barFill = document.getElementById('obs-goal-bar');
-            barFill.style.background = goal.barColor;
-            barFill.style.boxShadow = `0 0 15px ${goal.barColor}`;
+            // คำนวณเปอร์เซ็นต์ (ไม่ให้หลอดทะลุ 100%)
+            let percent = (current / target) * 100;
+            if (percent > 100) percent = 100;
 
-            // คำนวณเปอร์เซ็นต์ความยาวหลอด (กันทะลุ 100%)
-            let percent = (goal.current / goal.target) * 100;
-            if(percent > 100) percent = 100;
+            // อัปเดตข้อความและสี
+            document.getElementById('goal-title').innerText = goal.title || 'เป้าหมายโดเนท';
+            document.getElementById('goal-bar').style.width = percent + '%';
+            document.getElementById('goal-bar').style.backgroundColor = goal.barColor || '#ff0000';
+            
+            // โชว์ข้อความ เช่น 50 / 100 บาท (50%)
+            document.getElementById('goal-text').innerText = `${current.toLocaleString()} / ${target.toLocaleString()} บาท (${Math.round(percent)}%)`;
 
-            // สั่งขยับหลอด!
-            barFill.style.width = percent + '%';
-            document.getElementById('obs-goal-percentage').innerText = `${goal.current} บาท (${Math.round(percent)}%)`;
+            // อัปเดตสีตัวหนังสือและฟอนต์
+            if (goal.textColor) {
+                document.getElementById('goal-title').style.color = goal.textColor;
+                document.getElementById('goal-text').style.color = goal.textColor;
+            }
+            if (goal.font) {
+                document.body.style.fontFamily = goal.font;
+            }
         });
     </script>
 </body>

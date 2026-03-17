@@ -23,29 +23,23 @@
         <div id="leaderboard-content"></div>
     </div>
 
-    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io('http://localhost:3000');
+        const urlParams = new URLSearchParams(window.location.search);
+        const streamerName = urlParams.get('u') || 'Zantots';
+        const socket = io(); 
+
+        socket.on('connect', () => {
+            socket.emit('join_profile', streamerName);
+        });
 
         socket.on('apply_top_donor', (settings) => {
             const box = document.getElementById('td-box');
+            if (settings.isTransparent) { box.style.background = 'transparent'; box.style.backdropFilter = 'none'; } 
+            else { box.style.background = settings.boxColor; box.style.backdropFilter = 'blur(10px)'; }
             
-            if (settings.isTransparent) {
-                box.style.background = 'transparent';
-                box.style.backdropFilter = 'none'; 
-            } else {
-                box.style.background = settings.boxColor;
-                box.style.backdropFilter = 'blur(10px)';
-            }
-            
-            if (settings.hasBorder === false) {
-                box.style.border = 'none';
-                box.style.boxShadow = 'none';
-            } else {
-                const bColor = settings.borderColor || '#3A86FF';
-                box.style.border = `2px solid ${bColor}`;
-                box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)';
-            }
+            if (settings.hasBorder === false) { box.style.border = 'none'; box.style.boxShadow = 'none'; } 
+            else { const bColor = settings.borderColor || '#3A86FF'; box.style.border = `2px solid ${bColor}`; box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)'; }
 
             document.getElementById('td-title').style.color = settings.titleColor;
             document.getElementById('td-title').innerText = settings.title;
@@ -66,8 +60,7 @@
                         <div class="rank ${rankClass}">${rankText}</div>
                         <div class="name">${donator.name}</div>
                         <div class="amount" style="color: #10b981;">${donator.amount.toLocaleString()} ฿</div>
-                    </div>
-                `;
+                    </div>`;
             });
         });
     </script>

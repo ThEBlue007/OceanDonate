@@ -88,7 +88,6 @@
 
         .transparent-bg { background-color: #1a1a1a; background-image: linear-gradient(45deg, #252525 25%, transparent 25%, transparent 75%, #252525 75%, #252525), linear-gradient(45deg, #252525 25%, transparent 25%, transparent 75%, #252525 75%, #252525); background-size: 20px 20px; background-position: 0 0, 10px 10px; }
         .preview-box { border: 1px solid var(--border); border-radius: 15px; padding: 40px 20px; text-align: center; position: relative; min-height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
-        .preview-actions { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 10px; }
         
         .layout-selector { display: flex; gap: 15px; margin-bottom: 20px; }
         .layout-item { flex: 1; background: rgba(0,0,0,0.3); border: 2px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
@@ -99,20 +98,19 @@
         #preview-alert-content { transition: all 0.3s; display: flex; flex-direction: column; align-items: center; font-family: 'Kanit', sans-serif; }
         #preview-alert-content.layout-row { flex-direction: row; gap: 20px; text-align: left; }
 
+        /* 📹 NEW: OBS LINK STYLES */
+        .obs-link-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .obs-link-item input { flex: 1; background: transparent; border: none; color: var(--blue); font-family: monospace; font-size: 0.85rem; outline: none; }
+
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 0.3s; }
         .modal-overlay.active { display: flex; opacity: 1; }
         .modal-box { background: #0f1322; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 450px; border-radius: 15px; padding: 25px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); transform: translateY(-20px); transition: 0.3s; }
         .modal-overlay.active .modal-box { transform: translateY(0); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
-
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
 
         .history-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
         .history-table th { background: rgba(58, 134, 255, 0.1); color: var(--blue); font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(58, 134, 255, 0.3); }
         .history-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text); }
-        .history-table tr:hover td { background: rgba(255,255,255,0.02); }
     </style>
 </head>
 <body>
@@ -134,8 +132,8 @@
     <div class="dashboard-wrapper">
         <aside class="dash-sidebar">
             <div class="user-profile">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile">
-                <h4>Zantots</h4><p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์" data-en="Online">ระบบออนไลน์</span></p>
+                <img id="sidebar-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile">
+                <h4 id="sidebar-name">Zantots</h4><p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์" data-en="Online">ระบบออนไลน์</span></p>
             </div>
             <ul class="dash-menu">
                 <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
@@ -153,6 +151,13 @@
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-calendar-day'></i> ยอดโดเนทวันนี้" data-en="<i class='fas fa-calendar-day'></i> Today's Donation"><i class="fas fa-calendar-day"></i> ยอดโดเนทวันนี้</h4><div class="amount"><span id="dash-stat-today">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-wallet'></i> ยอดโดเนททั้งหมด" data-en="<i class='fas fa-wallet'></i> Total Donation"><i class="fas fa-wallet"></i> ยอดโดเนททั้งหมด</h4><div class="amount"><span id="dash-stat-total">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-eye'></i> จำนวนผู้เข้าชม" data-en="<i class='fas fa-eye'></i> Total Views"><i class="fas fa-eye"></i> จำนวนผู้เข้าชม</h4><div class="amount"><span id="dash-stat-views">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="ครั้ง" data-en="Views">ครั้ง</span></div></div>
+                </div>
+
+                <div class="page-title">
+                    <span class="lang-el" data-th="การวิเคราะห์ (Analytics)" data-en="Analytics">การวิเคราะห์ (Analytics)</span>
+                    <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 1rem; padding: 8px 16px;">
+                        <i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูลทั้งหมด
+                    </button>
                 </div>
 
                 <div class="card" style="padding: 0; overflow: hidden;">
@@ -177,38 +182,59 @@
             </div>
 
             <div id="payment" class="tab-content">
-                <div class="page-title"><span class="lang-el" data-th="ช่องทางการรับเงิน" data-en="Payment Methods">ช่องทางการรับเงิน</span> <span class="badge-free lang-el" data-th="ฟรีค่าธรรมเนียม 100%" data-en="100% Free Fee">ฟรีค่าธรรมเนียม 100%</span></div>
-                <div class="card">
-                    <p style="color: var(--text); margin-bottom: 20px;" class="lang-el" data-th="เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้" data-en="Enable/Disable and configure payment methods for your viewers.">เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้</p>
-                    <div class="payment-card">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <i class="fas fa-qrcode" style="font-size: 2rem; color: #1155cc;"></i>
-                            <div><h4 style="font-size: 1.1rem;" class="lang-el" data-th="พร้อมเพย์ (PromptPay)" data-en="PromptPay">พร้อมเพย์ (PromptPay)</h4><p style="color: var(--text); font-size: 0.85rem;" class="lang-el" data-th="รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที" data-en="Receive money directly to your PromptPay account.">รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที</p></div>
+            <div class="page-title">
+                <span class="lang-el" data-th="ช่องทางการรับเงิน" data-en="Payment Methods">ช่องทางการรับเงิน</span> 
+                <span class="badge-free lang-el" data-th="ฟรีค่าธรรมเนียม 100%" data-en="100% Free Fee" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">ฟรีค่าธรรมเนียม 100%</span>
+            </div>
+            
+            <div class="card" style="padding: 30px;">
+                <p style="color: var(--text); margin-bottom: 25px; font-size: 0.95rem;" class="lang-el" data-th="เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้" data-en="Enable/Disable and configure payment methods.">เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้</p>
+                
+                <div class="payment-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px; background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="width: 60px; height: 60px; background: rgba(58, 134, 255, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(58, 134, 255, 0.2);">
+                            <i class="fas fa-qrcode" style="font-size: 1.8rem; color: #3A86FF;"></i>
                         </div>
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <button class="btn-outline lang-el" onclick="openModal('modal-promptpay')" data-th="ตั้งค่า" data-en="Settings">ตั้งค่า</button>
-                            <label class="switch"><input type="checkbox" id="outer-pp-active" onchange="toggleOuterPayment('promptpay')"><span class="slider"></span></label>
+                        <div>
+                            <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="พร้อมเพย์ (PromptPay)" data-en="PromptPay">พร้อมเพย์ (PromptPay)</h4>
+                            <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที" data-en="Receive money directly to your PromptPay account.">รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที</p>
                         </div>
                     </div>
-                    <div class="payment-card">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <i class="fas fa-university" style="font-size: 2rem; color: #f5a623;"></i>
-                            <div><h4 style="font-size: 1.1rem;" class="lang-el" data-th="ธนาคาร (Bank Transfer)" data-en="Bank Transfer">ธนาคาร (Bank Transfer)</h4><p style="color: var(--text); font-size: 0.85rem;" class="lang-el" data-th="รองรับทุกธนาคารในประเทศไทย" data-en="Supports all banks in Thailand.">รองรับทุกธนาคารในประเทศไทย</p></div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <button class="btn-outline lang-el" onclick="openModal('modal-promptpay')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
+                        <label class="switch"><input type="checkbox" id="outer-pp-active" onchange="toggleOuterPayment('promptpay')"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <div class="payment-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px; background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s;">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="width: 60px; height: 60px; background: rgba(245, 166, 35, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245, 166, 35, 0.2);">
+                            <i class="fas fa-university" style="font-size: 1.8rem; color: #f5a623;"></i>
                         </div>
-                        <div style="display: flex; gap: 15px; align-items: center;">
-                            <button class="btn-outline lang-el" onclick="openModal('modal-bank')" data-th="ตั้งค่า" data-en="Settings">ตั้งค่า</button>
-                            <label class="switch"><input type="checkbox" id="outer-bank-active" onchange="toggleOuterPayment('bank')"><span class="slider"></span></label>
+                        <div>
+                            <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="ธนาคาร (Bank Transfer)" data-en="Bank Transfer">ธนาคาร (Bank Transfer)</h4>
+                            <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รองรับทุกธนาคารในประเทศไทย" data-en="Supports all banks in Thailand.">รองรับทุกธนาคารในประเทศไทย</p>
                         </div>
+                    </div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <button class="btn-outline lang-el" onclick="openModal('modal-bank')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
+                        <label class="switch"><input type="checkbox" id="outer-bank-active" onchange="toggleOuterPayment('bank')"><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
+        </div>
 
             <div id="page-settings" class="tab-content">
                 <div class="page-title lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</div>
-                <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between;">
-                    <div><h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ</h4><a href="#" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">oceandonate.app/zantots</a></div>
-                    <button class="btn-primary lang-el" onclick="showAlert('คัดลอกลิงก์เรียบร้อยแล้ว', 'Link copied successfully!')" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link"><i class="fas fa-copy"></i> คัดลอกลิงก์</button>
-                </div>
+                    <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ</h4>
+                            <a href="#" id="dash-donate-link" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">oceandonate.app/loading...</a>
+                        </div>
+                        <button class="btn-primary lang-el" onclick="copyDonateLink()" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link">
+                            <i class="fas fa-copy"></i> คัดลอกลิงก์
+                        </button>
+                    </div>
                 
                 <div class="form-grid">
                     <div class="card">
@@ -256,6 +282,31 @@
                     <button class="btn-outline lang-el" onclick="openModal('modal-global')" data-th="<i class='fas fa-cog'></i> ตั้งค่าแสดงผลรวม" data-en="<i class='fas fa-cog'></i> Global Settings"><i class="fas fa-cog"></i> ตั้งค่าแสดงผลรวม</button>
                 </div>
 
+                <div class="card" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); margin-bottom: 30px;">
+                    <h4 style="margin-bottom: 10px; color: #ef4444;" class="lang-el" data-th="📹 ลิงก์สำหรับใส่ใน OBS (Browser Source)" data-en="📹 OBS Browser Source Links">📹 ลิงก์สำหรับใส่ใน OBS (Browser Source)</h4>
+                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px;" class="lang-el" data-th="คัดลอกลิงก์ส่วนตัวด้านล่างนี้ไปใส่ในโปรแกรม OBS เพื่อแสดงผลแจ้งเตือน" data-en="Copy your private links below to OBS for alert overlays.">คัดลอกลิงก์ส่วนตัวด้านล่างนี้ไปใส่ในโปรแกรม OBS เพื่อแสดงผลแจ้งเตือน</p>
+                    
+                    <style>
+                        .obs-link-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
+                        .obs-link-item input { flex: 1; background: transparent; border: none; color: var(--blue); font-family: monospace; font-size: 0.85rem; outline: none; }
+                    </style>
+
+                    <div class="obs-link-item">
+                        <span style="min-width: 100px; font-size: 0.85rem; color: var(--blue);">Alert Box:</span>
+                        <input type="text" id="obs-alert-url" readonly value="กำลังเจนลิงก์...">
+                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-alert-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
+                    </div>
+                    <div class="obs-link-item">
+                        <span style="min-width: 100px; font-size: 0.85rem; color: #ef4444;">Donate Goal:</span>
+                        <input type="text" id="obs-goal-url" readonly value="กำลังเจนลิงก์...">
+                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-goal-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
+                    </div>
+                    <div class="obs-link-item">
+                        <span style="min-width: 100px; font-size: 0.85rem; color: #fbbf24;">Top Donor:</span>
+                        <input type="text" id="obs-td-url" readonly value="กำลังเจนลิงก์...">
+                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-td-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
+                    </div>
+                </div>
                 <div class="widget-nav">
                     <div class="widget-tab active" data-sub="w-alert"><i class="fas fa-bell" style="color: var(--blue);"></i> <span class="lang-el" data-th="Donate Alert" data-en="Donate Alert">Donate Alert</span></div>
                     <div class="widget-tab" data-sub="w-goal"><i class="fas fa-bullseye" style="color: #ef4444;"></i> <span class="lang-el" data-th="Donate Goal" data-en="Donate Goal">Donate Goal</span></div>
@@ -488,356 +539,388 @@
         </div>
     </div>
 
-    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        const dashSocket = io('http://localhost:3000');
+        // ================= 📌 1. ระบบควบคุมหน้าเว็บ (UI Dashboard) =================
+        document.querySelectorAll('.tab-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const targetId = this.getAttribute('data-tab');
+                const targetContent = document.getElementById(targetId);
+                if(targetContent) targetContent.classList.add('active');
+            });
+        });
 
-        // ================= ระบบแปลภาษา 100% =================
+        document.querySelectorAll('.widget-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.widget-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.widget-panel').forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById(this.getAttribute('data-sub')).classList.add('active');
+            });
+        });
+
+        window.openModal = function(id) {
+            if (id === 'modal-promptpay') {
+                const outerPP = document.getElementById('outer-pp-active');
+                if (outerPP) document.getElementById('pp-active').checked = outerPP.checked;
+            } else if (id === 'modal-bank') {
+                const outerBank = document.getElementById('outer-bank-active');
+                if (outerBank) document.getElementById('bank-active').checked = outerBank.checked;
+            }
+            const modal = document.getElementById(id);
+            if(modal) modal.classList.add('active');
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            if(modal) modal.classList.remove('active');
+        };
+
+        // ================= 📌 2. เชื่อมต่อ Server & จัดการข้อมูล =================
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('u') || 'OceanDIWa';
+        const baseUrl = window.location.origin; 
+
+        const sidebarName = document.getElementById('sidebar-name');
+        const sidebarAvatar = document.getElementById('sidebar-avatar');
+        if(sidebarName) sidebarName.innerText = username;
+        if(sidebarAvatar) sidebarAvatar.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+
+        const bioInput = document.getElementById('dash-bio');
+        if(bioInput && bioInput.value.includes('Zantots')) {
+            bioInput.value = `ยินดีต้อนรับสู่ช่องของ ${username}!`;
+        }
+
+        const donateLink = document.getElementById('dash-donate-link');
+        if(donateLink) {
+            donateLink.innerText = `oceandonate.app/${username}`;
+            donateLink.href = `${baseUrl}/donate.html?u=${username}`;
+        }
+        document.getElementById('obs-alert-url').value = `${baseUrl}/widget.html?u=${username}`;
+        document.getElementById('obs-goal-url').value = `${baseUrl}/goal.html?u=${username}`;
+        document.getElementById('obs-td-url').value = `${baseUrl}/top-donator.html?u=${username}`;
+
+        window.copyDonateLink = function() {
+            navigator.clipboard.writeText(`${baseUrl}/donate.html?u=${username}`);
+            alert('✅ คัดลอกลิงก์รับโดเนทเรียบร้อยแล้ว!');
+        };
+        window.copyWidgetLink = function(targetId) {
+            const inputEl = document.getElementById(targetId);
+            if(inputEl) {
+                inputEl.select();
+                navigator.clipboard.writeText(inputEl.value);
+                alert('✅ คัดลอกลิงก์สำหรับใส่ OBS แล้ว!');
+            }
+        };
+
+        const socket = io(); 
+
+        // 🟢 แก้ไขบั๊กตัวแปร: ให้ใช้คำว่า username
+        socket.on('connect', () => {
+            socket.emit('join_profile', username);
+        });
+
+        socket.on('apply_payment', (settings) => {
+            const ppCard = document.querySelectorAll('.payment-card')[0];
+            const bankCard = document.querySelectorAll('.payment-card')[1];
+            const isPpActive = settings?.promptpay?.active || false;
+            const isBankActive = settings?.bank?.active || false;
+
+            if(document.getElementById('pp-active')) document.getElementById('pp-active').checked = isPpActive;
+            if(document.getElementById('outer-pp-active')) document.getElementById('outer-pp-active').checked = isPpActive;
+            if(settings?.promptpay?.phone) document.getElementById('pp-phone').value = settings.promptpay.phone;
+            
+            if(ppCard) { ppCard.style.opacity = isPpActive ? '1' : '0.5'; ppCard.style.filter = isPpActive ? 'none' : 'grayscale(1)'; }
+
+            if(document.getElementById('bank-active')) document.getElementById('bank-active').checked = isBankActive;
+            if(document.getElementById('outer-bank-active')) document.getElementById('outer-bank-active').checked = isBankActive;
+            
+            if(settings?.bank?.bankName) document.getElementById('bank-name').value = settings.bank.bankName;
+            if(settings?.bank?.accountNumber) document.getElementById('bank-acc').value = settings.bank.accountNumber;
+            if(settings?.bank?.accountName) document.getElementById('bank-owner').value = settings.bank.accountName;
+
+            if(bankCard) { bankCard.style.opacity = isBankActive ? '1' : '0.5'; bankCard.style.filter = isBankActive ? 'none' : 'grayscale(1)'; }
+        });
+
+        socket.on('apply_page_settings', (settings) => {
+            if(settings) {
+                if(settings.bio) document.getElementById('dash-bio').value = settings.bio;
+                if(settings.bgUrl) {
+                    const presetEl = document.getElementById('dash-theme-preset');
+                    const optionExists = Array.from(presetEl.options).some(opt => opt.value === settings.bgUrl);
+                    if(optionExists) presetEl.value = settings.bgUrl;
+                    else {
+                        presetEl.value = 'custom';
+                        document.getElementById('dash-bg').value = settings.bgUrl;
+                        document.getElementById('dash-bg').style.display = 'block';
+                    }
+                }
+            }
+        });
+
+        window.toggleCustomBg = function() {
+            const preset = document.getElementById('dash-theme-preset').value;
+            document.getElementById('dash-bg').style.display = (preset === 'custom') ? 'block' : 'none';
+        };
+
+        socket.on('update_stats', (stats) => {
+            if(document.getElementById('dash-stat-today')) document.getElementById('dash-stat-today').innerText = (stats.today || 0).toLocaleString();
+            if(document.getElementById('dash-stat-total')) document.getElementById('dash-stat-total').innerText = (stats.total || 0).toLocaleString();
+            if(document.getElementById('dash-stat-views')) document.getElementById('dash-stat-views').innerText = (stats.views || 0).toLocaleString();
+        });
+
+        socket.on('update_history', (history) => {
+            const tbody = document.getElementById('dash-history-list');
+            if (!tbody) return;
+            if (!history || history.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #a0aec0;">ยังไม่มีประวัติการโดเนทในขณะนี้</td></tr>';
+            
+            tbody.innerHTML = [...history].reverse().map((item, reversedIndex) => {
+                const originalIndex = history.length - 1 - reversedIndex; 
+                const dateStr = item.date ? new Date(item.date).toLocaleString('th-TH') : (item.timestamp || 'ไม่ระบุเวลา');
+                return `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 15px;">${dateStr}</td>
+                    <td style="padding: 15px; font-weight: 500;">${item.name}</td>
+                    <td style="padding: 15px; color: var(--blue); font-weight: bold;">${item.amount.toLocaleString()} ฿</td>
+                    <td style="padding: 15px;">${item.message || '-'}</td>
+                    <td style="padding: 15px;"><button class="btn-danger" style="padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;" onclick="deleteHistory(${originalIndex})"><i class="fas fa-trash"></i> ลบ</button></td>
+                </tr>`;
+            }).join('');
+        });
+
+        window.deleteHistory = function(index) {
+            if(confirm('คุณต้องการลบประวัติการโดเนทนี้ใช่หรือไม่?')) socket.emit('delete_donation', { username: username, index: index });
+        };
+
+        window.resetStats = function() {
+            if(confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "รีเซ็ตยอดเงินและประวัติทั้งหมด" ให้เป็น 0 ?')) {
+                socket.emit('reset_stats', { username });
+                alert('✅ รีเซ็ตข้อมูลเรียบร้อยแล้ว!');
+            }
+        };
+
+        window.toggleOuterPayment = function(type) {
+            if(type === 'promptpay') {
+                const isActive = document.getElementById('outer-pp-active').checked;
+                document.getElementById('pp-active').checked = isActive; 
+                socket.emit('save_payment', { username: username, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
+            } else if (type === 'bank') {
+                const isActive = document.getElementById('outer-bank-active').checked;
+                document.getElementById('bank-active').checked = isActive; 
+                socket.emit('save_payment', { username: username, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+            }
+        };
+
+        window.savePromptPay = function() {
+            const isActive = document.getElementById('pp-active').checked;
+            document.getElementById('outer-pp-active').checked = isActive;
+            socket.emit('save_payment', { username: username, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
+            closeModal('modal-promptpay');
+        };
+
+        window.saveBank = function() {
+            const isActive = document.getElementById('bank-active').checked;
+            document.getElementById('outer-bank-active').checked = isActive;
+            socket.emit('save_payment', { username: username, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+            closeModal('modal-bank');
+        };
+
+        window.saveProfileSettings = function() {
+            const themePreset = document.getElementById('dash-theme-preset').value;
+            const bgUrl = (themePreset === 'custom') ? document.getElementById('dash-bg').value : themePreset;
+            socket.emit('save_page_settings', { username: username, bio: document.getElementById('dash-bio').value, bgUrl: bgUrl });
+            alert('✅ บันทึกข้อมูลสำเร็จ!');
+        };
+
+        // 🟢 เพิ่มระบบ Live Preview หลอด Goal ขยับตามที่พิมพ์!
+        function updateGoalPreview() {
+            const title = document.getElementById('ctrl-goal-title')?.value || 'เป้าหมายโดเนท';
+            const target = parseFloat(document.getElementById('ctrl-goal-target')?.value) || 100;
+            const current = parseFloat(document.getElementById('ctrl-goal-current')?.value) || 0;
+            const barColor = document.getElementById('ctrl-goal-color')?.value || '#0ea5e9';
+            
+            let percent = (current / target) * 100;
+            if (percent > 100) percent = 100;
+
+            if(document.getElementById('preview-goal-title')) document.getElementById('preview-goal-title').innerText = title;
+            if(document.getElementById('preview-goal-bar')) {
+                document.getElementById('preview-goal-bar').style.width = percent + '%';
+                document.getElementById('preview-goal-bar').style.backgroundColor = barColor;
+            }
+            if(document.getElementById('preview-goal-percentage')) {
+                document.getElementById('preview-goal-percentage').innerText = `${current.toLocaleString()} บาท (${Math.round(percent)}%)`;
+            }
+        }
+        ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', updateGoalPreview);
+        });
+
+        // 🟢 ระบบบันทึก Widgets แบบกันพัง
+        window.saveGoalSettingsToOBS = function() {
+            const goalData = {
+                username: username,
+                title: document.getElementById('ctrl-goal-title').value,
+                target: document.getElementById('ctrl-goal-target').value,
+                current: document.getElementById('ctrl-goal-current').value,
+                font: document.getElementById('ctrl-goal-font').value,
+                barColor: document.getElementById('ctrl-goal-color').value,
+                textColor: document.getElementById('ctrl-goal-text-color').value
+            };
+            socket.emit('update_goal', goalData);
+            alert('✅ บันทึกเป้าหมาย และอัปเดตไปที่ OBS สำเร็จ!');
+        };
+
+        window.saveAlertSettingsToOBS = function() {
+            const activeLayout = document.querySelector('.layout-item.active');
+            const alertData = {
+                username: username,
+                layout: activeLayout ? activeLayout.getAttribute('data-layout') : 'main',
+                sound: document.getElementById('ctrl-alert-sound').value,
+                imgUrl: document.getElementById('ctrl-img-url').value,
+                nameColor: document.getElementById('ctrl-name-color').value,
+                amountColor: document.getElementById('ctrl-amount-color').value,
+                textColor: document.getElementById('ctrl-text-color').value
+            };
+            socket.emit('update_alert', alertData);
+            alert('✅ บันทึกการตกแต่ง Alert สำเร็จ!');
+        };
+
+        window.saveTopDonorToOBS = function() {
+            const tdData = {
+                username: username,
+                title: document.getElementById('ctrl-td-title').value,
+                titleColor: document.getElementById('ctrl-td-tcolor').value,
+                textColor: document.getElementById('ctrl-td-color').value,
+                boxColor: document.getElementById('ctrl-td-bg').value,
+                isTransparent: document.getElementById('ctrl-td-transparent-toggle').checked,
+                hasBorder: document.getElementById('ctrl-td-border-toggle').checked,
+                borderColor: document.getElementById('ctrl-td-border-color').value
+            };
+            socket.emit('update_top_donor', tdData);
+            alert('✅ บันทึกตารางจัดอันดับ สำเร็จ!');
+        };
+
+        socket.on('apply_goal', (goal) => {
+            if (!goal) return;
+            if (document.getElementById('ctrl-goal-title')) document.getElementById('ctrl-goal-title').value = goal.title;
+            if (document.getElementById('ctrl-goal-target')) document.getElementById('ctrl-goal-target').value = goal.target;
+            if (document.getElementById('ctrl-goal-current')) document.getElementById('ctrl-goal-current').value = goal.current;
+            if (document.getElementById('ctrl-goal-color')) document.getElementById('ctrl-goal-color').value = goal.barColor || '#0EA5E9';
+            updateGoalPreview(); // อัปเดต Preview ให้ขยับทันที
+        });
+        
+        // 🟢 1. ระบบ Live Preview Top Donator ขยับตามที่พิมพ์!
+        function updateTopDonorPreview() {
+            const title = document.getElementById('ctrl-td-title')?.value || '🏆 Top Donators';
+            const titleColor = document.getElementById('ctrl-td-tcolor')?.value || '#5BC0EB';
+            const textColor = document.getElementById('ctrl-td-color')?.value || '#ffffff';
+            const bgColor = document.getElementById('ctrl-td-bg')?.value || 'rgba(0, 0, 0, 0.6)';
+            const isTransparent = document.getElementById('ctrl-td-transparent-toggle')?.checked;
+            const hasBorder = document.getElementById('ctrl-td-border-toggle')?.checked;
+            const borderColor = document.getElementById('ctrl-td-border-color')?.value || '#3A86FF';
+
+            const box = document.getElementById('preview-td-box');
+            if (box) {
+                box.style.background = isTransparent ? 'transparent' : bgColor;
+                box.style.border = hasBorder ? `2px solid ${borderColor}` : 'none';
+            }
+
+            const titleEl = document.getElementById('preview-td-title');
+            if (titleEl) {
+                titleEl.innerText = title;
+                titleEl.style.color = titleColor;
+            }
+
+            // เปลี่ยนสีตัวหนังสือของรายชื่อคนโดเนท
+            document.querySelectorAll('.preview-td-item').forEach(item => {
+                item.style.color = textColor;
+            });
+        }
+
+        // ดักจับเวลาคลิกเปลี่ยนสี หรือพิมพ์เปลี่ยนชื่อ
+        ['ctrl-td-title', 'ctrl-td-tcolor', 'ctrl-td-color', 'ctrl-td-bg', 'ctrl-td-border-color'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', updateTopDonorPreview);
+        });
+        ['ctrl-td-transparent-toggle', 'ctrl-td-border-toggle'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('change', updateTopDonorPreview);
+        });
+
+        // 🟢 2. ดึงข้อมูลตั้งค่าจาก DB มาแสดงในช่องตั้งค่า (กรณี Refresh หน้าเว็บ)
+        socket.on('apply_top_donor', (settings) => {
+            if (!settings) return;
+            if (document.getElementById('ctrl-td-title')) document.getElementById('ctrl-td-title').value = settings.title || '🏆 Top Donators';
+            if (document.getElementById('ctrl-td-tcolor')) document.getElementById('ctrl-td-tcolor').value = settings.titleColor || '#5BC0EB';
+            if (document.getElementById('ctrl-td-color')) document.getElementById('ctrl-td-color').value = settings.textColor || '#ffffff';
+            if (document.getElementById('ctrl-td-bg')) document.getElementById('ctrl-td-bg').value = settings.boxColor || 'rgba(0, 0, 0, 0.6)';
+            if (document.getElementById('ctrl-td-border-color')) document.getElementById('ctrl-td-border-color').value = settings.borderColor || '#3A86FF';
+            if (document.getElementById('ctrl-td-transparent-toggle')) document.getElementById('ctrl-td-transparent-toggle').checked = settings.isTransparent || false;
+            if (document.getElementById('ctrl-td-border-toggle')) document.getElementById('ctrl-td-border-toggle').checked = settings.hasBorder !== false;
+            
+            updateTopDonorPreview();
+        });
+
+        // 🟢 3. ดึง "ชื่อคนโอนเงินจริงๆ" มาโชว์ในช่องตัวอย่าง (Real-time)
+        socket.on('update_leaderboard', (topDonators) => {
+            const tdPreviewBox = document.getElementById('preview-td-box');
+            if (!tdPreviewBox) return;
+            
+            const currentTitle = document.getElementById('ctrl-td-title')?.value || '🏆 Top Donators';
+            const titleHTML = `<div id="preview-td-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px;">${currentTitle}</div>`;
+            
+            let itemsHTML = '';
+            if (topDonators && topDonators.length > 0) {
+                // ดึงมาโชว์แค่ 3 อันดับแรกในช่องตัวอย่าง
+                topDonators.slice(0, 3).forEach((d, i) => {
+                    itemsHTML += `<div class="preview-td-item" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left;">${i+1}. ${d.name} <span style="float:right; color:#10b981;">${d.amount.toLocaleString()} ฿</span></div>`;
+                });
+            } else {
+                itemsHTML = `<div class="preview-td-item" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left;">ยังไม่มีคนโดเนท <span style="float:right; color:#10b981;">0 ฿</span></div>`;
+            }
+            
+            tdPreviewBox.innerHTML = titleHTML + itemsHTML;
+            updateTopDonorPreview(); // โหลดสีทับเข้าไปใหม่ให้สวยงาม
+        });
+
+
+        // ================= 📌 ระบบแปลภาษา (คืนชีพ!) =================
         let currentLang = 'th';
         const langToggle = document.getElementById('langToggle');
         const flagImg = document.getElementById('flagImg');
         const langText = document.getElementById('langText');
 
-        langToggle.addEventListener('click', () => {
-            currentLang = currentLang === 'th' ? 'en' : 'th';
-            
-            if(currentLang === 'en') {
-                flagImg.src = "https://flagcdn.com/w20/gb.png";
-                langText.innerText = "EN";
-            } else {
-                flagImg.src = "https://flagcdn.com/w20/th.png";
-                langText.innerText = "TH";
-            }
+        if(langToggle) {
+            langToggle.addEventListener('click', () => {
+                currentLang = currentLang === 'th' ? 'en' : 'th';
+                
+                // เปลี่ยนรูปธงและตัวอักษรบนปุ่ม
+                if(flagImg) flagImg.src = currentLang === 'en' ? "https://flagcdn.com/w20/gb.png" : "https://flagcdn.com/w20/th.png";
+                if(langText) langText.innerText = currentLang === 'en' ? "EN" : "TH";
 
-            document.querySelectorAll('.lang-el').forEach(el => {
-                if(el.hasAttribute(`data-${currentLang}`)) {
-                    el.innerHTML = el.getAttribute(`data-${currentLang}`);
-                }
-                if(el.hasAttribute(`data-${currentLang}-placeholder`)) {
-                    el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
-                }
-            });
-
-            if(window.lastHistoryData) renderHistory(window.lastHistoryData);
-        });
-
-        function showAlert(msgTh, msgEn) { alert(currentLang === 'en' ? msgEn : msgTh); }
-        // ===================================================
-
-        // ระบบ Tab
-        document.querySelectorAll('.tab-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); document.querySelectorAll('.tab-link').forEach(i => i.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); link.classList.add('active'); document.getElementById(link.getAttribute('data-tab')).classList.add('active'); }); });
-        document.querySelectorAll('.widget-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.widget-tab').forEach(i => i.classList.remove('active')); document.querySelectorAll('.widget-panel').forEach(p => p.classList.remove('active')); tab.classList.add('active'); document.getElementById(tab.getAttribute('data-sub')).classList.add('active'); }); });
-
-        function openModal(id) { document.getElementById(id).classList.add('active'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-        dashSocket.on('apply_payment', (payment) => {
-            if(document.getElementById('outer-pp-active')) document.getElementById('outer-pp-active').checked = payment.promptpay.active;
-            if(document.getElementById('outer-bank-active')) document.getElementById('outer-bank-active').checked = payment.bank.active;
-            document.getElementById('pp-active').checked = payment.promptpay.active;
-            document.getElementById('pp-phone').value = payment.promptpay.phone;
-            document.getElementById('bank-active').checked = payment.bank.active;
-            document.getElementById('bank-name').value = payment.bank.bankName;
-            document.getElementById('bank-acc').value = payment.bank.acc;
-            document.getElementById('bank-owner').value = payment.bank.owner;
-        });
-
-        dashSocket.on('update_stats', (stats) => {
-            document.getElementById('dash-stat-today').innerText = stats.today.toLocaleString();
-            document.getElementById('dash-stat-total').innerText = stats.total.toLocaleString();
-            document.getElementById('dash-stat-views').innerText = stats.views.toLocaleString();
-        });
-
-        dashSocket.on('apply_goal', (goal) => {
-            let percent = (goal.current / goal.target) * 100;
-            if(percent > 100) percent = 100;
-            document.getElementById('preview-goal-percentage').innerText = `${goal.current} ${currentLang === 'en' ? 'THB' : 'บาท'} (${Math.round(percent)}%)`;
-            document.getElementById('preview-goal-bar').style.width = percent + '%';
-        });
-
-        function renderHistory(history) {
-            window.lastHistoryData = history;
-            const tbody = document.getElementById('dash-history-list');
-            if (history.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--text);">${currentLang === 'en' ? 'No donation history yet.' : 'ยังไม่มีประวัติโดเนท'}</td></tr>`;
-                return;
-            }
-            
-            tbody.innerHTML = history.map(item => `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.3s;">
-                    <td style="padding: 12px 10px; color: var(--text); font-size: 0.85rem;">${item.timestamp}</td>
-                    <td style="padding: 12px 10px; font-weight: 500; color: #fff;">${item.name}</td>
-                    <td style="padding: 12px 10px; color: #10b981; font-weight: bold;">${item.amount.toLocaleString()} ฿</td>
-                    <td style="padding: 12px 10px; color: #e2e8f0; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.message}</td>
-                    <td style="padding: 12px 10px; text-align: center;">
-                        <button class="btn-danger" onclick="deleteDonation(${item.id})"><i class="fas fa-trash"></i> ${currentLang === 'en' ? 'Delete' : 'ลบ'}</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        dashSocket.on('update_history', (history) => { renderHistory(history); });
-        dashSocket.on('apply_banned_words', (words) => { if(document.getElementById('dash-banned-words')) document.getElementById('dash-banned-words').value = words.join(', '); });
-
-        function deleteDonation(id) {
-            const confirmMsg = currentLang === 'en' ? 'Are you sure you want to delete this donation record? (Amount and Goal will be deducted)' : 'คุณแน่ใจหรือไม่ว่าต้องการลบประวัติโดเนทนี้? (ยอดเงินและเป้าหมายจะถูกหักออกด้วย)';
-            if(confirm(confirmMsg)) dashSocket.emit('delete_donation', id);
-        }
-
-        function saveBannedWords() {
-            const rawText = document.getElementById('dash-banned-words').value;
-            const wordsArray = rawText.split(',').map(w => w.trim()).filter(w => w.length > 0);
-            dashSocket.emit('update_banned_words', wordsArray);
-            showAlert('บันทึกรายการคำต้องห้ามเรียบร้อยแล้วครับ ระบบจะบล็อกคำเหล่านี้ทันที!', 'Banned words saved! The system will block them immediately.');
-        }
-
-        function toggleCustomBg() {
-            const preset = document.getElementById('dash-theme-preset').value;
-            const customInput = document.getElementById('dash-bg');
-            if (preset === 'custom') customInput.style.display = 'block';
-            else customInput.style.display = 'none';
-        }
-
-        function saveProfileSettings() {
-            const bio = document.getElementById('dash-bio').value;
-            const thankMsg = document.getElementById('dash-thank').value;
-            let bgUrl = document.getElementById('dash-theme-preset').value;
-            if (bgUrl === 'custom') bgUrl = document.getElementById('dash-bg').value;
-            dashSocket.emit('update_page_settings', { bio, thankMsg, bgUrl });
-            showAlert('อัปเดตข้อมูลและภาพพื้นหลังเรียบร้อย!', 'Profile and Theme updated successfully!');
-        }
-
-        function saveSocialSettings() {
-            const yt = document.getElementById('dash-yt').value;
-            const fb = document.getElementById('dash-fb').value;
-            const twitch = document.getElementById('dash-twitch').value;
-            dashSocket.emit('update_page_settings', { yt, fb, twitch });
-            showAlert('อัปเดตปุ่มโซเชียลเรียบร้อย!', 'Social links updated successfully!');
-        }
-
-        function saveAlertSettingsToOBS() {
-            const imgUrl = document.getElementById('ctrl-img-url').value;
-            const nameColor = document.getElementById('ctrl-name-color').value;
-            const amountColor = document.getElementById('ctrl-amount-color').value;
-            const textColor = document.getElementById('ctrl-text-color').value;
-            let activeLayout = 'main';
-            const layoutElement = document.querySelector('.layout-item.active');
-            if(layoutElement) activeLayout = layoutElement.getAttribute('data-layout');
-            dashSocket.emit('update_settings', { imgUrl, nameColor, amountColor, textColor, layout: activeLayout });
-            showAlert('อัปเดตไปที่ OBS เรียบร้อย!', 'Alert settings saved to OBS!');
-        }
-
-        function saveGoalSettingsToOBS() {
-            const title = document.getElementById('ctrl-goal-title').value;
-            const target = parseFloat(document.getElementById('ctrl-goal-target').value) || 1;
-            const current = parseFloat(document.getElementById('ctrl-goal-current').value) || 0; // กลับมารับค่า Current ได้
-            const barColor = document.getElementById('ctrl-goal-color').value;
-            const textColor = document.getElementById('ctrl-goal-text-color').value;
-            dashSocket.emit('update_goal', { title, target, current, barColor, textColor });
-            showAlert('อัปเดตเป้าหมายไปที่ OBS เรียบร้อยแล้วครับ!', 'Goal settings saved to OBS!');
-        }
-
-        function saveTopDonorToOBS() {
-            const title = document.getElementById('ctrl-td-title').value;
-            const titleColor = document.getElementById('ctrl-td-tcolor').value;
-            const textColor = document.getElementById('ctrl-td-color').value;
-            const boxColor = document.getElementById('ctrl-td-bg').value;
-            const hasBorder = document.getElementById('ctrl-td-border-toggle').checked;
-            const borderColor = document.getElementById('ctrl-td-border-color').value;
-            const isTransparent = document.getElementById('ctrl-td-transparent-toggle').checked;
-
-            dashSocket.emit('update_top_donor', { title, titleColor, textColor, boxColor, hasBorder, borderColor, isTransparent });
-            showAlert('อัปเดตหน้าตา Top Donator เรียบร้อยครับ!', 'Top Donator settings saved!');
-        }
-
-        function savePromptPay() {
-            const active = document.getElementById('pp-active').checked;
-            const phone = document.getElementById('pp-phone').value;
-            dashSocket.emit('update_payment', { promptpay: { active, phone } });
-            closeModal('modal-promptpay');
-            showAlert('อัปเดตพร้อมเพย์ สำเร็จ!', 'PromptPay updated successfully!');
-        }
-
-        function saveBank() {
-            const active = document.getElementById('bank-active').checked;
-            const bankName = document.getElementById('bank-name').value;
-            const acc = document.getElementById('bank-acc').value;
-            const owner = document.getElementById('bank-owner').value;
-            dashSocket.emit('update_payment', { bank: { active, bankName, acc, owner } });
-            closeModal('modal-bank');
-            showAlert('อัปเดตบัญชีธนาคาร สำเร็จ!', 'Bank updated successfully!');
-        }
-
-        function toggleOuterPayment(method) {
-            if (method === 'promptpay') {
-                const active = document.getElementById('outer-pp-active').checked;
-                const phone = document.getElementById('pp-phone').value;
-                dashSocket.emit('update_payment', { promptpay: { active, phone } });
-            } else if (method === 'bank') {
-                const active = document.getElementById('outer-bank-active').checked;
-                const bankName = document.getElementById('bank-name').value;
-                const acc = document.getElementById('bank-acc').value;
-                const owner = document.getElementById('bank-owner').value;
-                dashSocket.emit('update_payment', { bank: { active, bankName, acc, owner } });
-            }
-        }
-
-        function applyGlobalSettings() { 
-            const globalFont = document.getElementById('global-font').value;
-            document.getElementById('preview-alert-content').style.fontFamily = globalFont;
-            document.getElementById('ctrl-font').value = globalFont;
-            document.getElementById('goal-bg-preview').style.fontFamily = globalFont;
-            document.getElementById('ctrl-goal-font').value = globalFont;
-            closeModal('modal-global'); 
-            showAlert('ปรับใช้ฟอนต์กับทุกวิดเจ็ตเรียบร้อยแล้ว!', 'Global font applied successfully!');
-        }
-
-        // ================= WIDGET PREVIEW & TTS =================
-        const layoutItems = document.querySelectorAll('.layout-item');
-        layoutItems.forEach(item => {
-            item.addEventListener('click', function() {
-                layoutItems.forEach(el => el.classList.remove('active'));
-                this.classList.add('active');
-                const layoutType = this.getAttribute('data-layout');
-                const contentBox = document.getElementById('preview-alert-content');
-                if (layoutType === 'row') contentBox.classList.add('layout-row');
-                else contentBox.classList.remove('layout-row');
-            });
-        });
-
-        document.getElementById('test-name').addEventListener('input', e => document.getElementById('preview-name').innerText = e.target.value);
-        document.getElementById('test-amount').addEventListener('input', e => document.getElementById('preview-amount').innerHTML = `${e.target.value} <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span>`);
-        document.getElementById('test-msg').addEventListener('input', e => document.getElementById('preview-msg').innerText = e.target.value);
-        document.getElementById('ctrl-name-color').addEventListener('input', e => document.getElementById('preview-name').style.color = e.target.value);
-        document.getElementById('ctrl-amount-color').addEventListener('input', e => document.getElementById('preview-amount').style.color = e.target.value);
-        document.getElementById('ctrl-text-color').addEventListener('input', e => document.getElementById('preview-text-donate').style.color = e.target.value);
-        document.getElementById('ctrl-img-url').addEventListener('input', e => { if(e.target.value) document.getElementById('preview-image').src = e.target.value; });
-        document.getElementById('ctrl-font').addEventListener('change', e => document.getElementById('preview-alert-content').style.fontFamily = e.target.value);
-
-        // TTS System
-        document.getElementById('ctrl-alert-vol').addEventListener('input', e => document.getElementById('val-alert-vol').innerText = e.target.value);
-        document.getElementById('ctrl-tts-rate').addEventListener('input', e => document.getElementById('val-tts-rate').innerText = e.target.value);
-        document.getElementById('ctrl-tts-pitch').addEventListener('input', e => document.getElementById('val-tts-pitch').innerText = e.target.value);
-        document.getElementById('ctrl-tts-vol').addEventListener('input', e => document.getElementById('val-tts-vol').innerText = e.target.value);
-
-        let voices = [];
-        let voiceLoadInterval;
-        function populateVoices() {
-            voices = window.speechSynthesis.getVoices();
-            const voiceSelect = document.getElementById('ctrl-tts-voice');
-            if (!voiceSelect) return;
-            if (voices.length > 0) {
-                clearInterval(voiceLoadInterval);
-                voiceSelect.innerHTML = ''; 
-                let hasThai = false;
-                voices.forEach((voice, i) => {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    if(voice.lang.includes('th') || voice.name.toLowerCase().includes('thai')) {
-                        option.selected = true; hasThai = true;
+                // ค้นหาคำที่ต้องการแปลและสลับภาษา
+                document.querySelectorAll('.lang-el').forEach(el => {
+                    if(el.hasAttribute(`data-${currentLang}`)) {
+                        el.innerHTML = el.getAttribute(`data-${currentLang}`);
                     }
-                    voiceSelect.appendChild(option);
+                    if(el.hasAttribute(`data-${currentLang}-placeholder`)) {
+                        el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+                    }
                 });
-                if(!hasThai) {
-                    const option = document.createElement('option');
-                    option.textContent = "⚠️ ไม่พบเสียงภาษาไทยในเครื่องนี้";
-                    option.disabled = true;
-                    voiceSelect.appendChild(option);
-                }
-            }
+            });
         }
-        populateVoices();
-        if (speechSynthesis.onvoiceschanged !== undefined) { speechSynthesis.onvoiceschanged = populateVoices; }
-        if (voices.length === 0) { voiceLoadInterval = setInterval(populateVoices, 500); }
 
-        document.getElementById('btn-test-alert').addEventListener('click', () => {
-            const el = document.getElementById('preview-alert-content');
-            el.style.animation = 'none'; el.offsetHeight; el.style.animation = 'fadeIn 0.6s ease-out';
-            
-            const soundType = document.getElementById('ctrl-alert-sound').value;
-            const alertVol = document.getElementById('ctrl-alert-vol').value / 100;
-            let audioUrl = 'https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg'; 
-            if (soundType === 'success') audioUrl = 'https://actions.google.com/sounds/v1/cartoon/pop.ogg'; 
-            
-            const alertSound = new Audio(audioUrl);
-            alertSound.volume = alertVol;
-            alertSound.play();
 
-            alertSound.onended = () => {
-                const ttsVol = document.getElementById('ctrl-tts-vol').value / 100;
-                if (ttsVol === 0) return;
 
-                const speakName = document.getElementById('ctrl-tts-name-toggle').checked;
-                const speakMsg = document.getElementById('ctrl-tts-msg-toggle').checked;
-                const name = document.getElementById('test-name').value;
-                const amount = document.getElementById('test-amount').value;
-                const msg = document.getElementById('test-msg').value;
 
-                let textToSpeak = '';
-                if (speakName) textToSpeak += `${name} โดเนทมา ${amount} บาท `;
-                if (speakMsg) textToSpeak += msg;
-                if (textToSpeak.trim() === '') return;
-
-                const speech = new SpeechSynthesisUtterance(textToSpeak);
-                speech.volume = ttsVol;
-                speech.rate = parseFloat(document.getElementById('ctrl-tts-rate').value);
-                speech.pitch = parseFloat(document.getElementById('ctrl-tts-pitch').value);
-                const voiceIdx = document.getElementById('ctrl-tts-voice').value;
-                if (voiceIdx && voices[voiceIdx]) { speech.voice = voices[voiceIdx]; } else { speech.lang = 'th-TH'; }
-                window.speechSynthesis.speak(speech);
-            };
-        });
-
-        // Goal Preview
-        function updateGoalPreview() {
-            const title = document.getElementById('ctrl-goal-title').value;
-            const target = parseFloat(document.getElementById('ctrl-goal-target').value) || 1;
-            const current = parseFloat(document.getElementById('ctrl-goal-current').value) || 0;
-            let percent = (current / target) * 100;
-            if(percent > 100) percent = 100;
-            document.getElementById('preview-goal-title').innerText = title;
-            document.getElementById('preview-goal-bar').style.width = percent + '%';
-            document.getElementById('preview-goal-percentage').innerHTML = `${current} <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span> (${Math.round(percent)}%)`;
-        }
-        document.getElementById('ctrl-goal-title').addEventListener('input', updateGoalPreview);
-        document.getElementById('ctrl-goal-target').addEventListener('input', updateGoalPreview);
-        document.getElementById('ctrl-goal-current').addEventListener('input', updateGoalPreview);
-        document.getElementById('ctrl-goal-color').addEventListener('input', e => { document.getElementById('preview-goal-bar').style.background = e.target.value; document.getElementById('preview-goal-bar').style.boxShadow = `0 0 15px ${e.target.value}`; });
-        document.getElementById('ctrl-goal-text-color').addEventListener('input', e => document.getElementById('goal-bg-preview').style.color = e.target.value);
-        document.getElementById('ctrl-goal-font').addEventListener('change', e => document.getElementById('goal-bg-preview').style.fontFamily = e.target.value);
-
-        // Top Donor Preview
-        document.getElementById('ctrl-td-title').addEventListener('input', e => document.getElementById('preview-td-title').innerText = e.target.value);
-        document.getElementById('ctrl-td-tcolor').addEventListener('input', e => document.getElementById('preview-td-title').style.color = e.target.value);
-        document.getElementById('ctrl-td-color').addEventListener('input', e => {
-            document.getElementById('preview-td-item1').style.color = e.target.value;
-            document.getElementById('preview-td-item2').style.color = e.target.value;
-        });
-
-        document.getElementById('ctrl-td-transparent-toggle').addEventListener('change', e => {
-            const box = document.getElementById('preview-td-box');
-            if(e.target.checked) box.style.background = 'transparent';
-            else box.style.background = document.getElementById('ctrl-td-bg').value;
-        });
-
-        document.getElementById('ctrl-td-bg').addEventListener('input', e => {
-            if(!document.getElementById('ctrl-td-transparent-toggle').checked) {
-                document.getElementById('preview-td-box').style.background = e.target.value;
-            }
-        });
-        
-        document.getElementById('ctrl-td-border-toggle').addEventListener('change', e => {
-            const box = document.getElementById('preview-td-box');
-            if(e.target.checked) box.style.border = `2px solid ${document.getElementById('ctrl-td-border-color').value}`;
-            else box.style.border = 'none';
-        });
-
-        document.getElementById('ctrl-td-border-color').addEventListener('input', e => {
-            if(document.getElementById('ctrl-td-border-toggle').checked) {
-                document.getElementById('preview-td-box').style.border = `2px solid ${e.target.value}`;
-            }
-        });
     </script>
+</body>
+</html>
 </body>
 </html>
