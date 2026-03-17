@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Ocean Donate</title>
+    <link rel="icon" type="image/png" href="Logo.png?v=2">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -229,7 +230,7 @@
                     <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between;">
                         <div>
                             <h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ</h4>
-                            <a href="#" id="dash-donate-link" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">oceandonate.app/loading...</a>
+                            <a href="#" id="dash-donate-link" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">กำลังโหลดลิงก์...</a>
                         </div>
                         <button class="btn-primary lang-el" onclick="copyDonateLink()" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link">
                             <i class="fas fa-copy"></i> คัดลอกลิงก์
@@ -512,7 +513,7 @@
                 <div><h3 class="lang-el" data-th="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> พร้อมเพย์" data-en="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> PromptPay"><i class="fas fa-qrcode" style="color:#3A86FF;"></i> พร้อมเพย์</h3></div>
                 <label class="switch"><input type="checkbox" id="pp-active" checked><span class="slider"></span></label>
             </div>
-            <div class="form-group"><label class="lang-el" data-th="เบอร์โทรศัพท์" data-en="Phone Number">เบอร์โทรศัพท์</label><input type="text" class="form-control" id="pp-phone" value="0946919475"></div>
+            <div class="form-group"><label class="lang-el" data-th="เบอร์โทรศัพท์" data-en="Phone Number">เบอร์โทรศัพท์</label><input type="text" class="form-control" id="pp-phone" value="0000000000"></div>
             <button class="btn-success w-100 lang-el" onclick="savePromptPay()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')" data-th="ปิด" data-en="Close">ปิด</button>
         </div>
@@ -532,8 +533,8 @@
                     <option value="กรุงเทพ (BBL)" class="lang-el" data-th="ธนาคารกรุงเทพ (BBL)" data-en="Bangkok Bank (BBL)">ธนาคารกรุงเทพ (BBL)</option>
                 </select>
             </div>
-            <div class="form-group"><label class="lang-el" data-th="หมายเลขบัญชี" data-en="Account Number">หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="1961746848"></div>
-            <div class="form-group"><label class="lang-el" data-th="ชื่อเจ้าของบัญชี" data-en="Account Name">ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="สันต์ทศน์ พ."></div>
+            <div class="form-group"><label class="lang-el" data-th="หมายเลขบัญชี" data-en="Account Number">หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="เลขบัญชี 10 หลัก"></div>
+            <div class="form-group"><label class="lang-el" data-th="ชื่อเจ้าของบัญชี" data-en="Account Name">ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="ชื่อ นามสกุลตามบัญชีธนาคาร"></div>
             <button class="btn-success w-100 lang-el" onclick="saveBank()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')" data-th="ปิด" data-en="Close">ปิด</button>
         </div>
@@ -598,7 +599,7 @@
 
         const donateLink = document.getElementById('dash-donate-link');
         if(donateLink) {
-            donateLink.innerText = `oceandonate.app/${username}`;
+            donateLink.innerText = `${baseUrl}/donate.html?u=${username}`;
             donateLink.href = `${baseUrl}/donate.html?u=${username}`;
         }
         document.getElementById('obs-alert-url').value = `${baseUrl}/widget.html?u=${username}`;
@@ -891,30 +892,67 @@
 
 
         // ================= 📌 ระบบแปลภาษา (คืนชีพ!) =================
-        let currentLang = 'th';
-        const langToggle = document.getElementById('langToggle');
-        const flagImg = document.getElementById('flagImg');
-        const langText = document.getElementById('langText');
+        // --- 2. ระบบแปลภาษา (เวอร์ชันอัปเดตครบทุกจุด) ---
+    const langToggle = document.getElementById('langToggle');
+    const langText = document.getElementById('langText');
+    const flagImg = document.getElementById('flagImg');
+    let currentLang = 'th';
 
-        if(langToggle) {
-            langToggle.addEventListener('click', () => {
-                currentLang = currentLang === 'th' ? 'en' : 'th';
-                
-                // เปลี่ยนรูปธงและตัวอักษรบนปุ่ม
-                if(flagImg) flagImg.src = currentLang === 'en' ? "https://flagcdn.com/w20/gb.png" : "https://flagcdn.com/w20/th.png";
-                if(langText) langText.innerText = currentLang === 'en' ? "EN" : "TH";
-
-                // ค้นหาคำที่ต้องการแปลและสลับภาษา
-                document.querySelectorAll('.lang-el').forEach(el => {
-                    if(el.hasAttribute(`data-${currentLang}`)) {
-                        el.innerHTML = el.getAttribute(`data-${currentLang}`);
-                    }
-                    if(el.hasAttribute(`data-${currentLang}-placeholder`)) {
-                        el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
-                    }
-                });
-            });
+    const translations = {
+        th: {
+            home: "หน้าแรก", discovery: "Discovery", how: "วิธีใช้งาน", package: "แพ็กเกจ", contact: "ติดต่อ",
+            login: "เข้าสู่ระบบ", register: "สมัครสมาชิก", lang: "TH - ภาษาไทย",
+            title: "รับเงินโดเนทของคุณ<br>เข้าบัญชีตรง ๆ ทันที",
+            desc: "ระบบโดเนทสำหรับสตรีมเมอร์ยุคใหม่ รับเงินเข้าบัญชีทันที ไม่มีหักค่าธรรมเนียม พร้อมหน้าตาที่สวยงาม ใช้งานง่าย และปรับแต่งได้อิสระตามสไตล์คุณ<br>เพื่อการศึกษาและเป็น Project ยืนสมัครมหาลัยของ นายสันต์ทศน์ พาประเสริฐ",
+            join: "เข้าร่วมกับเรา", flag: "https://flagcdn.com/w20/th.png",
+            discTitle: "ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ", discDesc: "สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate",
+            howTitle: "เริ่มต้นใช้งานใน 3 ขั้นตอน", howDesc: "ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที",
+            pkgTitle: "ฟรี 100% ไม่มีกั๊กฟีเจอร์", pkgDesc: "เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน",
+            contTitle: "ติดต่อเรา", contDesc: "มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ"
+        },
+        en: {
+            home: "Home", discovery: "Discovery", how: "How to use", package: "Pricing", contact: "Contact",
+            login: "Login", register: "Register", lang: "EN - English",
+            title: "Receive Donations<br>Directly & Instantly",
+            desc: "Modern donation system for streamers. Instant transfers, 0% fees, beautiful UI, and fully customizable.<br>Educational project for university admission by Santat Pa-prasert",
+            join: "Join Us", flag: "https://flagcdn.com/w20/gb.png",
+            discTitle: "Find Your Favorite Streamers", discDesc: "Support creators you follow easily via Ocean Donate",
+            howTitle: "Start in 3 Easy Steps", howDesc: "Fast, easy, and ready to receive donations in 5 minutes",
+            pkgTitle: "100% Free, Full Features", pkgDesc: "Because this is an Open Source Project for all streamers",
+            contTitle: "Contact Us", contDesc: "Any questions about my portfolio? Feel free to contact me!"
         }
+    };
+
+    langToggle.onclick = () => {
+        currentLang = currentLang === 'th' ? 'en' : 'th';
+        const t = translations[currentLang];
+        
+        // อัปเดตเมนู
+        document.querySelector('.lang-home').innerHTML = `<i class="fas fa-home"></i> ${t.home}`;
+        document.querySelector('.lang-discovery').innerHTML = `<i class="fas fa-search"></i> ${t.discovery}`;
+        document.querySelector('.lang-how').innerHTML = `<i class="fas fa-book-open"></i> ${t.how}`;
+        document.querySelector('.lang-package').innerHTML = `<i class="fas fa-credit-card"></i> ${t.package}`;
+        document.querySelector('.lang-contact').innerHTML = `<i class="fas fa-comment"></i> ${t.contact}`;
+        document.querySelector('.lang-login').innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.login}`;
+        document.querySelector('.lang-register').innerHTML = `<i class="fas fa-user-plus"></i> ${t.register}`;
+        
+        // อัปเดตหน้า Hero
+        langText.innerText = t.lang;
+        flagImg.src = t.flag;
+        document.getElementById('main-title').innerHTML = t.title;
+        document.getElementById('main-desc').innerHTML = t.desc;
+        document.getElementById('btn-join').innerHTML = `${t.join} <i class="fas fa-arrow-up-right-from-square"></i>`;
+
+        // อัปเดตเนื้อหา Section อื่นๆ (ที่เพิ่มเข้าไปใหม่)
+        document.getElementById('discovery-title').innerText = t.discTitle;
+        document.getElementById('discovery-desc').innerText = t.discDesc;
+        document.getElementById('how-title').innerText = t.howTitle;
+        document.getElementById('how-desc').innerText = t.howDesc;
+        document.getElementById('package-title').innerText = t.pkgTitle;
+        document.getElementById('package-desc').innerText = t.pkgDesc;
+        document.getElementById('contact-title').innerText = t.contTitle;
+        document.getElementById('contact-desc').innerText = t.contDesc;
+    };
 
 
 

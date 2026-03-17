@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ocean Donate | ผลงานโดย สันต์ทศน์</title>
+    <link rel="icon" type="image/png" href="Logo.png?v=2">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="mainstyle.css">
@@ -66,8 +67,8 @@
     <section id="discovery" class="content-section discovery-bg">
         <div class="container">
             <div class="section-header reveal">
-                <h2>ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ</h2>
-                <p>สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate</p>
+                <h2 id="discovery-title">ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ</h2> 
+                <p id="discovery-desc">สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate</p>
             </div>
             <div class="streamer-grid">
                 <div class="streamer-card reveal delay-1">
@@ -95,24 +96,24 @@
     <section id="how" class="content-section">
         <div class="container">
             <div class="section-header reveal">
-                <h2>เริ่มต้นใช้งานใน 3 ขั้นตอน</h2>
-                <p>ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที</p>
+                <h2 id="how-title">เริ่มต้นใช้งานใน 3 ขั้นตอน</h2>
+                <p id="how-desc">ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที</p>
             </div>
             <div class="how-grid">
                 <div class="step-card reveal delay-1">
                     <div class="step-number">1</div>
-                    <h4>สมัครสมาชิกฟรี</h4>
-                    <p>สร้างบัญชีด้วยอีเมล หรือล็อกอินผ่าน Discord / Google สะดวกสุดๆ</p>
+                    <h4 id="step1-title">สมัครสมาชิกฟรี</h4>
+                    <p id="step1-desc">สร้างบัญชีด้วยอีเมล หรือล็อกอินผ่าน Discord / Google สะดวกสุดๆ</p>
                 </div>
                 <div class="step-card reveal delay-2">
                     <div class="step-number">2</div>
-                    <h4>ตั้งค่าช่องทางรับเงิน</h4>
-                    <p>เชื่อมต่อบัญชีธนาคาร หรือพร้อมเพย์ รับเงินตรงไม่ผ่านคนกลาง</p>
+                    <h4 id="step2-title">ตั้งค่าช่องทางรับเงิน</h4>
+                    <p id="step2-desc">เชื่อมต่อบัญชีธนาคาร หรือพร้อมเพย์ รับเงินตรงไม่ผ่านคนกลาง</p>
                 </div>
                 <div class="step-card reveal delay-3">
                     <div class="step-number">3</div>
-                    <h4>นำลิงก์ไปใส่ OBS</h4>
-                    <p>คัดลอก Overlay Link ไปใส่ในโปรแกรมสตรีม แล้วเริ่มรับโดเนทได้เลย!</p>
+                    <h4 id="step3-title">นำลิงก์ไปใส่ OBS</h4>
+                    <p id="step3-desc">คัดลอก Overlay Link ไปใส่ในโปรแกรมสตรีม แล้วเริ่มรับโดเนทได้เลย!</p>
                 </div>
             </div>
         </div>
@@ -121,35 +122,39 @@
     <section id="package" class="content-section discovery-bg">
         <div class="container">
             <div class="section-header reveal">
-                <h2>ฟรี 100% ไม่มีกั๊กฟีเจอร์</h2>
-                <p>เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน</p>
+                <h2 id="package-title">ฟรี 100% ไม่มีกั๊กฟีเจอร์</h2>
+                <p id="package-desc">เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน</p>
             </div>
-            <div class="package-wrapper reveal delay-1">
+            
+            <div class="package-wrapper reveal delay-1" style="display: flex; justify-content: center;">
+                
                 <div class="package-card">
-                    <div class="pkg-header">Ocean <span>FREE</span></div>
-                    <div class="pkg-price">0฿ <span>/ เดือน</span></div>
+                    <div class="pkg-header">Ocean <span id="pkg-free-text">FREE</span></div>
+                    <div class="pkg-price">0฿ <span id="pkg-month-text">/ เดือน</span></div>
                     <ul class="pkg-features">
-                        <li><i class="fas fa-check-circle"></i> รับเงินโดเนท 0% ค่าธรรมเนียม</li>
-                        <li><i class="fas fa-check-circle"></i> ปรับแต่ง Alert ได้อิสระ</li>
-                        <li><i class="fas fa-check-circle"></i> มีหน้าโปรไฟล์สตรีมเมอร์ส่วนตัว</li>
-                        <li><i class="fas fa-check-circle"></i> รองรับเสียงอ่านโดเนท (TTS)</li>
+                        <li><i class="fas fa-check-circle"></i> <span class="lang-pkg-f1">รับเงินโดเนท 0% ค่าธรรมเนียม</span></li>
+                        <li><i class="fas fa-check-circle"></i> <span class="lang-pkg-f2">ปรับแต่ง Alert ได้อิสระ</span></li>
+                        <li><i class="fas fa-check-circle"></i> <span class="lang-pkg-f3">มีหน้าโปรไฟล์สตรีมเมอร์ส่วนตัว</span></li>
+                        <li><i class="fas fa-check-circle"></i> <span class="lang-pkg-f4">รองรับเสียงอ่านโดเนท (TTS)</span></li>
                     </ul>
-                    <a href="auth.html" class="btn-primary" style="display: block; text-align: center; margin-top: 20px;">เริ่มใช้งานเลย</a>
+                    <a href="auth.html" class="btn-primary lang-pkg-btn" style="display: block; text-align: center; margin-top: 20px;">เริ่มใช้งานเลย</a>
                 </div>
+
             </div>
+            
         </div>
     </section>
 
     <section id="contact" class="content-section">
         <div class="container">
             <div class="section-header reveal">
-                <h2>ติดต่อเรา</h2>
-                <p>มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ</p>
+                <h2 id="contact-title">ติดต่อเรา</h2>
+                <p id="contact-desc">มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ</p>
             </div>
             <div class="contact-box">
                 <div class="contact-item reveal delay-1"><i class="fas fa-envelope"></i> santod0946919475@gmail.com</div>
                 <div class="contact-item reveal delay-2"><i class="fab fa-discord"></i> ocean1145</div>
-                <div class="contact-item reveal delay-3"><i class="fab fa-github"></i> github.com/sontod</div>
+                <div class="contact-item reveal delay-3"><i class="fab fa-github"></i> github.com/ThEBlue007</div>
             </div>
         </div>
     </section>
@@ -189,14 +194,53 @@
                 login: "เข้าสู่ระบบ", register: "สมัครสมาชิก", lang: "TH - ภาษาไทย",
                 title: "รับเงินโดเนทของคุณ<br>เข้าบัญชีตรง ๆ ทันที",
                 desc: "ระบบโดเนทสำหรับสตรีมเมอร์ยุคใหม่ รับเงินเข้าบัญชีทันที ไม่มีหักค่าธรรมเนียม พร้อมหน้าตาที่สวยงาม ใช้งานง่าย และปรับแต่งได้อิสระตามสไตล์คุณ<br>เพื่อการศึกษาและเป็น Project ยืนสมัครมหาลัยของ นายสันต์ทศน์ พาประเสริฐ",
-                join: "เข้าร่วมกับเรา", flag: "https://flagcdn.com/w20/th.png"
+                join: "เข้าร่วมกับเรา", flag: "https://flagcdn.com/w20/th.png",
+                discTitle: "ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ", 
+                discDesc: "สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate",
+                howTitle: "เริ่มต้นใช้งานใน 3 ขั้นตอน", 
+                howDesc: "ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที",
+                step1T: "สมัครสมาชิกฟรี", step1D: "สร้างบัญชีด้วยอีเมล หรือล็อกอินผ่าน Discord / Google สะดวกสุดๆ",
+                step2T: "ตั้งค่าช่องทางรับเงิน", step2D: "เชื่อมต่อบัญชีธนาคาร หรือพร้อมเพย์ รับเงินตรงไม่ผ่านคนกลาง",
+                step3T: "นำลิงก์ไปใส่ OBS", step3D: "คัดลอก Overlay Link ไปใส่ในโปรแกรมสตรีม แล้วเริ่มรับโดเนทได้เลย!",
+                pkgTitle: "ฟรี 100% ไม่มีกั๊กฟีเจอร์", 
+                pkgDesc: "เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน",
+                contactTitle: "ติดต่อเรา", 
+                contactDesc: "มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ",
+                catGaming: "🎮 เกมมิ่ง", 
+                catVtuber: "🌸 VTuber", 
+                catIrl: "🎤 พูดคุย (IRL)",
+                donateBtn: "โดเนทเลย",
+                pkgFree: "FREE", pkgMonth: "/ เดือน",
+                pkgF1: "รับเงินโดเนท 0% ค่าธรรมเนียม", pkgF2: "ปรับแต่ง Alert ได้อิสระ",
+                pkgF3: "มีหน้าโปรไฟล์สตรีมเมอร์ส่วนตัว", pkgF4: "รองรับเสียงอ่านโดเนท (TTS)",
+                pkgBtn: "เริ่มใช้งานเลย"
             },
             en: {
                 home: "Home", discovery: "Discovery", how: "How to use", package: "Pricing", contact: "Contact",
                 login: "Login", register: "Register", lang: "EN - English",
                 title: "Receive Donations<br>Directly & Instantly",
                 desc: "Modern donation system for streamers. Instant transfers, 0% fees, beautiful UI, and fully customizable.<br>Educational project for university admission by Santat Pa-prasert",
-                join: "Join Us", flag: "https://flagcdn.com/w20/gb.png"
+                join: "Join Us", flag: "https://flagcdn.com/w20/gb.png",
+                discTitle: "Find Your Favorite Streamers", 
+                discDesc: "Support your favorite creators easily via Ocean Donate",
+                howTitle: "Get Started in 3 Steps", 
+                howDesc: "Fast, easy, and ready to receive donations within 5 minutes",
+                step1T: "Sign Up for Free", step1D: "Create an account via Email, Discord, or Google. Super easy!",
+                step2T: "Setup Payments", step2D: "Connect your Bank or PromptPay. Get paid directly.",
+                step3T: "Add Link to OBS", step3D: "Copy Overlay Link to your streaming software and start!",
+                pkgTitle: "100% Free, All Features", 
+                pkgDesc: "An Open Source Project built for every streamer",
+                contactTitle: "Contact Us", 
+                contactDesc: "Any questions about my portfolio? Feel free to reach out!",
+                catGaming: "🎮 Gaming", 
+                catVtuber: "🌸 VTuber", 
+                catIrl: "🎤 Talk (IRL)",
+                donateBtn: "Donate Now",
+                pkgFree: "FREE", pkgMonth: "/ Month",
+                pkgF1: "0% Transaction Fees", pkgF2: "Fully Customizable Alerts",
+                pkgF3: "Personal Streamer Profile", pkgF4: "Text-to-Speech (TTS) Support",
+                pkgBtn: "Get Started Now"
+                
             }
         };
 
@@ -215,6 +259,46 @@
             document.getElementById('main-title').innerHTML = t.title;
             document.getElementById('main-desc').innerHTML = t.desc;
             document.getElementById('btn-join').innerHTML = `${t.join} <i class="fas fa-arrow-up-right-from-square"></i>`;
+            document.getElementById('discovery-title').innerText = t.discTitle;
+            document.getElementById('discovery-desc').innerText = t.discDesc;
+            document.getElementById('how-title').innerText = t.howTitle;
+            document.getElementById('how-desc').innerText = t.howDesc;
+            document.getElementById('package-title').innerText = t.pkgTitle;
+            document.getElementById('package-desc').innerText = t.pkgDesc;
+            document.getElementById('contact-title').innerText = t.contactTitle;
+            document.getElementById('contact-desc').innerText = t.contactDesc;
+
+            document.querySelectorAll('.btn-donate').forEach(el => el.innerText = t.donateBtn);
+            const cats = document.querySelectorAll('.streamer-category');
+            if(cats[0]) cats[0].innerText = t.catGaming;
+            if(cats[1]) cats[1].innerText = t.catVtuber;
+            if(cats[2]) cats[2].innerText = t.catIrl;
+
+            // 2. เปลี่ยนข้อความในการ์ด Package (ใช้ ID หรือ Class ที่เราเติมเพิ่ม)
+            const pkgTitle = document.querySelector('.pkg-header span');
+            if(pkgTitle) pkgTitle.innerText = t.pkgFree;
+            
+            const pkgPrice = document.querySelector('.pkg-price span');
+            if(pkgPrice) pkgPrice.innerText = t.pkgMonth;
+
+            const features = document.querySelectorAll('.pkg-features li');
+            if(features.length >= 4) {
+                features[0].innerHTML = `<i class="fas fa-check-circle"></i> ${t.pkgF1}`;
+                features[1].innerHTML = `<i class="fas fa-check-circle"></i> ${t.pkgF2}`;
+                features[2].innerHTML = `<i class="fas fa-check-circle"></i> ${t.pkgF3}`;
+                features[3].innerHTML = `<i class="fas fa-check-circle"></i> ${t.pkgF4}`;
+            }
+            
+            const pkgBtn = document.querySelector('#package .btn-primary');
+            if(pkgBtn) pkgBtn.innerText = t.pkgBtn;
+            
+            // เปลี่ยนข้อความในการ์ด 3 ขั้นตอน
+            document.querySelectorAll('.step-card h4')[0].innerText = t.step1T;
+            document.querySelectorAll('.step-card p')[0].innerText = t.step1D;
+            document.querySelectorAll('.step-card h4')[1].innerText = t.step2T;
+            document.querySelectorAll('.step-card p')[1].innerText = t.step2D;
+            document.querySelectorAll('.step-card h4')[2].innerText = t.step3T;
+            document.querySelectorAll('.step-card p')[2].innerText = t.step3D;
         };
 
         // --- 3. ระบบ Scroll Reveal แอนิเมชันเลื่อนจอ (ใหม่ล่าสุด!) ---
