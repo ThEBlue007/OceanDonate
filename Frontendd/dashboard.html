@@ -543,6 +543,36 @@
     
     <script src="/socket.io/socket.io.js"></script>
     <script>
+
+        // ================= 📌 ระบบแปลภาษา (ย้ายขึ้นมาบนสุด!) =================
+        const langToggle = document.getElementById('langToggle');
+        const langText = document.getElementById('langText');
+        const flagImg = document.getElementById('flagImg');
+        let currentLang = 'th';
+
+        if(langToggle) {
+            langToggle.onclick = () => {
+                currentLang = currentLang === 'th' ? 'en' : 'th';
+                
+                if (currentLang === 'en') {
+                    if(langText) langText.innerText = 'EN';
+                    if(flagImg) flagImg.src = 'https://flagcdn.com/w20/gb.png';
+                } else {
+                    if(langText) langText.innerText = 'TH';
+                    if(flagImg) flagImg.src = 'https://flagcdn.com/w20/th.png';
+                }
+
+                document.querySelectorAll('.lang-el').forEach(el => {
+                    if (el.hasAttribute(`data-${currentLang}`)) {
+                        el.innerHTML = el.getAttribute(`data-${currentLang}`);
+                    }
+                    if (el.hasAttribute(`data-${currentLang}-placeholder`)) {
+                        el.setAttribute('placeholder', el.getAttribute(`data-${currentLang}-placeholder`));
+                    }
+                });
+            };
+        }
+
         // ================= 📌 1. ระบบควบคุมหน้าเว็บ (UI Dashboard) =================
         document.querySelectorAll('.tab-link').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -889,72 +919,6 @@
             tdPreviewBox.innerHTML = titleHTML + itemsHTML;
             updateTopDonorPreview(); // โหลดสีทับเข้าไปใหม่ให้สวยงาม
         });
-
-
-        // ================= 📌 ระบบแปลภาษา (คืนชีพ!) =================
-        // --- 2. ระบบแปลภาษา (เวอร์ชันอัปเดตครบทุกจุด) ---
-    const langToggle = document.getElementById('langToggle');
-    const langText = document.getElementById('langText');
-    const flagImg = document.getElementById('flagImg');
-    let currentLang = 'th';
-
-    const translations = {
-        th: {
-            home: "หน้าแรก", discovery: "Discovery", how: "วิธีใช้งาน", package: "แพ็กเกจ", contact: "ติดต่อ",
-            login: "เข้าสู่ระบบ", register: "สมัครสมาชิก", lang: "TH - ภาษาไทย",
-            title: "รับเงินโดเนทของคุณ<br>เข้าบัญชีตรง ๆ ทันที",
-            desc: "ระบบโดเนทสำหรับสตรีมเมอร์ยุคใหม่ รับเงินเข้าบัญชีทันที ไม่มีหักค่าธรรมเนียม พร้อมหน้าตาที่สวยงาม ใช้งานง่าย และปรับแต่งได้อิสระตามสไตล์คุณ<br>เพื่อการศึกษาและเป็น Project ยืนสมัครมหาลัยของ นายสันต์ทศน์ พาประเสริฐ",
-            join: "เข้าร่วมกับเรา", flag: "https://flagcdn.com/w20/th.png",
-            discTitle: "ค้นหาสตรีมเมอร์ที่คุณชื่นชอบ", discDesc: "สนับสนุนครีเอเตอร์ที่คุณติดตามได้ง่ายๆ ผ่าน Ocean Donate",
-            howTitle: "เริ่มต้นใช้งานใน 3 ขั้นตอน", howDesc: "ง่าย รวดเร็ว พร้อมรับโดเนทได้ทันทีภายใน 5 นาที",
-            pkgTitle: "ฟรี 100% ไม่มีกั๊กฟีเจอร์", pkgDesc: "เพราะนี่คือ Open Source Project สำหรับสตรีมเมอร์ทุกคน",
-            contTitle: "ติดต่อเรา", contDesc: "มีข้อสงสัยหรือต้องการสอบถามเกี่ยวกับการยื่นพอร์ต ติดต่อผมได้เลยครับ"
-        },
-        en: {
-            home: "Home", discovery: "Discovery", how: "How to use", package: "Pricing", contact: "Contact",
-            login: "Login", register: "Register", lang: "EN - English",
-            title: "Receive Donations<br>Directly & Instantly",
-            desc: "Modern donation system for streamers. Instant transfers, 0% fees, beautiful UI, and fully customizable.<br>Educational project for university admission by Santat Pa-prasert",
-            join: "Join Us", flag: "https://flagcdn.com/w20/gb.png",
-            discTitle: "Find Your Favorite Streamers", discDesc: "Support creators you follow easily via Ocean Donate",
-            howTitle: "Start in 3 Easy Steps", howDesc: "Fast, easy, and ready to receive donations in 5 minutes",
-            pkgTitle: "100% Free, Full Features", pkgDesc: "Because this is an Open Source Project for all streamers",
-            contTitle: "Contact Us", contDesc: "Any questions about my portfolio? Feel free to contact me!"
-        }
-    };
-
-    langToggle.onclick = () => {
-        currentLang = currentLang === 'th' ? 'en' : 'th';
-        const t = translations[currentLang];
-        
-        // อัปเดตเมนู
-        document.querySelector('.lang-home').innerHTML = `<i class="fas fa-home"></i> ${t.home}`;
-        document.querySelector('.lang-discovery').innerHTML = `<i class="fas fa-search"></i> ${t.discovery}`;
-        document.querySelector('.lang-how').innerHTML = `<i class="fas fa-book-open"></i> ${t.how}`;
-        document.querySelector('.lang-package').innerHTML = `<i class="fas fa-credit-card"></i> ${t.package}`;
-        document.querySelector('.lang-contact').innerHTML = `<i class="fas fa-comment"></i> ${t.contact}`;
-        document.querySelector('.lang-login').innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.login}`;
-        document.querySelector('.lang-register').innerHTML = `<i class="fas fa-user-plus"></i> ${t.register}`;
-        
-        // อัปเดตหน้า Hero
-        langText.innerText = t.lang;
-        flagImg.src = t.flag;
-        document.getElementById('main-title').innerHTML = t.title;
-        document.getElementById('main-desc').innerHTML = t.desc;
-        document.getElementById('btn-join').innerHTML = `${t.join} <i class="fas fa-arrow-up-right-from-square"></i>`;
-
-        // อัปเดตเนื้อหา Section อื่นๆ (ที่เพิ่มเข้าไปใหม่)
-        document.getElementById('discovery-title').innerText = t.discTitle;
-        document.getElementById('discovery-desc').innerText = t.discDesc;
-        document.getElementById('how-title').innerText = t.howTitle;
-        document.getElementById('how-desc').innerText = t.howDesc;
-        document.getElementById('package-title').innerText = t.pkgTitle;
-        document.getElementById('package-desc').innerText = t.pkgDesc;
-        document.getElementById('contact-title').innerText = t.contTitle;
-        document.getElementById('contact-desc').innerText = t.contDesc;
-    };
-
-
 
 
     </script>
