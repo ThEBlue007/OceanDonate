@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Ocean Donate</title>
-    <link rel="icon" type="image/png" href="Logo.png?v=2">
+    <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -790,6 +790,48 @@
         ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', updateGoalPreview);
+        });
+
+        // 🟢 2. ระบบ Live Preview สำหรับ Donate Alert (ที่ตกหล่นไป)
+        function updateAlertPreview() {
+            const name = document.getElementById('test-name')?.value || 'โทนี่';
+            const amount = document.getElementById('test-amount')?.value || '500';
+            const msg = document.getElementById('test-msg')?.value || 'ติดตามมานานแล้วครับ FC มากๆ ครับ';
+            
+            const nameColor = document.getElementById('ctrl-name-color')?.value || '#f59e0b';
+            const amountColor = document.getElementById('ctrl-amount-color')?.value || '#5BC0EB';
+            const textColor = document.getElementById('ctrl-text-color')?.value || '#ffffff';
+            const imgUrl = document.getElementById('ctrl-img-url')?.value || 'https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png';
+            const font = document.getElementById('ctrl-font')?.value || "'Kanit', sans-serif";
+
+            if(document.getElementById('preview-name')) { document.getElementById('preview-name').innerText = name; document.getElementById('preview-name').style.color = nameColor; }
+            if(document.getElementById('preview-amount')) { document.getElementById('preview-amount').innerText = `${amount} บาท`; document.getElementById('preview-amount').style.color = amountColor; }
+            if(document.getElementById('preview-msg')) { document.getElementById('preview-msg').innerText = msg; document.getElementById('preview-msg').style.color = textColor; }
+            if(document.getElementById('preview-text-donate')) { document.getElementById('preview-text-donate').style.color = textColor; }
+            if(document.getElementById('preview-image')) { document.getElementById('preview-image').src = imgUrl; }
+            if(document.getElementById('preview-alert-content')) { document.getElementById('preview-alert-content').style.fontFamily = font; }
+        }
+
+        ['test-name', 'test-amount', 'test-msg', 'ctrl-name-color', 'ctrl-amount-color', 'ctrl-text-color', 'ctrl-img-url', 'ctrl-font'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', updateAlertPreview);
+                if(el.tagName === 'SELECT') el.addEventListener('change', updateAlertPreview);
+            }
+        }); 
+
+        // ระบบเปลี่ยน Layout ซ้าย/ขวา
+        document.querySelectorAll('.layout-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.layout-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const layoutType = this.getAttribute('data-layout');
+                const alertContent = document.getElementById('preview-alert-content');
+                if(alertContent) {
+                    if(layoutType === 'row') alertContent.classList.add('layout-row');
+                    else alertContent.classList.remove('layout-row');
+                }
+            });
         });
 
         // 🟢 ระบบบันทึก Widgets แบบกันพัง
