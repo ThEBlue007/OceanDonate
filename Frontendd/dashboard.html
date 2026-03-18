@@ -774,20 +774,31 @@
             const target = parseFloat(document.getElementById('ctrl-goal-target')?.value) || 100;
             const current = parseFloat(document.getElementById('ctrl-goal-current')?.value) || 0;
             const barColor = document.getElementById('ctrl-goal-color')?.value || '#0ea5e9';
+            const textColor = document.getElementById('ctrl-goal-text-color')?.value || '#ffffff'; // <-- ดึงค่าสีตัวหนังสือมาแล้ว
             
             let percent = (current / target) * 100;
             if (percent > 100) percent = 100;
 
-            if(document.getElementById('preview-goal-title')) document.getElementById('preview-goal-title').innerText = title;
+            const titleEl = document.getElementById('preview-goal-title');
+            if(titleEl) {
+                titleEl.innerText = title;
+                titleEl.style.color = textColor; // <-- สั่งเปลี่ยนสีหัวข้อ
+            }
+
             if(document.getElementById('preview-goal-bar')) {
                 document.getElementById('preview-goal-bar').style.width = percent + '%';
                 document.getElementById('preview-goal-bar').style.backgroundColor = barColor;
             }
-            if(document.getElementById('preview-goal-percentage')) {
-                document.getElementById('preview-goal-percentage').innerText = `${current.toLocaleString()} บาท (${Math.round(percent)}%)`;
+            
+            const percentEl = document.getElementById('preview-goal-percentage');
+            if(percentEl) {
+                percentEl.innerText = `${current.toLocaleString()} บาท (${Math.round(percent)}%)`;
+                percentEl.style.color = textColor; // <-- สั่งเปลี่ยนสีตัวเลขเปอร์เซ็นต์
             }
         }
-        ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color'].forEach(id => {
+        
+        // 👇 ตรงนี้สำคัญมาก! ต้องเพิ่ม 'ctrl-goal-text-color' เข้าไปเพื่อให้ระบบรู้ว่าถ้าเปลี่ยนสี ให้ภาพขยับตาม
+        ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color', 'ctrl-goal-text-color'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', updateGoalPreview);
         });
