@@ -1,6 +1,19 @@
 {
+  "name": "oceandonate",
+  "version": "1.0.0",
+  "main": "Backend/server.js",
+  "scripts": {
+    "start": "node Backend/server.js",
+    "build": "npm install --prefix Backend",
+    "postinstall": "npm install --prefix Backend"
+  },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.1.0",
-    "mongoose": "^9.3.0"
+    "mongoose": "^9.12.0",
+    "socket.io": "^4.8.3"
   }
 }

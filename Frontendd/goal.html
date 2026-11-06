@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Donate Goal Widget</title>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* รูปแบบพื้นฐานของ Widget ต้องโปร่งใส */
         body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; background: transparent; color: white; }
         
         .goal-container { width: 100%; max-width: 600px; text-align: center; padding: 15px; }
@@ -18,11 +17,10 @@
             overflow: hidden; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
         }
         
-        /* แอนิเมชันหลอดวิ่ง */
         .goal-bar-fill { 
-            height: 100%; width: 0%; background: #ff0000; 
+            height: 100%; width: 0%; background: #0ea5e9; 
             border-radius: 25px; 
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; 
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; 
         }
         
         .goal-text { 
@@ -43,38 +41,30 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
+        const widgetToken = urlParams.get('token');
         const streamerName = urlParams.get('u');
         
-        // 1. เชื่อมต่อ Server (ไม่มี localhost เพราะเตรียมขึ้นโฮสต์)
         const socket = io(); 
 
-        // 🟢 2. ท่าไม้ตายแก้บั๊ก "ไม่ต้องกด Refresh": ทันทีที่เน็ตต่อติด ให้ดึงข้อมูลทันที!
         socket.on('connect', () => {
-            console.log("เชื่อมต่อเซิร์ฟเวอร์สำเร็จ!");
-            socket.emit('join_profile', streamerName);
+            socket.emit('join_widget', { token: widgetToken, username: streamerName });
         });
 
-        // 🟢 3. รับข้อมูลจาก Dashboard / Server มาอัปเดตหลอด Goal
         socket.on('apply_goal', (goal) => {
             if (!goal) return;
 
-            // แปลงตัวเลข
             const current = parseFloat(goal.current) || 0;
             const target = parseFloat(goal.target) || 100;
             
-            // คำนวณเปอร์เซ็นต์ (ไม่ให้หลอดทะลุ 100%)
             let percent = (current / target) * 100;
             if (percent > 100) percent = 100;
 
-            // อัปเดตข้อความและสี
             document.getElementById('goal-title').innerText = goal.title || 'เป้าหมายโดเนท';
             document.getElementById('goal-bar').style.width = percent + '%';
-            document.getElementById('goal-bar').style.backgroundColor = goal.barColor || '#ff0000';
+            document.getElementById('goal-bar').style.backgroundColor = goal.barColor || '#0ea5e9';
             
-            // โชว์ข้อความ เช่น 50 / 100 บาท (50%)
             document.getElementById('goal-text').innerText = `${current.toLocaleString()} / ${target.toLocaleString()} บาท (${Math.round(percent)}%)`;
 
-            // อัปเดตสีตัวหนังสือและฟอนต์
             if (goal.textColor) {
                 document.getElementById('goal-title').style.color = goal.textColor;
                 document.getElementById('goal-text').style.color = goal.textColor;

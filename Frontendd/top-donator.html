@@ -2,17 +2,18 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <title>Top Donators Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; color: white; transition: 0.3s; }
+        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; color: white; transition: 0.3s; background: transparent; }
         .leaderboard-box { background: rgba(0, 0, 0, 0.6); border-radius: 15px; padding: 20px; width: 350px; backdrop-filter: blur(10px); transition: 0.3s; }
         .title { font-size: 1.5rem; font-weight: bold; color: #5BC0EB; text-align: center; margin-bottom: 15px; text-shadow: 0 2px 5px black; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; transition: 0.3s; }
         
-        /* 📌 จุดที่แก้ไข: เปลี่ยน background เป็น transparent เอาสีขาวจางๆ ออกไปเลย */
         .list-item { display: flex; align-items: center; justify-content: space-between; background: transparent; border: none; margin-bottom: 10px; padding: 12px 15px; border-radius: 10px; transition: 0.3s; }
         
         .rank { font-size: 1.2rem; font-weight: bold; width: 30px; text-shadow: 0 1px 2px black; }
-        .name { flex: 1; font-weight: 500; font-size: 1.1rem; text-shadow: 0 1px 2px black; }
-        .amount { font-weight: bold; color: inherit; font-size: 1.1rem; text-shadow: 0 1px 2px black; }
+        .name { flex: 1; font-weight: 500; font-size: 1.1rem; text-shadow: 0 1px 2px black; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
+        .amount { font-weight: bold; color: inherit; font-size: 1.1rem; text-shadow: 0 1px 2px black; white-space: nowrap; }
 
         .rank-1 { color: #fbbf24; font-size: 1.5rem; } .rank-2 { color: #94a3b8; font-size: 1.3rem; } .rank-3 { color: #b45309; font-size: 1.3rem; } 
     </style>
@@ -26,29 +27,48 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const streamerName = urlParams.get('u') || 'Zantots';
+        const widgetToken = urlParams.get('token');
+        const streamerName = urlParams.get('u') || 'OceanDIWa';
+        
         const socket = io(); 
 
         socket.on('connect', () => {
-            socket.emit('join_profile', streamerName);
+            socket.emit('join_widget', { token: widgetToken, username: streamerName });
         });
 
         socket.on('apply_top_donor', (settings) => {
+            if (!settings) return;
             const box = document.getElementById('td-box');
-            if (settings.isTransparent) { box.style.background = 'transparent'; box.style.backdropFilter = 'none'; } 
-            else { box.style.background = settings.boxColor; box.style.backdropFilter = 'blur(10px)'; }
+            if (settings.isTransparent) { 
+                box.style.background = 'transparent'; 
+                box.style.backdropFilter = 'none'; 
+            } else { 
+                box.style.background = settings.boxColor || 'rgba(0, 0, 0, 0.6)'; 
+                box.style.backdropFilter = 'blur(10px)'; 
+            }
             
-            if (settings.hasBorder === false) { box.style.border = 'none'; box.style.boxShadow = 'none'; } 
-            else { const bColor = settings.borderColor || '#3A86FF'; box.style.border = `2px solid ${bColor}`; box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)'; }
+            if (settings.hasBorder === false) { 
+                box.style.border = 'none'; 
+                box.style.boxShadow = 'none'; 
+            } else { 
+                const bColor = settings.borderColor || '#3A86FF'; 
+                box.style.border = `2px solid ${bColor}`; 
+                box.style.boxShadow = '0 10px 30px rgba(0,0,0,0.8)'; 
+            }
 
-            document.getElementById('td-title').style.color = settings.titleColor;
-            document.getElementById('td-title').innerText = settings.title;
-            document.body.style.color = settings.textColor; 
+            document.getElementById('td-title').style.color = settings.titleColor || '#5BC0EB';
+            document.getElementById('td-title').innerText = settings.title || '🏆 Top Donators';
+            document.body.style.color = settings.textColor || '#ffffff'; 
         });
 
         socket.on('update_leaderboard', (topDonators) => {
             const container = document.getElementById('leaderboard-content');
+            if (!container) return;
             container.innerHTML = ''; 
+            if (!topDonators || topDonators.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 15px;">ยังไม่มีข้อมูลการโดเนท</div>';
+                return;
+            }
             topDonators.forEach((donator, index) => {
                 let rankClass = ''; let rankText = `#${index + 1}`;
                 if (index === 0) { rankClass = 'rank-1'; rankText = '👑'; }

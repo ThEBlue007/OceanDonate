@@ -2,91 +2,325 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <title>Donate Alert Widget</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; }
-        #alert-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; transition: all 0.5s ease; }
-        
-        #alert-box.layout-row { flex-direction: row; gap: 20px; text-align: left; }
-        #alert-box.layout-row .image-box img { width: 100px; height: 100px; margin-bottom: 0; }
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: 'Kanit', sans-serif; 
+            background: transparent; 
+        }
 
-        @keyframes popIn { 0% { transform: translate(-50%, -40%) scale(0.8); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
-        .show-alert { animation: popIn 0.8s forwards; opacity: 1 !important; }
-        .image-box img { width: 150px; height: 150px; border-radius: 15px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.5); margin-bottom: 15px; transition: 0.3s; }
-        .text-main { font-size: 2rem; font-weight: bold; color: white; text-shadow: 0 3px 5px rgba(0,0,0,1); transition: 0.3s; }
-        .text-msg { font-size: 1.5rem; color: #e2e8f0; text-shadow: 0 2px 4px rgba(0,0,0,1); margin-top: 10px; }
+        #alert-box { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            opacity: 0; 
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            max-width: 90vw;
+            pointer-events: none;
+        }
+        
+        /* 🟢 Layout แบบ Row ที่ถูกต้อง: ซ้ายเป็นรูป ขวาเป็นกล่องข้อความซ้อนกัน 2 บรรทัด */
+        #alert-box.layout-row { 
+            flex-direction: row; 
+            align-items: center; 
+            text-align: left; 
+            gap: 25px; 
+            background: rgba(5, 8, 17, 0.75);
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+        #alert-box.layout-row .image-box img { 
+            width: 120px; 
+            height: 120px; 
+            margin-bottom: 0; 
+        }
+        #alert-box.layout-row .alert-text-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        @keyframes popIn { 
+            0% { transform: translate(-50%, -40%) scale(0.8); opacity: 0; } 
+            50% { transform: translate(-50%, -50%) scale(1.06); opacity: 1; } 
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+        }
+        .show-alert { 
+            animation: popIn 0.6s forwards !important; 
+            opacity: 1 !important; 
+        }
+
+        .image-box img { 
+            width: 160px; 
+            height: 160px; 
+            border-radius: 18px; 
+            object-fit: cover; 
+            box-shadow: 0 12px 25px rgba(0,0,0,0.6); 
+            margin-bottom: 15px; 
+            transition: 0.3s; 
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .alert-text-wrapper {
+            max-width: 600px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .text-main { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            color: white; 
+            text-shadow: 0 3px 8px rgba(0,0,0,0.9); 
+            line-height: 1.3;
+            margin-bottom: 6px;
+        }
+        .text-msg { 
+            font-size: 1.5rem; 
+            color: #f1f5f9; 
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9); 
+            line-height: 1.4;
+            max-height: 150px;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
     <div id="alert-box">
-        <div class="image-box"><img id="alert-img" src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWp1YzJxajRrMjlhdDZmaXdkcHRkMnphM2I5ODJhZmlyOWVvYm45ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YaP3iYxN3T8nIEN5rD/giphy.gif" alt="img"></div>
-        <div class="text-main"><span id="donator-name">Name</span> <span id="text-donate">โดเนทมา</span> <span id="donate-amount">0 บาท</span></div>
-        <div class="text-msg" id="donate-message">Message here</div>
+        <div class="image-box">
+            <img id="alert-img" src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWp1YzJxajRrMjlhdDZmaXdkcHRkMnphM2I5ODJhZmlyOWVvYm45ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YaP3iYxN3T8nIEN5rD/giphy.gif" alt="img">
+        </div>
+        <div class="alert-text-wrapper">
+            <div class="text-main">
+                <span id="donator-name">Name</span> 
+                <span id="text-donate">โดเนทมา</span> 
+                <span id="donate-amount">0 บาท</span>
+            </div>
+            <div class="text-msg" id="donate-message">Message here</div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        let targetUser = urlParams.get('u') || 'Zantots';
+        const widgetToken = urlParams.get('token');
+        const targetUser = urlParams.get('u') || 'OceanDIWa';
+        
         const socket = io(); 
 
+        let activeSettings = {
+            layout: 'main',
+            sound: 'boing',
+            soundVol: 75,
+            ttsRate: 1.0,
+            ttsPitch: 1.0,
+            ttsVol: 100,
+            ttsNameToggle: true,
+            ttsMsgToggle: true,
+            imgUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWp1YzJxajRrMjlhdDZmaXdkcHRkMnphM2I5ODJhZmlyOWVvYm45ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YaP3iYxN3T8nIEN5rD/giphy.gif',
+            nameColor: '#f59e0b',
+            amountColor: '#5BC0EB',
+            textColor: '#ffffff',
+            font: "'Kanit', sans-serif"
+        };
+
         socket.on('connect', () => {
-            socket.emit('join_profile', targetUser);
+            console.log("Connected to OceanDonate Widget Socket");
+            // เชื่อมต่อด้วย token ลับ หรือ fallback username
+            socket.emit('join_widget', { token: widgetToken, username: targetUser });
         });
         
         let alertQueue = [];
         let isAlertActive = false; 
 
+        // 🟢 ระบบสร้างเสียงแจ้งเตือนแบบ Web Audio API (เล่นได้ 100% ไม่พึ่งพาเซิร์ฟเวอร์ภายนอก)
+        function playSynthesizedSound(type, volumeRatio) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime((volumeRatio || 0.75) * 0.3, now);
+                gain.connect(ctx.destination);
+
+                if (type === 'success' || type === 'coin') {
+                    // เสียงเหรียญ Coin Drop ติ๊งๆ 2 จังหวะ
+                    const osc1 = ctx.createOscillator();
+                    const osc2 = ctx.createOscillator();
+                    osc1.type = 'sine';
+                    osc2.type = 'triangle';
+                    osc1.frequency.setValueAtTime(987.77, now); // B5
+                    osc1.frequency.setValueAtTime(1318.51, now + 0.1); // E6
+                    osc1.connect(gain);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc1.start(now);
+                    osc1.stop(now + 0.6);
+                } else {
+                    // เสียง Boing / BB Spirit ตึ๋ง!
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(260, now);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(320, now + 0.35);
+                    osc.connect(gain);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                }
+            } catch (err) {
+                console.warn("Synthesized audio error:", err);
+            }
+        }
+
         socket.on('apply_settings', (settings) => {
-            if(!settings) return;
+            if (!settings) return;
+            activeSettings = { ...activeSettings, ...settings };
+
             const imgEl = document.getElementById('alert-img');
-            if(imgEl) imgEl.src = settings.imgUrl;
+            if (imgEl && activeSettings.imgUrl) {
+                imgEl.src = activeSettings.imgUrl;
+            }
             
             const nameEl = document.getElementById('donator-name');
             const amountEl = document.getElementById('donate-amount');
             const textDonateEl = document.getElementById('text-donate');
-            if(nameEl) nameEl.style.color = settings.nameColor;
-            if(amountEl) amountEl.style.color = settings.amountColor;
-            if(textDonateEl) textDonateEl.style.color = settings.textColor;
+            const messageEl = document.getElementById('donate-message');
+            
+            if (nameEl) nameEl.style.color = activeSettings.nameColor || '#f59e0b';
+            if (amountEl) amountEl.style.color = activeSettings.amountColor || '#5BC0EB';
+            if (textDonateEl) textDonateEl.style.color = activeSettings.textColor || '#ffffff';
+            if (messageEl) messageEl.style.color = activeSettings.textColor || '#f1f5f9';
 
             const alertBox = document.getElementById('alert-box');
-            if(settings.layout === 'row') alertBox.classList.add('layout-row');
-            else alertBox.classList.remove('layout-row');
+            if (alertBox) {
+                if (activeSettings.layout === 'row') {
+                    alertBox.classList.add('layout-row');
+                } else {
+                    alertBox.classList.remove('layout-row');
+                }
+                if (activeSettings.font) {
+                    alertBox.style.fontFamily = activeSettings.font;
+                }
+            }
         });
 
         socket.on('show_alert', (data) => {
             alertQueue.push(data); 
-            if (!isAlertActive) processNextAlert(); 
+            if (!isAlertActive) {
+                processNextAlert(); 
+            }
         });
 
+        // 🟢 ระบบรันคิวแจ้งเตือนแบบ State Machine (ป้องกันเสียงซ้อน & ไม่ค้าง 100%)
         function processNextAlert() {
-            if (alertQueue.length === 0) { isAlertActive = false; return; }
+            if (alertQueue.length === 0) { 
+                isAlertActive = false; 
+                return; 
+            }
             isAlertActive = true; 
             const data = alertQueue.shift(); 
 
-            document.getElementById('donator-name').innerText = data.name;
-            document.getElementById('donate-amount').innerText = data.amount + ' บาท';
-            document.getElementById('donate-message').innerText = data.message;
+            const donatorName = data.name || 'ผู้ไม่ประสงค์ออกนาม';
+            const donateAmount = (data.amount || 0).toLocaleString();
+            const donateMessage = data.message || '';
+
+            document.getElementById('donator-name').innerText = donatorName;
+            document.getElementById('donate-amount').innerText = donateAmount + ' บาท';
+            document.getElementById('donate-message').innerText = donateMessage;
+
+            // 🟢 ฟีเจอร์: แสดงรูปภาพ/GIF ที่ผู้โดเนทแนบมา (ถ้ามี)
+            const imgEl = document.getElementById('alert-img');
+            if (data.imageUrl && data.imageUrl.trim() !== '') {
+                imgEl.src = data.imageUrl.trim();
+            } else {
+                imgEl.src = activeSettings.imgUrl || 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWp1YzJxajRrMjlhdDZmaXdkcHRkMnphM2I5ODJhZmlyOWVvYm45ZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/YaP3iYxN3T8nIEN5rD/giphy.gif';
+            }
 
             const alertBox = document.getElementById('alert-box');
             alertBox.classList.remove('show-alert');
             alertBox.style.opacity = '0';
-            void alertBox.offsetWidth; 
+            void alertBox.offsetWidth; // Trigger reflow
             alertBox.classList.add('show-alert');
 
-            const alertSound = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg');
-            alertSound.volume = 0.8;
-            alertSound.play();
+            // 1. เล่นเสียงแจ้งเตือน
+            const soundVol = (activeSettings.soundVol !== undefined ? activeSettings.soundVol : 75) / 100;
+            playSynthesizedSound(activeSettings.sound || 'boing', soundVol);
 
-            alertSound.onended = () => {
-                const speech = new SpeechSynthesisUtterance(`${data.name} โดเนทมา ${data.amount} บาท บอกว่า ${data.message}`);
-                speech.lang = 'th-TH';
-                window.speechSynthesis.speak(speech);
-                setTimeout(() => { 
-                    alertBox.style.opacity = '0'; 
-                    alertBox.classList.remove('show-alert'); 
-                    setTimeout(processNextAlert, 500); 
-                }, 5000);
-            };
+            let finished = false;
+            function finishAlert() {
+                if (finished) return;
+                finished = true;
+
+                // คืนค่ารูปเดิม
+                if (imgEl && activeSettings.imgUrl) {
+                    imgEl.src = activeSettings.imgUrl;
+                }
+
+                alertBox.style.opacity = '0'; 
+                alertBox.classList.remove('show-alert'); 
+                setTimeout(processNextAlert, 400); 
+            }
+
+            // 2. เล่นเสียงอ่านออกเสียง TTS หลังเสียงเตือน 300ms
+            setTimeout(() => {
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel(); // ตัดเสียงเก่าที่อาจค้างออก
+
+                    let ttsText = '';
+                    const speakName = (activeSettings.ttsNameToggle !== false);
+                    const speakMsg = (activeSettings.ttsMsgToggle !== false);
+
+                    if (speakName && speakMsg && donateMessage) {
+                        ttsText = `${donatorName} โดเนทมา ${donateAmount} บาท บอกว่า ${donateMessage}`;
+                    } else if (speakName) {
+                        ttsText = `${donatorName} โดเนทมา ${donateAmount} บาท`;
+                    } else if (speakMsg && donateMessage) {
+                        ttsText = donateMessage;
+                    }
+
+                    if (ttsText.trim() !== '') {
+                        const utterance = new SpeechSynthesisUtterance(ttsText);
+                        utterance.lang = 'th-TH';
+                        utterance.rate = parseFloat(activeSettings.ttsRate) || 1.0;
+                        utterance.pitch = parseFloat(activeSettings.ttsPitch) || 1.0;
+                        utterance.volume = (activeSettings.ttsVol !== undefined ? activeSettings.ttsVol : 100) / 100;
+
+                        // เลือกว่าถ้ามีเสียงไทย ให้ใช้เสียงไทย
+                        const voices = window.speechSynthesis.getVoices();
+                        const thVoice = voices.find(v => v.lang.includes('th') || v.lang.includes('TH'));
+                        if (thVoice) utterance.voice = thVoice;
+
+                        utterance.onend = () => {
+                            setTimeout(finishAlert, 1500); // รออีก 1.5 วินาทีหลังพูดจบแล้วค่อยปิด
+                        };
+                        utterance.onerror = () => {
+                            setTimeout(finishAlert, 2000);
+                        };
+
+                        window.speechSynthesis.speak(utterance);
+
+                        // Safety Timeout: กันกรณี TTS ใน OBS ค้าง ให้ปิดคิวไม่เกินความยาวข้อความ
+                        const maxWaitTime = Math.max(5000, 3000 + ttsText.length * 120);
+                        setTimeout(finishAlert, maxWaitTime);
+                    } else {
+                        setTimeout(finishAlert, 4000);
+                    }
+                } else {
+                    setTimeout(finishAlert, 4500);
+                }
+            }, 400);
         }
     </script>
 </body>

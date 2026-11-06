@@ -53,6 +53,7 @@
         .stat-card .amount { font-size: 1.8rem; font-weight: 700; color: white; }
 
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; color: var(--text); font-size: 0.95rem; }
         .form-control { width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 10px; outline: none; transition: 0.3s; }
@@ -96,10 +97,22 @@
         .layout-item .mock-img { width: 40px; height: 40px; background: #334155; border-radius: 5px; margin: 0 auto 10px; }
         .layout-item .mock-text { height: 8px; background: #475569; border-radius: 4px; margin: 5px auto; width: 60%; }
 
-        #preview-alert-content { transition: all 0.3s; display: flex; flex-direction: column; align-items: center; font-family: 'Kanit', sans-serif; }
-        #preview-alert-content.layout-row { flex-direction: row; gap: 20px; text-align: left; }
+        /* 🟢 แก้ไข Layout Row ใน Preview แดชบอร์ดให้ตรงกับความเป็นจริง */
+        #preview-alert-content { transition: all 0.3s; display: flex; flex-direction: column; align-items: center; font-family: 'Kanit', sans-serif; text-align: center; }
+        #preview-alert-content.layout-row { 
+            flex-direction: row; 
+            gap: 20px; 
+            text-align: left; 
+            align-items: center;
+            background: rgba(5, 8, 17, 0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #preview-alert-content.layout-row #preview-image { margin-bottom: 0; width: 90px; height: 90px; }
+        #preview-alert-content.layout-row .alert-text-wrapper { display: flex; flex-direction: column; align-items: flex-start; }
 
-        /* 📹 NEW: OBS LINK STYLES */
+        /* OBS LINK STYLES */
         .obs-link-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
         .obs-link-item input { flex: 1; background: transparent; border: none; color: var(--blue); font-family: monospace; font-size: 0.85rem; outline: none; }
 
@@ -133,19 +146,21 @@
     <div class="dashboard-wrapper">
         <aside class="dash-sidebar">
             <div class="user-profile">
-                <img id="sidebar-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile">
-                <h4 id="sidebar-name">Zantots</h4><p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์" data-en="Online">ระบบออนไลน์</span></p>
+                <img id="sidebar-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=OceanDIWa" alt="Profile">
+                <h4 id="sidebar-name">สตรีมเมอร์</h4>
+                <p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์ (ปลอดภัย)" data-en="Online (Secure)">ระบบออนไลน์ (ปลอดภัย)</span></p>
             </div>
             <ul class="dash-menu">
                 <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payment Methods">ช่องทางรับเงิน</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-laptop-house"></i> <span class="lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ต & แจ้งเตือน" data-en="Widgets & Alerts">วิดเจ็ต & แจ้งเตือน</span></a></li>
-                <li style="margin-top: 30px;"><a href="auth.html" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
+                <li style="margin-top: 30px;"><a href="javascript:void(0)" onclick="logout()" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
             </ul>
         </aside>
 
         <main class="dash-main">
+            <!-- OVERVIEW TAB -->
             <div id="overview" class="tab-content active">
                 <div class="page-title lang-el" data-th="การวิเคราะห์ (Analytics)" data-en="Analytics">การวิเคราะห์ (Analytics)</div>
                 <div class="stats-grid">
@@ -155,14 +170,13 @@
                 </div>
 
                 <div class="page-title">
-                    <span class="lang-el" data-th="การวิเคราะห์ (Analytics)" data-en="Analytics">การวิเคราะห์ (Analytics)</span>
-                    <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 1rem; padding: 8px 16px;">
+                    <span class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</span>
+                    <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 0.95rem; padding: 8px 16px;">
                         <i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูลทั้งหมด
                     </button>
                 </div>
 
                 <div class="card" style="padding: 0; overflow: hidden;">
-                    <h3 style="margin: 25px 25px 15px; font-weight: 500;" class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</h3>
                     <div style="overflow-x: auto;">
                         <table class="history-table">
                             <thead>
@@ -170,7 +184,7 @@
                                     <th><span class="lang-el" data-th="วันที่/เวลา" data-en="Date/Time">วันที่/เวลา</span></th>
                                     <th><span class="lang-el" data-th="ชื่อผู้โดเนท" data-en="Donator">ชื่อผู้โดเนท</span></th>
                                     <th><span class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</span></th>
-                                    <th><span class="lang-el" data-th="ข้อความ" data-en="Message">ข้อความ</span></th>
+                                    <th><span class="lang-el" data-th="ข้อความ & รูปแนบ" data-en="Message & Media">ข้อความ & รูปแนบ</span></th>
                                     <th style="text-align: center;"><span class="lang-el" data-th="จัดการ" data-en="Action">จัดการ</span></th>
                                 </tr>
                             </thead>
@@ -182,66 +196,70 @@
                 </div>
             </div>
 
+            <!-- PAYMENT TAB -->
             <div id="payment" class="tab-content">
-            <div class="page-title">
-                <span class="lang-el" data-th="ช่องทางการรับเงิน" data-en="Payment Methods">ช่องทางการรับเงิน</span> 
-                <span class="badge-free lang-el" data-th="ฟรีค่าธรรมเนียม 100%" data-en="100% Free Fee" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">ฟรีค่าธรรมเนียม 100%</span>
-            </div>
-            
-            <div class="card" style="padding: 30px;">
-                <p style="color: var(--text); margin-bottom: 25px; font-size: 0.95rem;" class="lang-el" data-th="เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้" data-en="Enable/Disable and configure payment methods.">เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้</p>
+                <div class="page-title">
+                    <span class="lang-el" data-th="ช่องทางการรับเงิน" data-en="Payment Methods">ช่องทางการรับเงิน</span> 
+                    <span class="badge-free lang-el" data-th="ฟรีค่าธรรมเนียม 100%" data-en="100% Free Fee" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">ฟรีค่าธรรมเนียม 100%</span>
+                </div>
                 
-                <div class="payment-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px; background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s;">
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="width: 60px; height: 60px; background: rgba(58, 134, 255, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(58, 134, 255, 0.2);">
-                            <i class="fas fa-qrcode" style="font-size: 1.8rem; color: #3A86FF;"></i>
+                <div class="card" style="padding: 30px;">
+                    <p style="color: var(--text); margin-bottom: 25px; font-size: 0.95rem;" class="lang-el" data-th="เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้" data-en="Enable/Disable and configure payment methods.">เปิด/ปิด และตั้งค่าช่องทางที่ผู้ติดตามสามารถโอนเงินให้คุณได้</p>
+                    
+                    <div class="payment-card">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 60px; height: 60px; background: rgba(58, 134, 255, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(58, 134, 255, 0.2);">
+                                <i class="fas fa-qrcode" style="font-size: 1.8rem; color: #3A86FF;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="พร้อมเพย์ (PromptPay)" data-en="PromptPay">พร้อมเพย์ (PromptPay)</h4>
+                                <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที" data-en="Receive money directly to your PromptPay account.">รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="พร้อมเพย์ (PromptPay)" data-en="PromptPay">พร้อมเพย์ (PromptPay)</h4>
-                            <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที" data-en="Receive money directly to your PromptPay account.">รับเงินเข้าบัญชีพร้อมเพย์ของคุณ ตรง ๆ ทันที</p>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <button class="btn-outline lang-el" onclick="openModal('modal-promptpay')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
+                            <label class="switch"><input type="checkbox" id="outer-pp-active" onchange="toggleOuterPayment('promptpay')"><span class="slider"></span></label>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <button class="btn-outline lang-el" onclick="openModal('modal-promptpay')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
-                        <label class="switch"><input type="checkbox" id="outer-pp-active" onchange="toggleOuterPayment('promptpay')"><span class="slider"></span></label>
-                    </div>
-                </div>
 
-                <div class="payment-card" style="display: flex; justify-content: space-between; align-items: center; padding: 25px; background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: 0.3s;">
-                    <div style="display: flex; align-items: center; gap: 20px;">
-                        <div style="width: 60px; height: 60px; background: rgba(245, 166, 35, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245, 166, 35, 0.2);">
-                            <i class="fas fa-university" style="font-size: 1.8rem; color: #f5a623;"></i>
+                    <div class="payment-card">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div style="width: 60px; height: 60px; background: rgba(245, 166, 35, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(245, 166, 35, 0.2);">
+                                <i class="fas fa-university" style="font-size: 1.8rem; color: #f5a623;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="ธนาคาร (Bank Transfer)" data-en="Bank Transfer">ธนาคาร (Bank Transfer)</h4>
+                                <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รองรับทุกธนาคารในประเทศไทย" data-en="Supports all banks in Thailand.">รองรับทุกธนาคารในประเทศไทย</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; color: white;" class="lang-el" data-th="ธนาคาร (Bank Transfer)" data-en="Bank Transfer">ธนาคาร (Bank Transfer)</h4>
-                            <p style="color: #a0aec0; font-size: 0.85rem; margin: 0;" class="lang-el" data-th="รองรับทุกธนาคารในประเทศไทย" data-en="Supports all banks in Thailand.">รองรับทุกธนาคารในประเทศไทย</p>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <button class="btn-outline lang-el" onclick="openModal('modal-bank')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
+                            <label class="switch"><input type="checkbox" id="outer-bank-active" onchange="toggleOuterPayment('bank')"><span class="slider"></span></label>
                         </div>
-                    </div>
-                    <div style="display: flex; gap: 20px; align-items: center;">
-                        <button class="btn-outline lang-el" onclick="openModal('modal-bank')" data-th="<i class='fas fa-cog'></i> ตั้งค่า" data-en="<i class='fas fa-cog'></i> Settings" style="padding: 8px 16px;"><i class="fas fa-cog"></i> ตั้งค่า</button>
-                        <label class="switch"><input type="checkbox" id="outer-bank-active" onchange="toggleOuterPayment('bank')"><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!-- PAGE SETTINGS TAB -->
             <div id="page-settings" class="tab-content">
                 <div class="page-title lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</div>
-                    <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between;">
-                        <div>
-                            <h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ</h4>
-                            <a href="#" id="dash-donate-link" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">กำลังโหลดลิงก์...</a>
-                        </div>
-                        <button class="btn-primary lang-el" onclick="copyDonateLink()" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link">
-                            <i class="fas fa-copy"></i> คัดลอกลิงก์
-                        </button>
+                
+                <div class="card" style="border-left: 4px solid var(--blue); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h4 style="margin-bottom: 5px; color: var(--text);" class="lang-el" data-th="ลิงก์หน้ารับเงินของคุณ (ส่งให้คนโดเนท)" data-en="Your Donation Link">ลิงก์หน้ารับเงินของคุณ (ส่งให้คนโดเนท)</h4>
+                        <a href="#" id="dash-donate-link" target="_blank" style="color: var(--blue); font-size: 1.2rem; font-weight: bold; text-decoration: none;">กำลังโหลดลิงก์...</a>
                     </div>
+                    <button class="btn-primary lang-el" onclick="copyDonateLink()" data-th="<i class='fas fa-copy'></i> คัดลอกลิงก์" data-en="<i class='fas fa-copy'></i> Copy Link">
+                        <i class="fas fa-copy"></i> คัดลอกลิงก์
+                    </button>
+                </div>
                 
                 <div class="form-grid">
+                    <!-- Profile & Page Settings -->
                     <div class="card">
-                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="ข้อมูลโปรไฟล์" data-en="Profile Settings">ข้อมูลโปรไฟล์</h3>
-                        <div class="form-group"><label class="lang-el" data-th="ข้อความแนะนำตัว (Bio)" data-en="Biography (Bio)">ข้อความแนะนำตัว (Bio)</label><textarea id="dash-bio" class="form-control lang-el" rows="3" data-th-placeholder="ยินดีต้อนรับสู่ช่องของ Zantots!" data-en-placeholder="Welcome to Zantots channel!">ยินดีต้อนรับสู่ช่องของ Zantots!</textarea></div>
-                        <div class="form-group"><label class="lang-el" data-th="ข้อความขอบคุณหลังโดเนท" data-en="Thank You Message">ข้อความขอบคุณหลังโดเนท</label><input type="text" id="dash-thank" class="form-control" value="ขอบคุณครับ!"></div>
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="ข้อมูลโปรไฟล์ & ข้อความ" data-en="Profile Settings">ข้อมูลโปรไฟล์ & ข้อความ</h3>
+                        <div class="form-group"><label class="lang-el" data-th="ข้อความแนะนำตัว (Bio)" data-en="Biography (Bio)">ข้อความแนะนำตัว (Bio)</label><textarea id="dash-bio" class="form-control" rows="3">ยินดีต้อนรับสู่ช่องของฉัน!</textarea></div>
+                        <div class="form-group"><label class="lang-el" data-th="ข้อความขอบคุณหลังโดเนท" data-en="Thank You Message">ข้อความขอบคุณหลังโดเนท</label><input type="text" id="dash-thank" class="form-control" value="ขอบคุณสำหรับการโดเนทครับ!"></div>
                         <div class="form-group">
                             <label class="lang-el" data-th="ธีมหน้าเว็บ (Theme)" data-en="Page Theme">ธีมหน้าเว็บ (Theme)</label>
                             <select id="dash-theme-preset" class="form-control" style="margin-bottom: 10px;" onchange="toggleCustomBg()">
@@ -252,46 +270,68 @@
                                 <option value="https://images.unsplash.com/photo-1523821741446-edb2b68bb7a0?q=80&w=2070&auto=format&fit=crop">Anime Scenery</option>
                                 <option value="custom" class="lang-el" data-th="✨ ใส่ลิงก์รูปภาพ / GIF เอง..." data-en="✨ Custom Image / GIF Link...">✨ ใส่ลิงก์รูปภาพ / GIF เอง...</option>
                             </select>
-                            <input type="text" id="dash-bg" class="form-control lang-el" data-th-placeholder="ใส่ลิงก์รูปภาพ/GIF ที่นี่..." data-en-placeholder="Paste Image/GIF URL here..." style="display: none;">
+                            <input type="text" id="dash-bg" class="form-control" placeholder="วางลิงก์รูปภาพ/GIF ที่นี่..." style="display: none;">
                         </div>
-                        <button class="btn-success w-100 lang-el" onclick="saveProfileSettings()" data-th="<i class='fas fa-save'></i> บันทึกข้อมูลและพื้นหลัง" data-en="<i class='fas fa-save'></i> Save Profile & Theme"><i class="fas fa-save"></i> บันทึกข้อมูลและพื้นหลัง</button>
+
+                        <!-- 🟢 การจำกัดความยาวข้อความ และ การแนบรูปภาพ -->
+                        <div class="form-group">
+                            <label class="lang-el" data-th="จำกัดความยาวข้อความโดเนท (ตัวอักษร)" data-en="Max Message Length (Characters)">จำกัดความยาวข้อความโดเนท (ตัวอักษร)</label>
+                            <input type="number" id="dash-max-len" class="form-control" min="50" max="300" value="150">
+                        </div>
+
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px;">
+                            <div>
+                                <label style="margin: 0; font-weight: bold;" class="lang-el" data-th="อนุญาตให้คนโดเนทแนบรูป/GIF" data-en="Allow Donor Images/GIFs">อนุญาตให้คนโดเนทแนบรูป/GIF</label>
+                                <p style="font-size: 0.8rem; color: var(--text); margin-top: 2px;">แสดงรูปภาพขึ้นจอ OBS Alert</p>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="dash-allow-images" checked><span class="slider"></span></label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="lang-el" data-th="ยอดโดเนทขั้นต่ำที่จะแสดงรูปภาพ (บาท)" data-en="Min Amount for Image (THB)">ยอดโดเนทขั้นต่ำที่จะแสดงรูปภาพ (บาท)</label>
+                            <input type="number" id="dash-min-image-amount" class="form-control" min="1" value="20">
+                        </div>
+
+                        <button class="btn-success w-100 lang-el" onclick="saveProfileSettings()" data-th="<i class='fas fa-save'></i> บันทึกข้อมูลและหน้ารับเงิน" data-en="<i class='fas fa-save'></i> Save Profile & Theme"><i class="fas fa-save"></i> บันทึกข้อมูลและหน้ารับเงิน</button>
                     </div>
 
+                    <!-- Social Media Links -->
                     <div class="card">
-                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="โซเชียลมีเดีย" data-en="Social Media">โซเชียลมีเดีย</h3>
-                        <div class="form-group"><label>YouTube URL</label><input type="text" id="dash-yt" class="form-control"></div>
-                        <div class="form-group"><label>Facebook URL</label><input type="text" id="dash-fb" class="form-control"></div>
-                        <div class="form-group"><label>Twitch URL</label><input type="text" id="dash-twitch" class="form-control"></div>
+                        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="โซเชียลมีเดีย (Social Media)" data-en="Social Media">โซเชียลมีเดีย (Social Media)</h3>
+                        <div class="form-group"><label><i class="fab fa-youtube" style="color:#ff0000; margin-right: 5px;"></i> YouTube URL</label><input type="text" id="dash-yt" class="form-control" placeholder="https://youtube.com/@channel"></div>
+                        <div class="form-group"><label><i class="fab fa-facebook" style="color:#1877f2; margin-right: 5px;"></i> Facebook URL</label><input type="text" id="dash-fb" class="form-control" placeholder="https://facebook.com/page"></div>
+                        <div class="form-group"><label><i class="fab fa-twitch" style="color:#9146ff; margin-right: 5px;"></i> Twitch URL</label><input type="text" id="dash-twitch" class="form-control" placeholder="https://twitch.tv/username"></div>
                         <button class="btn-success w-100 lang-el" style="margin-top: 15px;" onclick="saveSocialSettings()" data-th="<i class='fas fa-save'></i> บันทึกโซเชียลมีเดีย" data-en="<i class='fas fa-save'></i> Save Social Links"><i class="fas fa-save"></i> บันทึกโซเชียลมีเดีย</button>
                     </div>
 
+                    <!-- Profanity Filter -->
                     <div class="card" style="grid-column: 1 / -1;">
                         <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;" class="lang-el" data-th="ระบบกรองคำต้องห้าม (Profanity Filter)" data-en="Profanity Filter">ระบบกรองคำต้องห้าม (Profanity Filter)</h3>
                         <div class="form-group">
                             <label class="lang-el" data-th="ตั้งค่าคำหยาบ (คั่นแต่ละคำด้วยลูกน้ำ <code>,</code> )" data-en="Banned Words (Comma separated <code>,</code>)">ตั้งค่าคำหยาบ (คั่นแต่ละคำด้วยลูกน้ำ <code>,</code> )</label>
-                            <textarea id="dash-banned-words" class="form-control lang-el" rows="2" data-th-placeholder="เช่น: ควย, สัส, เหี้ย, พนัน" data-en-placeholder="e.g. badword1, badword2"></textarea>
-                            <p style="font-size: 0.85rem; color: #ef4444; margin-top: 8px;" class="lang-el" data-th="* ระบบจะบล็อกไม่ให้คนสแกนจ่าย หรือไม่แสดงบนจอ OBS ทันที หากผู้ใช้พิมพ์คำเหล่านี้" data-en="* The system will block these words automatically.">* ระบบจะบล็อกไม่ให้คนสแกนจ่าย หรือไม่แสดงบนจอ OBS ทันที หากผู้ใช้พิมพ์คำเหล่านี้</p>
+                            <textarea id="dash-banned-words" class="form-control lang-el" rows="3" data-th-placeholder="เช่น: ควย, สัส, เหี้ย, พนัน, คาสิโน" data-en-placeholder="e.g. badword1, badword2"></textarea>
+                            <p style="font-size: 0.85rem; color: #ef4444; margin-top: 8px;" class="lang-el" data-th="* ระบบจะปฏิเสธการสแกนจ่ายทันที หากข้อความหรือชื่อมีคำเหล่านี้ เพื่อความปลอดภัยของช่องคุณ" data-en="* The system will block these words automatically.">* ระบบจะปฏิเสธการสแกนจ่ายทันที หากข้อความหรือชื่อมีคำเหล่านี้ เพื่อความปลอดภัยของช่องคุณ</p>
                         </div>
                         <button class="btn-success w-100 lang-el" onclick="saveBannedWords()" data-th="<i class='fas fa-save'></i> บันทึกรายการคำต้องห้าม" data-en="<i class='fas fa-save'></i> Save Banned Words"><i class="fas fa-save"></i> บันทึกรายการคำต้องห้าม</button>
                     </div>
                 </div>
             </div>
 
+            <!-- WIDGETS TAB -->
             <div id="widgets" class="tab-content">
                 <div class="page-title">
                     <span class="lang-el" data-th="วิดเจ็ตทั้งหมด (Widgets)" data-en="All Widgets">วิดเจ็ตทั้งหมด (Widgets)</span>
                     <button class="btn-outline lang-el" onclick="openModal('modal-global')" data-th="<i class='fas fa-cog'></i> ตั้งค่าแสดงผลรวม" data-en="<i class='fas fa-cog'></i> Global Settings"><i class="fas fa-cog"></i> ตั้งค่าแสดงผลรวม</button>
                 </div>
 
+                <!-- OBS Links with Secret Token -->
                 <div class="card" style="border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05); margin-bottom: 30px;">
-                    <h4 style="margin-bottom: 10px; color: #ef4444;" class="lang-el" data-th="📹 ลิงก์สำหรับใส่ใน OBS (Browser Source)" data-en="📹 OBS Browser Source Links">📹 ลิงก์สำหรับใส่ใน OBS (Browser Source)</h4>
-                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px;" class="lang-el" data-th="คัดลอกลิงก์ส่วนตัวด้านล่างนี้ไปใส่ในโปรแกรม OBS เพื่อแสดงผลแจ้งเตือน" data-en="Copy your private links below to OBS for alert overlays.">คัดลอกลิงก์ส่วนตัวด้านล่างนี้ไปใส่ในโปรแกรม OBS เพื่อแสดงผลแจ้งเตือน</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                        <h4 style="color: #ef4444;" class="lang-el" data-th="🔒 ลิงก์ส่วนตัวสำหรับใส่ใน OBS (Browser Source พร้อม Stream Key)" data-en="🔒 Private OBS Browser Source Links (With Stream Key)">🔒 ลิงก์ส่วนตัวสำหรับใส่ใน OBS (Browser Source พร้อม Stream Key)</h4>
+                        <button class="btn-danger" style="font-size: 0.8rem; padding: 6px 12px;" onclick="regenerateStreamKey()"><i class="fas fa-key"></i> รีเซ็ต OBS Stream Key</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px;" class="lang-el" data-th="* คัดลอกลิงก์ด้านล่างไปใส่ใน OBS ลิงก์มี Token ลับเฉพาะตัวคุณ คนอื่นไม่สามารถแอบดึงหรือส่องได้" data-en="Copy your private links below to OBS for alert overlays.">* คัดลอกลิงก์ด้านล่างไปใส่ใน OBS ลิงก์มี Token ลับเฉพาะตัวคุณ คนอื่นไม่สามารถแอบดึงหรือส่องได้</p>
                     
-                    <style>
-                        .obs-link-item { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 10px; }
-                        .obs-link-item input { flex: 1; background: transparent; border: none; color: var(--blue); font-family: monospace; font-size: 0.85rem; outline: none; }
-                    </style>
-
                     <div class="obs-link-item">
                         <span style="min-width: 100px; font-size: 0.85rem; color: var(--blue);">Alert Box:</span>
                         <input type="text" id="obs-alert-url" readonly value="กำลังเจนลิงก์...">
@@ -308,149 +348,159 @@
                         <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-td-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
                     </div>
                 </div>
+
                 <div class="widget-nav">
-                    <div class="widget-tab active" data-sub="w-alert"><i class="fas fa-bell" style="color: var(--blue);"></i> <span class="lang-el" data-th="Donate Alert" data-en="Donate Alert">Donate Alert</span></div>
-                    <div class="widget-tab" data-sub="w-goal"><i class="fas fa-bullseye" style="color: #ef4444;"></i> <span class="lang-el" data-th="Donate Goal" data-en="Donate Goal">Donate Goal</span></div>
-                    <div class="widget-tab" data-sub="w-topdonor"><i class="fas fa-trophy" style="color: #fbbf24;"></i> <span class="lang-el" data-th="Top Donator" data-en="Top Donator">Top Donator</span></div>
+                    <div class="widget-tab active" data-sub="w-alert"><i class="fas fa-bell" style="color: var(--blue);"></i> <span>Donate Alert</span></div>
+                    <div class="widget-tab" data-sub="w-goal"><i class="fas fa-bullseye" style="color: #ef4444;"></i> <span>Donate Goal</span></div>
+                    <div class="widget-tab" data-sub="w-topdonor"><i class="fas fa-trophy" style="color: #fbbf24;"></i> <span>Top Donator</span></div>
                 </div>
 
+                <!-- WIDGET PANEL: ALERT -->
                 <div id="w-alert" class="widget-panel active">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                         <div>
+                            <!-- Preview Box -->
                             <div class="preview-box transparent-bg" id="alert-bg-preview">
                                 <div id="preview-alert-content">
-                                    <img id="preview-image" src="https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png" style="width: 120px; height: 120px; border-radius: 15px; margin-bottom: 15px; object-fit: cover;">
-                                    <div>
-                                        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+                                    <img id="preview-image" src="https://media.giphy.com/media/YaP3iYxN3T8nIEN5rD/giphy.gif" style="width: 120px; height: 120px; border-radius: 15px; margin-bottom: 15px; object-fit: cover;">
+                                    <div class="alert-text-wrapper">
+                                        <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 8px; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
                                             <span id="preview-name" style="color:#f59e0b;">โทนี่</span> 
-                                            <span id="preview-text-donate" style="color: #ffffff;" class="lang-el" data-th="โดเนทมา" data-en="donated">โดเนทมา</span> 
-                                            <span id="preview-amount" style="color: #5BC0EB;">500 <span class="lang-el" data-th="บาท" data-en="THB">บาท</span></span>
+                                            <span id="preview-text-donate" style="color: #ffffff;">โดเนทมา</span> 
+                                            <span id="preview-amount" style="color: #5BC0EB;">500 บาท</span>
                                         </div>
-                                        <div id="preview-msg" style="font-size: 1.1rem; color: #e2e8f0; text-shadow: 0 1px 3px rgba(0,0,0,0.8);" class="lang-el" data-th="ติดตามมานานแล้วครับ FC มากๆ ครับ" data-en="Long time fan! Love your stream.">ติดตามมานานแล้วครับ FC มากๆ ครับ</div>
+                                        <div id="preview-msg" style="font-size: 1.1rem; color: #e2e8f0; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">ติดตามมานานแล้วครับ FC มากๆ ครับ</div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Test Alert Box -->
                             <div class="card" style="margin-top: 20px; padding: 20px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                     <h4 class="lang-el" data-th="ทดสอบการแจ้งเตือน" data-en="Test Alert">ทดสอบการแจ้งเตือน</h4>
-                                    <button class="btn-outline lang-el" id="btn-test-alert" style="padding: 5px 15px; font-size: 0.85rem;" data-th="<i class='fas fa-play'></i> ทดสอบและเล่นเสียง" data-en="<i class='fas fa-play'></i> Test & Play Audio"><i class="fas fa-play"></i> ทดสอบและเล่นเสียง</button>
+                                    <button class="btn-outline lang-el" id="btn-test-alert" style="padding: 6px 16px; font-size: 0.9rem; background: rgba(58,134,255,0.15); border-color: var(--blue); color: white;" data-th="<i class='fas fa-play'></i> ทดสอบและเล่นเสียง" data-en="<i class='fas fa-play'></i> Test & Play Audio">
+                                        <i class="fas fa-play"></i> ทดสอบและเล่นเสียง
+                                    </button>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 10px; align-items: end;">
-                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="ผู้โดเนท" data-en="Donator">ผู้โดเนท</label><input type="text" id="test-name" class="form-control" value="โทนี่"></div>
-                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</label><input type="number" id="test-amount" class="form-control" value="500"></div>
-                                    <div><label style="font-size: 0.8rem; color: var(--text);" class="lang-el" data-th="ข้อความ" data-en="Message">ข้อความ</label><input type="text" id="test-msg" class="form-control" value="ติดตามมานานแล้วครับ FC มากๆ ครับ"></div>
+                                    <div><label style="font-size: 0.8rem; color: var(--text);">ผู้โดเนท</label><input type="text" id="test-name" class="form-control" value="โทนี่"></div>
+                                    <div><label style="font-size: 0.8rem; color: var(--text);">จำนวนเงิน</label><input type="number" id="test-amount" class="form-control" value="500"></div>
+                                    <div><label style="font-size: 0.8rem; color: var(--text);">ข้อความ</label><input type="text" id="test-msg" class="form-control" value="ติดตามมานานแล้วครับ FC มากๆ ครับ"></div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Settings Form -->
                         <div class="card">
                             <div class="form-group">
-                                <h4 style="margin-bottom: 15px;" class="lang-el" data-th="รูปแบบ (Layout)" data-en="Layout Type">รูปแบบ (Layout)</h4>
+                                <h4 style="margin-bottom: 15px;">รูปแบบ (Layout)</h4>
                                 <div class="layout-selector">
-                                    <div class="layout-item active" data-layout="main"><div class="mock-img"></div><div class="mock-text"></div><span style="font-size: 0.85rem; font-weight: bold;">Main</span></div>
-                                    <div class="layout-item" data-layout="row"><div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;"><div class="mock-img" style="margin: 0; width: 30px; height: 30px;"></div><div style="flex: 1;"><div class="mock-text"></div></div></div><span style="font-size: 0.85rem; font-weight: bold;">Row</span></div>
+                                    <div class="layout-item active" data-layout="main"><div class="mock-img"></div><div class="mock-text"></div><span style="font-size: 0.85rem; font-weight: bold;">Main (แนวตั้ง)</span></div>
+                                    <div class="layout-item" data-layout="row"><div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 10px;"><div class="mock-img" style="margin: 0; width: 30px; height: 30px;"></div><div style="flex: 1;"><div class="mock-text"></div></div></div><span style="font-size: 0.85rem; font-weight: bold;">Row (แนวนอน)</span></div>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="เสียง (Audio & TTS)" data-en="Audio & TTS Settings">เสียง (Audio & TTS)</h4>
+                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;">เสียง (Audio & TTS)</h4>
                                 
-                                <label class="lang-el" data-th="เสียงการแจ้งเตือน" data-en="Alert Sound">เสียงการแจ้งเตือน</label>
+                                <label>เสียงการแจ้งเตือน</label>
                                 <select class="form-control" id="ctrl-alert-sound" style="margin-bottom: 15px;">
-                                    <option value="boing" class="lang-el" data-th="BB Spirit (ตึ๋ง!)" data-en="BB Spirit (Boing!)">BB Spirit (ตึ๋ง!)</option>
-                                    <option value="success" class="lang-el" data-th="Coin Drop (วิ้ง!)" data-en="Coin Drop (Success)">Coin Drop (วิ้ง!)</option>
+                                    <option value="boing">BB Spirit (ตึ๋ง!)</option>
+                                    <option value="success">Coin Drop (วิ้ง!)</option>
                                 </select>
 
-                                <label><span class="lang-el" data-th="ระดับเสียงแจ้งเตือน" data-en="Alert Volume">ระดับเสียงแจ้งเตือน</span> (<span id="val-alert-vol">75</span>%)</label>
-                                <input type="range" id="ctrl-alert-vol" min="0" max="100" value="75" style="margin-bottom: 20px;">
+                                <label>ระดับเสียงแจ้งเตือน (<span id="val-alert-vol">75</span>%)</label>
+                                <input type="range" id="ctrl-alert-vol" min="0" max="100" value="75" style="margin-bottom: 20px;" oninput="document.getElementById('val-alert-vol').innerText = this.value;">
 
-                                <label class="lang-el" data-th="เสียงคนพูด Text to Speech" data-en="TTS Voice">เสียงคนพูด Text to Speech</label>
+                                <label>เสียงคนพูด Text to Speech (TTS Voice)</label>
                                 <select class="form-control" id="ctrl-tts-voice" style="margin-bottom: 15px;">
-                                    <option value="" class="lang-el" data-th="กำลังโหลดเสียงจากระบบ..." data-en="Loading voices...">กำลังโหลดเสียงจากระบบ...</option>
+                                    <option value="">เสียงภาษาไทยเริ่มต้น (Default Thai)</option>
                                 </select>
 
-                                <label><span class="lang-el" data-th="ความเร็วในการพูด (Rate)" data-en="Speech Rate">ความเร็วในการพูด (Rate)</span> (<span id="val-tts-rate">1.0</span>)</label>
-                                <input type="range" id="ctrl-tts-rate" min="0.1" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;">
+                                <label>ความเร็วในการพูด (Rate) (<span id="val-tts-rate">1.0</span>)</label>
+                                <input type="range" id="ctrl-tts-rate" min="0.5" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;" oninput="document.getElementById('val-tts-rate').innerText = this.value;">
 
-                                <label><span class="lang-el" data-th="ระดับเสียงสูงต่ำ (Pitch)" data-en="Speech Pitch">ระดับเสียงสูงต่ำ (Pitch)</span> (<span id="val-tts-pitch">1.0</span>)</label>
-                                <input type="range" id="ctrl-tts-pitch" min="0" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;">
+                                <label>ระดับเสียงสูงต่ำ (Pitch) (<span id="val-tts-pitch">1.0</span>)</label>
+                                <input type="range" id="ctrl-tts-pitch" min="0.5" max="2" step="0.1" value="1.0" style="margin-bottom: 15px;" oninput="document.getElementById('val-tts-pitch').innerText = this.value;">
 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <div><span style="display:block; font-weight:bold;" class="lang-el" data-th="พูดชื่อและจำนวนเงิน" data-en="Speak Name & Amount">พูดชื่อและจำนวนเงิน</span></div>
+                                    <div><span style="display:block; font-weight:bold;">พูดชื่อและจำนวนเงิน</span></div>
                                     <label class="switch"><input type="checkbox" id="ctrl-tts-name-toggle" checked><span class="slider"></span></label>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <div><span style="display:block; font-weight:bold;" class="lang-el" data-th="พูดข้อความ" data-en="Speak Message">พูดข้อความ</span></div>
+                                    <div><span style="display:block; font-weight:bold;">พูดข้อความ</span></div>
                                     <label class="switch"><input type="checkbox" id="ctrl-tts-msg-toggle" checked><span class="slider"></span></label>
                                 </div>
 
-                                <label><span class="lang-el" data-th="ระดับเสียง Text to Speech" data-en="TTS Volume">ระดับเสียง Text to Speech</span> (<span id="val-tts-vol">100</span>%)</label>
-                                <input type="range" id="ctrl-tts-vol" min="0" max="100" value="100" style="margin-bottom: 15px;">
+                                <label>ระดับเสียง Text to Speech (<span id="val-tts-vol">100</span>%)</label>
+                                <input type="range" id="ctrl-tts-vol" min="0" max="100" value="100" style="margin-bottom: 15px;" oninput="document.getElementById('val-tts-vol').innerText = this.value;">
                             </div>
 
                             <div class="form-group">
-                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="สีและฟอนต์" data-en="Colors & Font">สีและฟอนต์</h4>
+                                <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;">สีและฟอนต์</h4>
                                 <div class="form-grid">
                                     <div>
-                                        <label class="lang-el" data-th="ฟอนต์เฉพาะ Alert" data-en="Alert Font">ฟอนต์เฉพาะ Alert</label>
+                                        <label>ฟอนต์เฉพาะ Alert</label>
                                         <select class="form-control" id="ctrl-font">
-                                            <option value="'Kanit', sans-serif" class="lang-el" data-th="Kanit (เริ่มต้น)" data-en="Kanit (Default)">Kanit (เริ่มต้น)</option>
+                                            <option value="'Kanit', sans-serif">Kanit (เริ่มต้น)</option>
                                             <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
                                         </select>
                                     </div>
-                                    <div><label class="lang-el" data-th="สีข้อความตรงกลาง" data-en="Middle Text Color">สีข้อความตรงกลาง</label><input type="color" id="ctrl-text-color" class="color-picker" value="#ffffff"></div>
+                                    <div><label>สีข้อความตรงกลาง</label><input type="color" id="ctrl-text-color" class="color-picker" value="#ffffff"></div>
                                 </div>
                                 <div class="form-grid" style="margin-top: 15px;">
-                                    <div><label class="lang-el" data-th="สีชื่อ" data-en="Name Color">สีชื่อ</label><input type="color" id="ctrl-name-color" class="color-picker" value="#f59e0b"></div>
-                                    <div><label class="lang-el" data-th="สีจำนวนเงิน" data-en="Amount Color">สีจำนวนเงิน</label><input type="color" id="ctrl-amount-color" class="color-picker" value="#5BC0EB"></div>
+                                    <div><label>สีชื่อผู้โดเนท</label><input type="color" id="ctrl-name-color" class="color-picker" value="#f59e0b"></div>
+                                    <div><label>สีจำนวนเงิน</label><input type="color" id="ctrl-amount-color" class="color-picker" value="#5BC0EB"></div>
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="lang-el" data-th="URL รูปภาพ GIF/PNG" data-en="Image URL (GIF/PNG)">URL รูปภาพ GIF/PNG</label>
-                                <input type="text" id="ctrl-img-url" class="form-control" value="https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png">
+                                <label>URL รูปภาพ GIF/PNG เริ่มต้น</label>
+                                <input type="text" id="ctrl-img-url" class="form-control" value="https://media.giphy.com/media/YaP3iYxN3T8nIEN5rD/giphy.gif">
                             </div>
-                            <button class="btn-success w-100 lang-el" onclick="saveAlertSettingsToOBS()" data-th="<i class='fas fa-save'></i> บันทึกการตั้งค่า Alert" data-en="<i class='fas fa-save'></i> Save Alert Settings"><i class="fas fa-save"></i> บันทึกการตั้งค่า Alert</button>
+                            <button class="btn-success w-100 lang-el" onclick="saveAlertSettingsToOBS()"><i class="fas fa-save"></i> บันทึกการตั้งค่า Alert ไปที่ OBS</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- WIDGET PANEL: GOAL -->
                 <div id="w-goal" class="widget-panel">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                         <div>
                             <div class="preview-box transparent-bg" id="goal-bg-preview" style="justify-content: flex-end; padding-bottom: 40px; font-family: 'Kanit', sans-serif;">
-                                <h3 id="preview-goal-title" style="margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,1);" class="lang-el" data-th="ค่าอาหารหมา" data-en="Dog Food Fund">ค่าอาหารหมา</h3>
+                                <h3 id="preview-goal-title" style="margin-bottom: 15px; text-shadow: 0 2px 5px rgba(0,0,0,1);">เป้าหมายโดเนท</h3>
                                 <div style="width: 100%; height: 35px; background: rgba(0,0,0,0.6); border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); overflow: hidden; position: relative;">
-                                    <div id="preview-goal-bar" style="width: 0%; height: 100%; background: #0EA5E9; border-radius: 20px 0 0 20px; box-shadow: 0 0 15px #0EA5E9; transition: width 0.5s;"></div>
-                                    <span id="preview-goal-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: white; text-shadow: 0 1px 3px black;">0 <span class="lang-el" data-th="บาท" data-en="THB">บาท</span> (0%)</span>
+                                    <div id="preview-goal-bar" style="width: 50%; height: 100%; background: #0ea5e9; border-radius: 20px 0 0 20px; box-shadow: 0 0 15px #0ea5e9; transition: width 0.5s;"></div>
+                                    <span id="preview-goal-percentage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; color: white; text-shadow: 0 1px 3px black;">50 / 100 บาท (50%)</span>
                                 </div>
                             </div>
                         </div>
                         <div class="card">
-                            <h4 style="margin-bottom: 15px;" class="lang-el" data-th="ตั้งค่าเป้าหมายหลัก" data-en="Main Goal Settings">ตั้งค่าเป้าหมายหลัก</h4>
-                            <div class="form-group"><label class="lang-el" data-th="ชื่อเป้าหมาย" data-en="Goal Title">ชื่อเป้าหมาย</label><input type="text" id="ctrl-goal-title" class="form-control" value="ค่าอาหารหมา"></div>
+                            <h4 style="margin-bottom: 15px;">ตั้งค่าเป้าหมายหลัก</h4>
+                            <div class="form-group"><label>ชื่อเป้าหมาย</label><input type="text" id="ctrl-goal-title" class="form-control" value="เป้าหมายโดเนท"></div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="lang-el" data-th="เป้าหมาย (บาท)" data-en="Target (THB)">เป้าหมาย (บาท)</label><input type="number" id="ctrl-goal-target" class="form-control" value="100"></div>
-                                <div class="form-group"><label class="lang-el" data-th="ปัจจุบัน (ทดสอบ)" data-en="Current (Test)">ปัจจุบัน (ทดสอบ)</label><input type="number" id="ctrl-goal-current" class="form-control" value="50"></div>
+                                <div class="form-group"><label>เป้าหมาย (บาท)</label><input type="number" id="ctrl-goal-target" class="form-control" value="100"></div>
+                                <div class="form-group"><label>ปัจจุบัน (บาท)</label><input type="number" id="ctrl-goal-current" class="form-control" value="50"></div>
                             </div>
 
-                            <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;" class="lang-el" data-th="ปรับแต่งสีและฟอนต์" data-en="Colors & Font">ปรับแต่งสีและฟอนต์</h4>
+                            <h4 style="margin-bottom: 15px; border-top: 1px solid var(--border); padding-top: 20px;">ปรับแต่งสีและฟอนต์</h4>
                             <div class="form-group">
-                                <label class="lang-el" data-th="ฟอนต์เฉพาะ Goal" data-en="Goal Font">ฟอนต์เฉพาะ Goal</label>
+                                <label>ฟอนต์เฉพาะ Goal</label>
                                 <select class="form-control" id="ctrl-goal-font">
-                                    <option value="'Kanit', sans-serif" class="lang-el" data-th="Kanit (เริ่มต้น)" data-en="Kanit (Default)">Kanit (เริ่มต้น)</option>
+                                    <option value="'Kanit', sans-serif">Kanit (เริ่มต้น)</option>
                                     <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
                                 </select>
                             </div>
                             <div class="form-grid" style="margin-top: 15px;">
-                                <div class="form-group"><label class="lang-el" data-th="สีหลอดเป้าหมาย" data-en="Bar Color">สีหลอดเป้าหมาย</label><input type="color" id="ctrl-goal-color" class="color-picker" value="#0EA5E9"></div>
-                                <div class="form-group"><label class="lang-el" data-th="สีตัวหนังสือ" data-en="Text Color">สีตัวหนังสือ</label><input type="color" id="ctrl-goal-text-color" class="color-picker" value="#ffffff"></div>
+                                <div class="form-group"><label>สีหลอดเป้าหมาย</label><input type="color" id="ctrl-goal-color" class="color-picker" value="#0ea5e9"></div>
+                                <div class="form-group"><label>สีตัวหนังสือ</label><input type="color" id="ctrl-goal-text-color" class="color-picker" value="#ffffff"></div>
                             </div>
-                            <button class="btn-success w-100 lang-el" style="margin-top: 10px;" onclick="saveGoalSettingsToOBS()" data-th="<i class='fas fa-save'></i> บันทึกเป้าหมายไปที่ OBS" data-en="<i class='fas fa-save'></i> Save Goal Settings"><i class="fas fa-save"></i> บันทึกเป้าหมายไปที่ OBS</button>
+                            <button class="btn-success w-100" style="margin-top: 10px;" onclick="saveGoalSettingsToOBS()"><i class="fas fa-save"></i> บันทึกเป้าหมายไปที่ OBS</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- WIDGET PANEL: TOP DONOR -->
                 <div id="w-topdonor" class="widget-panel">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                         <div>
@@ -458,30 +508,30 @@
                                 <div id="preview-td-box" style="background: rgba(0, 0, 0, 0.6); border: 2px solid #3A86FF; padding: 20px; border-radius: 15px; width: 100%;">
                                     <div id="preview-td-title" style="font-size: 1.5rem; font-weight: bold; color: #5BC0EB; margin-bottom: 10px;">🏆 Top Donators</div>
                                     <div id="preview-td-item1" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left; color: #ffffff;">1. คุณ A <span style="float:right; color:#10b981;">5,000 ฿</span></div>
-                                    <div id="preview-td-item2" style="background: transparent; padding: 10px; border-radius: 8px; text-align: left; color: #ffffff;">2. ไบค์ตัวใหญ่ <span style="float:right; color:#10b981;">50 ฿</span></div>
+                                    <div id="preview-td-item2" style="background: transparent; padding: 10px; border-radius: 8px; text-align: left; color: #ffffff;">2. คุณ B <span style="float:right; color:#10b981;">500 ฿</span></div>
                                 </div>
                             </div>
                         </div>
                         <div class="card">
-                            <h4 style="margin-bottom: 15px;" class="lang-el" data-th="ตั้งค่า Top Donator" data-en="Top Donator Settings">ตั้งค่า Top Donator</h4>
-                            <div class="form-group"><label class="lang-el" data-th="หัวข้อตาราง" data-en="Title">หัวข้อตาราง</label><input type="text" id="ctrl-td-title" class="form-control" value="🏆 Top Donators"></div>
+                            <h4 style="margin-bottom: 15px;">ตั้งค่า Top Donator</h4>
+                            <div class="form-group"><label>หัวข้อตาราง</label><input type="text" id="ctrl-td-title" class="form-control" value="🏆 Top Donators"></div>
                             <div class="form-grid">
-                                <div class="form-group"><label class="lang-el" data-th="สีหัวข้อ" data-en="Title Color">สีหัวข้อ</label><input type="color" id="ctrl-td-tcolor" class="color-picker" value="#5BC0EB"></div>
-                                <div class="form-group"><label class="lang-el" data-th="สีตัวหนังสือรายชื่อ" data-en="Name Color">สีตัวหนังสือรายชื่อ</label><input type="color" id="ctrl-td-color" class="color-picker" value="#ffffff"></div>
+                                <div class="form-group"><label>สีหัวข้อ</label><input type="color" id="ctrl-td-tcolor" class="color-picker" value="#5BC0EB"></div>
+                                <div class="form-group"><label>สีตัวหนังสือรายชื่อ</label><input type="color" id="ctrl-td-color" class="color-picker" value="#ffffff"></div>
                             </div>
-                            <div class="form-group"><label class="lang-el" data-th="สีพื้นหลังกล่อง (RGBA)" data-en="Background Color (RGBA)">สีพื้นหลังกล่อง (RGBA)</label><input type="text" id="ctrl-td-bg" class="form-control" value="rgba(0, 0, 0, 0.6)"></div>
+                            <div class="form-group"><label>สีพื้นหลังกล่อง (RGBA)</label><input type="text" id="ctrl-td-bg" class="form-control" value="rgba(0, 0, 0, 0.6)"></div>
                             
                             <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
-                                <label style="margin: 0; font-weight: bold; color: #10b981;" class="lang-el" data-th="พื้นหลังโปร่งใส 100%" data-en="100% Transparent Background">พื้นหลังโปร่งใส 100%</label>
+                                <label style="margin: 0; font-weight: bold; color: #10b981;">พื้นหลังโปร่งใส 100%</label>
                                 <label class="switch"><input type="checkbox" id="ctrl-td-transparent-toggle"><span class="slider"></span></label>
                             </div>
                             <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 15px; margin-top: 15px;">
-                                <label style="margin: 0; font-weight: bold;" class="lang-el" data-th="แสดงเส้นขอบกล่อง (Border)" data-en="Show Border">แสดงเส้นขอบกล่อง (Border)</label>
+                                <label style="margin: 0; font-weight: bold;">แสดงเส้นขอบกล่อง (Border)</label>
                                 <label class="switch"><input type="checkbox" id="ctrl-td-border-toggle" checked><span class="slider"></span></label>
                             </div>
-                            <div class="form-group"><label class="lang-el" data-th="สีเส้นขอบ" data-en="Border Color">สีเส้นขอบ</label><input type="color" id="ctrl-td-border-color" class="color-picker" value="#3A86FF"></div>
+                            <div class="form-group"><label>สีเส้นขอบ</label><input type="color" id="ctrl-td-border-color" class="color-picker" value="#3A86FF"></div>
 
-                            <button class="btn-success w-100 lang-el" style="margin-top:20px;" onclick="saveTopDonorToOBS()" data-th="<i class='fas fa-save'></i> บันทึกตารางจัดอันดับ" data-en="<i class='fas fa-save'></i> Save Top Donator"><i class="fas fa-save"></i> บันทึกตารางจัดอันดับ</button>
+                            <button class="btn-success w-100" style="margin-top:20px;" onclick="saveTopDonorToOBS()"><i class="fas fa-save"></i> บันทึกตารางจัดอันดับ</button>
                         </div>
                     </div>
                 </div>
@@ -490,61 +540,109 @@
         </main>
     </div>
 
+    <!-- Modals -->
     <div class="modal-overlay" id="modal-global">
         <div class="modal-box">
             <div class="modal-header">
-                <div><h3 class="lang-el" data-th="<i class='fas fa-cog' style='color:#3A86FF;'></i> ตั้งค่าการแสดงผลรวม" data-en="<i class='fas fa-cog' style='color:#3A86FF;'></i> Global Settings"><i class="fas fa-cog" style="color:#3A86FF;"></i> ตั้งค่าการแสดงผลรวม</h3><p style="color: var(--text); font-size: 0.85rem; margin-top: 5px;" class="lang-el" data-th="ปรับใช้การตั้งค่าเหล่านี้กับทุกวิดเจ็ตพร้อมกัน" data-en="Apply these settings to all widgets simultaneously.">ปรับใช้การตั้งค่าเหล่านี้กับทุกวิดเจ็ตพร้อมกัน</p></div>
+                <div><h3><i class="fas fa-cog" style="color:#3A86FF;"></i> ตั้งค่าการแสดงผลรวม</h3><p style="color: var(--text); font-size: 0.85rem; margin-top: 5px;">ปรับใช้การตั้งค่าเหล่านี้กับทุกวิดเจ็ตพร้อมกัน</p></div>
             </div>
-            <div class="form-group">
-                <label class="lang-el" data-th="เปลี่ยนฟอนต์ให้ตรงกันทั้งหมด" data-en="Global Font Family">เปลี่ยนฟอนต์ให้ตรงกันทั้งหมด</label>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>เปลี่ยนฟอนต์ให้ตรงกันทั้งหมด</label>
                 <select class="form-control" id="global-font">
                     <option value="'Kanit', sans-serif">Kanit</option>
                     <option value="'IBM Plex Sans Thai', sans-serif">IBM Plex Sans Thai</option>
                 </select>
             </div>
-            <button class="btn-success w-100 lang-el" onclick="applyGlobalSettings()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
-            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-global')" data-th="ปิดหน้าต่าง" data-en="Close">ปิดหน้าต่าง</button>
+            <button class="btn-success w-100" onclick="applyGlobalSettings()"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-global')">ปิดหน้าต่าง</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal-promptpay">
         <div class="modal-box">
-            <div class="modal-header">
-                <div><h3 class="lang-el" data-th="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> พร้อมเพย์" data-en="<i class='fas fa-qrcode' style='color:#3A86FF;'></i> PromptPay"><i class="fas fa-qrcode" style="color:#3A86FF;"></i> พร้อมเพย์</h3></div>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div><h3><i class="fas fa-qrcode" style="color:#3A86FF;"></i> พร้อมเพย์</h3></div>
                 <label class="switch"><input type="checkbox" id="pp-active" checked><span class="slider"></span></label>
             </div>
-            <div class="form-group"><label class="lang-el" data-th="เบอร์โทรศัพท์" data-en="Phone Number">เบอร์โทรศัพท์</label><input type="text" class="form-control" id="pp-phone" value="0000000000"></div>
-            <button class="btn-success w-100 lang-el" onclick="savePromptPay()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
-            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')" data-th="ปิด" data-en="Close">ปิด</button>
+            <div class="form-group"><label>เบอร์โทรศัพท์ / เลขประจำตัว</label><input type="text" class="form-control" id="pp-phone" value="0000000000"></div>
+            <button class="btn-success w-100" onclick="savePromptPay()"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')">ปิด</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="modal-bank">
         <div class="modal-box">
-            <div class="modal-header">
-                <div><h3 class="lang-el" data-th="<i class='fas fa-university' style='color:#3A86FF;'></i> ธนาคาร" data-en="<i class='fas fa-university' style='color:#3A86FF;'></i> Bank Transfer"><i class="fas fa-university" style="color:#3A86FF;"></i> ธนาคาร</h3></div>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div><h3><i class="fas fa-university" style="color:#3A86FF;"></i> ธนาคาร</h3></div>
                 <label class="switch"><input type="checkbox" id="bank-active" checked><span class="slider"></span></label>
             </div>
             <div class="form-group">
-                <label class="lang-el" data-th="ธนาคาร" data-en="Bank Name">ธนาคาร</label>
+                <label>ธนาคาร</label>
                 <select class="form-control" id="bank-name">
-                    <option value="กสิกรไทย (KBANK)" class="lang-el" data-th="ธนาคารกสิกรไทย (KBANK)" data-en="Kasikorn Bank (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
-                    <option value="ไทยพาณิชย์ (SCB)" class="lang-el" data-th="ธนาคารไทยพาณิชย์ (SCB)" data-en="Siam Commercial Bank (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
-                    <option value="กรุงเทพ (BBL)" class="lang-el" data-th="ธนาคารกรุงเทพ (BBL)" data-en="Bangkok Bank (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+                    <option value="กสิกรไทย (KBANK)">ธนาคารกสิกรไทย (KBANK)</option>
+                    <option value="ไทยพาณิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+                    <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+                    <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
+                    <option value="ทหารไทยธนชาต (TTB)">ธนาคารทหารไทยธนชาต (TTB)</option>
                 </select>
             </div>
-            <div class="form-group"><label class="lang-el" data-th="หมายเลขบัญชี" data-en="Account Number">หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="เลขบัญชี 10 หลัก"></div>
-            <div class="form-group"><label class="lang-el" data-th="ชื่อเจ้าของบัญชี" data-en="Account Name">ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="ชื่อ นามสกุลตามบัญชีธนาคาร"></div>
-            <button class="btn-success w-100 lang-el" onclick="saveBank()" data-th="<i class='fas fa-save'></i> บันทึก" data-en="<i class='fas fa-save'></i> Save"><i class="fas fa-save"></i> บันทึก</button>
-            <button class="btn-outline w-100 lang-el" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')" data-th="ปิด" data-en="Close">ปิด</button>
+            <div class="form-group"><label>หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="เลขบัญชี"></div>
+            <div class="form-group"><label>ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="ชื่อ นามสกุล"></div>
+            <button class="btn-success w-100" onclick="saveBank()"><i class="fas fa-save"></i> บันทึก</button>
+            <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')">ปิด</button>
         </div>
     </div>
 
-    
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // ================= 📌 1. ตรวจสอบสิทธิ์ความปลอดภัย (JWT Authentication Guard) =================
+        const token = localStorage.getItem('ocean_token');
+        const tokenUser = localStorage.getItem('ocean_user');
+        const urlParams = new URLSearchParams(window.location.search);
+        let requestedUser = urlParams.get('u');
 
-        // ================= 📌 ระบบแปลภาษา (ย้ายขึ้นมาบนสุด!) =================
+        // ถ้าไม่มี Token หรือไม่ได้ล็อกอิน ให้เด้งกลับหน้า auth.html ทันที
+        if (!token) {
+            alert('🔒 กรุณาเข้าสู่ระบบก่อนเข้าใช้งาน Dashboard ครับ');
+            window.location.href = 'auth.html';
+        }
+
+        // ป้องกันการเปลี่ยน URL ?u=คนอื่น (Anti-URL Tampering)
+        if (tokenUser && requestedUser && requestedUser !== tokenUser) {
+            window.location.href = `dashboard.html?u=${tokenUser}`;
+        }
+
+        const username = tokenUser || requestedUser || 'OceanDIWa';
+        const baseUrl = window.location.origin;
+
+        // ฟังก์ชัน Logout
+        window.logout = function() {
+            if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+                localStorage.removeItem('ocean_token');
+                localStorage.removeItem('ocean_user');
+                window.location.href = 'auth.html';
+            }
+        };
+
+        // ตรวจสอบความถูกต้องของ Token กับ Server
+        async function checkTokenValidity() {
+            try {
+                const res = await fetch('/api/verify', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) {
+                    localStorage.removeItem('ocean_token');
+                    localStorage.removeItem('ocean_user');
+                    alert('⚠️ เซสชันของคุณหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+                    window.location.href = 'auth.html';
+                }
+            } catch (err) {
+                console.warn("Verify token network error:", err);
+            }
+        }
+        checkTokenValidity();
+
+        // ================= 📌 2. ภาษาและ UI Tab Control =================
         const langToggle = document.getElementById('langToggle');
         const langText = document.getElementById('langText');
         const flagImg = document.getElementById('flagImg');
@@ -553,27 +651,17 @@
         if(langToggle) {
             langToggle.onclick = () => {
                 currentLang = currentLang === 'th' ? 'en' : 'th';
-                
-                if (currentLang === 'en') {
-                    if(langText) langText.innerText = 'EN';
-                    if(flagImg) flagImg.src = 'https://flagcdn.com/w20/gb.png';
-                } else {
-                    if(langText) langText.innerText = 'TH';
-                    if(flagImg) flagImg.src = 'https://flagcdn.com/w20/th.png';
-                }
+                if (langText) langText.innerText = currentLang === 'en' ? 'EN' : 'TH';
+                if (flagImg) flagImg.src = currentLang === 'en' ? 'https://flagcdn.com/w20/gb.png' : 'https://flagcdn.com/w20/th.png';
 
                 document.querySelectorAll('.lang-el').forEach(el => {
                     if (el.hasAttribute(`data-${currentLang}`)) {
                         el.innerHTML = el.getAttribute(`data-${currentLang}`);
                     }
-                    if (el.hasAttribute(`data-${currentLang}-placeholder`)) {
-                        el.setAttribute('placeholder', el.getAttribute(`data-${currentLang}-placeholder`));
-                    }
                 });
             };
         }
 
-        // ================= 📌 1. ระบบควบคุมหน้าเว็บ (UI Dashboard) =================
         document.querySelectorAll('.tab-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -591,7 +679,8 @@
                 document.querySelectorAll('.widget-tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.widget-panel').forEach(p => p.classList.remove('active'));
                 this.classList.add('active');
-                document.getElementById(this.getAttribute('data-sub')).classList.add('active');
+                const target = document.getElementById(this.getAttribute('data-sub'));
+                if (target) target.classList.add('active');
             });
         });
 
@@ -612,34 +701,23 @@
             if(modal) modal.classList.remove('active');
         };
 
-        // ================= 📌 2. เชื่อมต่อ Server & จัดการข้อมูล =================
-        const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('u') || 'OceanDIWa';
-        const baseUrl = window.location.origin; 
-
+        // อัปเดตข้อมูล UI หัวข้อโปรไฟล์
         const sidebarName = document.getElementById('sidebar-name');
         const sidebarAvatar = document.getElementById('sidebar-avatar');
         if(sidebarName) sidebarName.innerText = username;
         if(sidebarAvatar) sidebarAvatar.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
-
-        const bioInput = document.getElementById('dash-bio');
-        if(bioInput && bioInput.value.includes('Zantots')) {
-            bioInput.value = `ยินดีต้อนรับสู่ช่องของ ${username}!`;
-        }
 
         const donateLink = document.getElementById('dash-donate-link');
         if(donateLink) {
             donateLink.innerText = `${baseUrl}/donate.html?u=${username}`;
             donateLink.href = `${baseUrl}/donate.html?u=${username}`;
         }
-        document.getElementById('obs-alert-url').value = `${baseUrl}/widget.html?u=${username}`;
-        document.getElementById('obs-goal-url').value = `${baseUrl}/goal.html?u=${username}`;
-        document.getElementById('obs-td-url').value = `${baseUrl}/top-donator.html?u=${username}`;
 
         window.copyDonateLink = function() {
             navigator.clipboard.writeText(`${baseUrl}/donate.html?u=${username}`);
             alert('✅ คัดลอกลิงก์รับโดเนทเรียบร้อยแล้ว!');
         };
+
         window.copyWidgetLink = function(targetId) {
             const inputEl = document.getElementById(targetId);
             if(inputEl) {
@@ -649,13 +727,39 @@
             }
         };
 
-        const socket = io(); 
+        // ================= 📌 3. การเชื่อมต่อ Socket.io แบบระบุ Token ยืนยันตัวตน =================
+        const socket = io();
 
-        // 🟢 แก้ไขบั๊กตัวแปร: ให้ใช้คำว่า username
         socket.on('connect', () => {
-            socket.emit('join_profile', username);
+            // ยืนยันสิทธิ์กับ Backend ด้วย Token
+            socket.emit('auth_dashboard', { token: token, username: username });
         });
 
+        socket.on('auth_error', (err) => {
+            alert('⚠️ ' + (err.message || 'การยืนยันตัวตนล้มเหลว'));
+            window.location.href = 'auth.html';
+        });
+
+        // 🟢 อัปเดตลิงก์ OBS ที่มี Stream Key / Widget Token
+        socket.on('apply_security_settings', (sec) => {
+            if (sec && sec.widgetToken) {
+                document.getElementById('obs-alert-url').value = `${baseUrl}/widget.html?token=${sec.widgetToken}`;
+                document.getElementById('obs-goal-url').value = `${baseUrl}/goal.html?token=${sec.widgetToken}`;
+                document.getElementById('obs-td-url').value = `${baseUrl}/top-donator.html?token=${sec.widgetToken}`;
+            }
+        });
+
+        window.regenerateStreamKey = function() {
+            if (confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการสร้าง OBS Stream Key ใหม่? (คุณจะต้องนำลิงก์ใหม่ไปใส่ใน OBS)')) {
+                socket.emit('regenerate_widget_token', { username, token });
+            }
+        };
+
+        socket.on('notify_success', (msg) => {
+            alert('✅ ' + msg);
+        });
+
+        // ================= 📌 4. จัดการ Payment Methods =================
         socket.on('apply_payment', (settings) => {
             const ppCard = document.querySelectorAll('.payment-card')[0];
             const bankCard = document.querySelectorAll('.payment-card')[1];
@@ -666,7 +770,7 @@
             if(document.getElementById('outer-pp-active')) document.getElementById('outer-pp-active').checked = isPpActive;
             if(settings?.promptpay?.phone) document.getElementById('pp-phone').value = settings.promptpay.phone;
             
-            if(ppCard) { ppCard.style.opacity = isPpActive ? '1' : '0.5'; ppCard.style.filter = isPpActive ? 'none' : 'grayscale(1)'; }
+            if(ppCard) { ppCard.style.opacity = isPpActive ? '1' : '0.5'; }
 
             if(document.getElementById('bank-active')) document.getElementById('bank-active').checked = isBankActive;
             if(document.getElementById('outer-bank-active')) document.getElementById('outer-bank-active').checked = isBankActive;
@@ -675,12 +779,44 @@
             if(settings?.bank?.accountNumber) document.getElementById('bank-acc').value = settings.bank.accountNumber;
             if(settings?.bank?.accountName) document.getElementById('bank-owner').value = settings.bank.accountName;
 
-            if(bankCard) { bankCard.style.opacity = isBankActive ? '1' : '0.5'; bankCard.style.filter = isBankActive ? 'none' : 'grayscale(1)'; }
+            if(bankCard) { bankCard.style.opacity = isBankActive ? '1' : '0.5'; }
         });
 
+        window.toggleOuterPayment = function(type) {
+            if(type === 'promptpay') {
+                const isActive = document.getElementById('outer-pp-active').checked;
+                document.getElementById('pp-active').checked = isActive; 
+                socket.emit('save_payment', { username, token, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
+            } else if (type === 'bank') {
+                const isActive = document.getElementById('outer-bank-active').checked;
+                document.getElementById('bank-active').checked = isActive; 
+                socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+            }
+        };
+
+        window.savePromptPay = function() {
+            const isActive = document.getElementById('pp-active').checked;
+            document.getElementById('outer-pp-active').checked = isActive;
+            socket.emit('save_payment', { username, token, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
+            closeModal('modal-promptpay');
+        };
+
+        window.saveBank = function() {
+            const isActive = document.getElementById('bank-active').checked;
+            document.getElementById('outer-bank-active').checked = isActive;
+            socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+            closeModal('modal-bank');
+        };
+
+        // ================= 📌 5. Page Settings (Bio, Theme, Length, Images) =================
         socket.on('apply_page_settings', (settings) => {
             if(settings) {
                 if(settings.bio) document.getElementById('dash-bio').value = settings.bio;
+                if(settings.thankMsg) document.getElementById('dash-thank').value = settings.thankMsg;
+                if(settings.maxMessageLength) document.getElementById('dash-max-len').value = settings.maxMessageLength;
+                if(settings.allowDonorImages !== undefined) document.getElementById('dash-allow-images').checked = settings.allowDonorImages;
+                if(settings.minAmountForImage !== undefined) document.getElementById('dash-min-image-amount').value = settings.minAmountForImage;
+
                 if(settings.bgUrl) {
                     const presetEl = document.getElementById('dash-theme-preset');
                     const optionExists = Array.from(presetEl.options).some(opt => opt.value === settings.bgUrl);
@@ -699,6 +835,64 @@
             document.getElementById('dash-bg').style.display = (preset === 'custom') ? 'block' : 'none';
         };
 
+        window.saveProfileSettings = function() {
+            const themePreset = document.getElementById('dash-theme-preset').value;
+            const bgUrl = (themePreset === 'custom') ? document.getElementById('dash-bg').value : themePreset;
+            socket.emit('save_page_settings', { 
+                username, 
+                token, 
+                bio: document.getElementById('dash-bio').value, 
+                thankMsg: document.getElementById('dash-thank').value,
+                bgUrl: bgUrl,
+                maxMessageLength: document.getElementById('dash-max-len').value,
+                allowDonorImages: document.getElementById('dash-allow-images').checked,
+                minAmountForImage: document.getElementById('dash-min-image-amount').value
+            });
+            alert('✅ บันทึกข้อมูลและหน้ารับเงินสำเร็จ!');
+        };
+
+        // ================= 📌 6. จัดการโซเชียลมีเดีย (แก้บั๊ก Social ไม่ Save) =================
+        socket.on('apply_social', (links) => {
+            if (links) {
+                if (links.youtube) document.getElementById('dash-yt').value = links.youtube;
+                if (links.facebook) document.getElementById('dash-fb').value = links.facebook;
+                if (links.twitch) document.getElementById('dash-twitch').value = links.twitch;
+            }
+        });
+
+        window.saveSocialSettings = function() {
+            const youtube = document.getElementById('dash-yt').value.trim();
+            const facebook = document.getElementById('dash-fb').value.trim();
+            const twitch = document.getElementById('dash-twitch').value.trim();
+
+            socket.emit('save_social', {
+                username,
+                token,
+                youtube,
+                facebook,
+                twitch
+            });
+            alert('✅ บันทึกข้อมูลโซเชียลมีเดียเรียบร้อยแล้ว!');
+        };
+
+        // ================= 📌 7. จัดการคำต้องห้าม (แก้บั๊ก Profanity Filter ไม่ทำงาน) =================
+        socket.on('apply_banned_words', (words) => {
+            if (Array.isArray(words)) {
+                document.getElementById('dash-banned-words').value = words.join(', ');
+            }
+        });
+
+        window.saveBannedWords = function() {
+            const wordsVal = document.getElementById('dash-banned-words').value;
+            socket.emit('save_banned_words', {
+                username,
+                token,
+                words: wordsVal
+            });
+            alert('✅ บันทึกรายการคำต้องห้ามเรียบร้อยแล้ว!');
+        };
+
+        // ================= 📌 8. สถิติและประวัติการโดเนท =================
         socket.on('update_stats', (stats) => {
             if(document.getElementById('dash-stat-today')) document.getElementById('dash-stat-today').innerText = (stats.today || 0).toLocaleString();
             if(document.getElementById('dash-stat-total')) document.getElementById('dash-stat-total').innerText = (stats.total || 0).toLocaleString();
@@ -712,98 +906,33 @@
             
             tbody.innerHTML = [...history].reverse().map((item, reversedIndex) => {
                 const originalIndex = history.length - 1 - reversedIndex; 
-                const dateStr = item.date ? new Date(item.date).toLocaleString('th-TH') : (item.timestamp || 'ไม่ระบุเวลา');
+                const dateStr = item.date ? new Date(item.date).toLocaleString('th-TH') : 'ไม่ระบุเวลา';
+                const imageBadge = item.imageUrl ? `<a href="${item.imageUrl}" target="_blank" style="margin-left: 8px; color: #3A86FF; text-decoration: none; font-size: 0.85rem;"><i class="fas fa-image"></i> [ดูรูป]</a>` : '';
                 return `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 15px;">${dateStr}</td>
                     <td style="padding: 15px; font-weight: 500;">${item.name}</td>
                     <td style="padding: 15px; color: var(--blue); font-weight: bold;">${item.amount.toLocaleString()} ฿</td>
-                    <td style="padding: 15px;">${item.message || '-'}</td>
-                    <td style="padding: 15px;"><button class="btn-danger" style="padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;" onclick="deleteHistory(${originalIndex})"><i class="fas fa-trash"></i> ลบ</button></td>
+                    <td style="padding: 15px;">${item.message || '-'}${imageBadge}</td>
+                    <td style="padding: 15px; text-align: center;"><button class="btn-danger" style="padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;" onclick="deleteHistory(${originalIndex})"><i class="fas fa-trash"></i> ลบ</button></td>
                 </tr>`;
             }).join('');
         });
 
         window.deleteHistory = function(index) {
-            if(confirm('คุณต้องการลบประวัติการโดเนทนี้ใช่หรือไม่?')) socket.emit('delete_donation', { username: username, index: index });
+            if(confirm('คุณต้องการลบประวัติการโดเนทนี้ใช่หรือไม่?')) {
+                socket.emit('delete_donation', { username, token, index: index });
+            }
         };
 
         window.resetStats = function() {
             if(confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "รีเซ็ตยอดเงินและประวัติทั้งหมด" ให้เป็น 0 ?')) {
-                socket.emit('reset_stats', { username });
+                socket.emit('reset_stats', { username, token });
                 alert('✅ รีเซ็ตข้อมูลเรียบร้อยแล้ว!');
             }
         };
 
-        window.toggleOuterPayment = function(type) {
-            if(type === 'promptpay') {
-                const isActive = document.getElementById('outer-pp-active').checked;
-                document.getElementById('pp-active').checked = isActive; 
-                socket.emit('save_payment', { username: username, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
-            } else if (type === 'bank') {
-                const isActive = document.getElementById('outer-bank-active').checked;
-                document.getElementById('bank-active').checked = isActive; 
-                socket.emit('save_payment', { username: username, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
-            }
-        };
-
-        window.savePromptPay = function() {
-            const isActive = document.getElementById('pp-active').checked;
-            document.getElementById('outer-pp-active').checked = isActive;
-            socket.emit('save_payment', { username: username, type: 'promptpay', data: { active: isActive, phone: document.getElementById('pp-phone').value } });
-            closeModal('modal-promptpay');
-        };
-
-        window.saveBank = function() {
-            const isActive = document.getElementById('bank-active').checked;
-            document.getElementById('outer-bank-active').checked = isActive;
-            socket.emit('save_payment', { username: username, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
-            closeModal('modal-bank');
-        };
-
-        window.saveProfileSettings = function() {
-            const themePreset = document.getElementById('dash-theme-preset').value;
-            const bgUrl = (themePreset === 'custom') ? document.getElementById('dash-bg').value : themePreset;
-            socket.emit('save_page_settings', { username: username, bio: document.getElementById('dash-bio').value, bgUrl: bgUrl });
-            alert('✅ บันทึกข้อมูลสำเร็จ!');
-        };
-
-        // 🟢 เพิ่มระบบ Live Preview หลอด Goal ขยับตามที่พิมพ์!
-        function updateGoalPreview() {
-            const title = document.getElementById('ctrl-goal-title')?.value || 'เป้าหมายโดเนท';
-            const target = parseFloat(document.getElementById('ctrl-goal-target')?.value) || 100;
-            const current = parseFloat(document.getElementById('ctrl-goal-current')?.value) || 0;
-            const barColor = document.getElementById('ctrl-goal-color')?.value || '#0ea5e9';
-            const textColor = document.getElementById('ctrl-goal-text-color')?.value || '#ffffff'; // <-- ดึงค่าสีตัวหนังสือมาแล้ว
-            
-            let percent = (current / target) * 100;
-            if (percent > 100) percent = 100;
-
-            const titleEl = document.getElementById('preview-goal-title');
-            if(titleEl) {
-                titleEl.innerText = title;
-                titleEl.style.color = textColor; // <-- สั่งเปลี่ยนสีหัวข้อ
-            }
-
-            if(document.getElementById('preview-goal-bar')) {
-                document.getElementById('preview-goal-bar').style.width = percent + '%';
-                document.getElementById('preview-goal-bar').style.backgroundColor = barColor;
-            }
-            
-            const percentEl = document.getElementById('preview-goal-percentage');
-            if(percentEl) {
-                percentEl.innerText = `${current.toLocaleString()} บาท (${Math.round(percent)}%)`;
-                percentEl.style.color = textColor; // <-- สั่งเปลี่ยนสีตัวเลขเปอร์เซ็นต์
-            }
-        }
-        
-        // 👇 ตรงนี้สำคัญมาก! ต้องเพิ่ม 'ctrl-goal-text-color' เข้าไปเพื่อให้ระบบรู้ว่าถ้าเปลี่ยนสี ให้ภาพขยับตาม
-        ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color', 'ctrl-goal-text-color'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('input', updateGoalPreview);
-        });
-
-        // 🟢 2. ระบบ Live Preview สำหรับ Donate Alert (ที่ตกหล่นไป)
+        // ================= 📌 9. ตั้งค่าวิดเจ็ต Alert & พรีวิว & ทดสอบเสียง =================
         function updateAlertPreview() {
             const name = document.getElementById('test-name')?.value || 'โทนี่';
             const amount = document.getElementById('test-amount')?.value || '500';
@@ -812,7 +941,7 @@
             const nameColor = document.getElementById('ctrl-name-color')?.value || '#f59e0b';
             const amountColor = document.getElementById('ctrl-amount-color')?.value || '#5BC0EB';
             const textColor = document.getElementById('ctrl-text-color')?.value || '#ffffff';
-            const imgUrl = document.getElementById('ctrl-img-url')?.value || 'https://media.discordapp.net/attachments/934672365764349972/1480165647681065000/image.png';
+            const imgUrl = document.getElementById('ctrl-img-url')?.value || 'https://media.giphy.com/media/YaP3iYxN3T8nIEN5rD/giphy.gif';
             const font = document.getElementById('ctrl-font')?.value || "'Kanit', sans-serif";
 
             if(document.getElementById('preview-name')) { document.getElementById('preview-name').innerText = name; document.getElementById('preview-name').style.color = nameColor; }
@@ -829,9 +958,9 @@
                 el.addEventListener('input', updateAlertPreview);
                 if(el.tagName === 'SELECT') el.addEventListener('change', updateAlertPreview);
             }
-        }); 
+        });
 
-        // ระบบเปลี่ยน Layout ซ้าย/ขวา
+        // 🟢 เปลี่ยนปุ่ม Layout (Main vs Row)
         document.querySelectorAll('.layout-item').forEach(item => {
             item.addEventListener('click', function() {
                 document.querySelectorAll('.layout-item').forEach(i => i.classList.remove('active'));
@@ -845,10 +974,216 @@
             });
         });
 
-        // 🟢 ระบบบันทึก Widgets แบบกันพัง
+        // 🟢 ดึงค่า Alert Settings จาก Database กลับมาแสดงบน Dashboard
+        socket.on('apply_settings', (settings) => {
+            if (!settings) return;
+            if (settings.layout) {
+                document.querySelectorAll('.layout-item').forEach(btn => {
+                    if (btn.getAttribute('data-layout') === settings.layout) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                const alertContent = document.getElementById('preview-alert-content');
+                if (alertContent) {
+                    if (settings.layout === 'row') alertContent.classList.add('layout-row');
+                    else alertContent.classList.remove('layout-row');
+                }
+            }
+            if (settings.sound) document.getElementById('ctrl-alert-sound').value = settings.sound;
+            if (settings.soundVol !== undefined) {
+                document.getElementById('ctrl-alert-vol').value = settings.soundVol;
+                document.getElementById('val-alert-vol').innerText = settings.soundVol;
+            }
+            if (settings.ttsRate !== undefined) {
+                document.getElementById('ctrl-tts-rate').value = settings.ttsRate;
+                document.getElementById('val-tts-rate').innerText = settings.ttsRate;
+            }
+            if (settings.ttsPitch !== undefined) {
+                document.getElementById('ctrl-tts-pitch').value = settings.ttsPitch;
+                document.getElementById('val-tts-pitch').innerText = settings.ttsPitch;
+            }
+            if (settings.ttsVol !== undefined) {
+                document.getElementById('ctrl-tts-vol').value = settings.ttsVol;
+                document.getElementById('val-tts-vol').innerText = settings.ttsVol;
+            }
+            if (settings.ttsNameToggle !== undefined) document.getElementById('ctrl-tts-name-toggle').checked = settings.ttsNameToggle;
+            if (settings.ttsMsgToggle !== undefined) document.getElementById('ctrl-tts-msg-toggle').checked = settings.ttsMsgToggle;
+            if (settings.font) document.getElementById('ctrl-font').value = settings.font;
+            if (settings.nameColor) document.getElementById('ctrl-name-color').value = settings.nameColor;
+            if (settings.amountColor) document.getElementById('ctrl-amount-color').value = settings.amountColor;
+            if (settings.textColor) document.getElementById('ctrl-text-color').value = settings.textColor;
+            if (settings.imgUrl) document.getElementById('ctrl-img-url').value = settings.imgUrl;
+
+            updateAlertPreview();
+        });
+
+        window.saveAlertSettingsToOBS = function() {
+            const activeLayout = document.querySelector('.layout-item.active');
+            const alertData = {
+                username: username,
+                token: token,
+                layout: activeLayout ? activeLayout.getAttribute('data-layout') : 'main',
+                sound: document.getElementById('ctrl-alert-sound').value,
+                soundVol: parseInt(document.getElementById('ctrl-alert-vol').value) || 75,
+                ttsRate: parseFloat(document.getElementById('ctrl-tts-rate').value) || 1.0,
+                ttsPitch: parseFloat(document.getElementById('ctrl-tts-pitch').value) || 1.0,
+                ttsVol: parseInt(document.getElementById('ctrl-tts-vol').value) || 100,
+                ttsNameToggle: document.getElementById('ctrl-tts-name-toggle').checked,
+                ttsMsgToggle: document.getElementById('ctrl-tts-msg-toggle').checked,
+                imgUrl: document.getElementById('ctrl-img-url').value,
+                nameColor: document.getElementById('ctrl-name-color').value,
+                amountColor: document.getElementById('ctrl-amount-color').value,
+                textColor: document.getElementById('ctrl-text-color').value,
+                font: document.getElementById('ctrl-font').value
+            };
+            socket.emit('update_alert', alertData);
+            alert('✅ บันทึกการตกแต่ง Alert ไปที่ OBS สำเร็จ!');
+        };
+
+        // 🟢 แก้บั๊กปุ่มทดสอบและเล่นเสียง (btn-test-alert)
+        function playLocalPreviewSound(type, volumeRatio) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime((volumeRatio || 0.75) * 0.3, now);
+                gain.connect(ctx.destination);
+
+                if (type === 'success' || type === 'coin') {
+                    const osc1 = ctx.createOscillator();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(987.77, now);
+                    osc1.frequency.setValueAtTime(1318.51, now + 0.1);
+                    osc1.connect(gain);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc1.start(now);
+                    osc1.stop(now + 0.6);
+                } else {
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(260, now);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.15);
+                    osc.frequency.exponentialRampToValueAtTime(320, now + 0.35);
+                    osc.connect(gain);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                }
+            } catch (e) { console.warn(e); }
+        }
+
+        const btnTestAlert = document.getElementById('btn-test-alert');
+        if (btnTestAlert) {
+            btnTestAlert.onclick = () => {
+                const name = document.getElementById('test-name').value || 'โทนี่';
+                const amount = document.getElementById('test-amount').value || '500';
+                const msg = document.getElementById('test-msg').value || 'ทดสอบการแจ้งเตือนและระบบอ่านออกเสียง!';
+                const soundType = document.getElementById('ctrl-alert-sound').value;
+                const soundVol = (parseInt(document.getElementById('ctrl-alert-vol').value) || 75) / 100;
+
+                // 1. กระตุกแอนิเมชันใน Preview Box
+                const previewContent = document.getElementById('preview-alert-content');
+                if (previewContent) {
+                    previewContent.style.transform = 'scale(1.1)';
+                    setTimeout(() => { previewContent.style.transform = 'scale(1)'; }, 300);
+                }
+
+                // 2. เล่นเสียงในเครื่อง
+                playLocalPreviewSound(soundType, soundVol);
+
+                // 3. ทดสอบเสียงพูด TTS
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                    const text = `${name} โดเนทมา ${amount} บาท บอกว่า ${msg}`;
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'th-TH';
+                    utterance.rate = parseFloat(document.getElementById('ctrl-tts-rate').value) || 1.0;
+                    utterance.pitch = parseFloat(document.getElementById('ctrl-tts-pitch').value) || 1.0;
+                    utterance.volume = (parseInt(document.getElementById('ctrl-tts-vol').value) || 100) / 100;
+
+                    const voices = window.speechSynthesis.getVoices();
+                    const thVoice = voices.find(v => v.lang.includes('th') || v.lang.includes('TH'));
+                    if (thVoice) utterance.voice = thVoice;
+
+                    setTimeout(() => { window.speechSynthesis.speak(utterance); }, 350);
+                }
+
+                // 4. ส่งสัญญาณไปยัง OBS Widget จริงๆ
+                socket.emit('test_alert', {
+                    username,
+                    token,
+                    name,
+                    amount,
+                    message: msg
+                });
+            };
+        }
+
+        // โหลดรายชื่อเสียง TTS ในเบราว์เซอร์
+        function populateVoices() {
+            if (!window.speechSynthesis) return;
+            const voices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('ctrl-tts-voice');
+            if (!voiceSelect || voices.length === 0) return;
+
+            voiceSelect.innerHTML = '<option value="">เสียงภาษาไทยเริ่มต้น (Default Thai)</option>';
+            voices.forEach((voice, i) => {
+                const opt = document.createElement('option');
+                opt.value = voice.name;
+                opt.innerText = `${voice.name} (${voice.lang})`;
+                if (voice.lang.includes('th') || voice.lang.includes('TH')) {
+                    opt.selected = true;
+                }
+                voiceSelect.appendChild(opt);
+            });
+        }
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = populateVoices;
+            populateVoices();
+        }
+
+        // ================= 📌 10. ตั้งค่า Goal & Top Donator =================
+        function updateGoalPreview() {
+            const title = document.getElementById('ctrl-goal-title')?.value || 'เป้าหมายโดเนท';
+            const target = parseFloat(document.getElementById('ctrl-goal-target')?.value) || 100;
+            const current = parseFloat(document.getElementById('ctrl-goal-current')?.value) || 0;
+            const barColor = document.getElementById('ctrl-goal-color')?.value || '#0ea5e9';
+            const textColor = document.getElementById('ctrl-goal-text-color')?.value || '#ffffff';
+            
+            let percent = (current / target) * 100;
+            if (percent > 100) percent = 100;
+
+            const titleEl = document.getElementById('preview-goal-title');
+            if(titleEl) {
+                titleEl.innerText = title;
+                titleEl.style.color = textColor;
+            }
+
+            if(document.getElementById('preview-goal-bar')) {
+                document.getElementById('preview-goal-bar').style.width = percent + '%';
+                document.getElementById('preview-goal-bar').style.backgroundColor = barColor;
+            }
+            
+            const percentEl = document.getElementById('preview-goal-percentage');
+            if(percentEl) {
+                percentEl.innerText = `${current.toLocaleString()} / ${target.toLocaleString()} บาท (${Math.round(percent)}%)`;
+                percentEl.style.color = textColor;
+            }
+        }
+        
+        ['ctrl-goal-title', 'ctrl-goal-target', 'ctrl-goal-current', 'ctrl-goal-color', 'ctrl-goal-text-color'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('input', updateGoalPreview);
+        });
+
         window.saveGoalSettingsToOBS = function() {
             const goalData = {
                 username: username,
+                token: token,
                 title: document.getElementById('ctrl-goal-title').value,
                 target: document.getElementById('ctrl-goal-target').value,
                 current: document.getElementById('ctrl-goal-current').value,
@@ -860,46 +1195,16 @@
             alert('✅ บันทึกเป้าหมาย และอัปเดตไปที่ OBS สำเร็จ!');
         };
 
-        window.saveAlertSettingsToOBS = function() {
-            const activeLayout = document.querySelector('.layout-item.active');
-            const alertData = {
-                username: username,
-                layout: activeLayout ? activeLayout.getAttribute('data-layout') : 'main',
-                sound: document.getElementById('ctrl-alert-sound').value,
-                imgUrl: document.getElementById('ctrl-img-url').value,
-                nameColor: document.getElementById('ctrl-name-color').value,
-                amountColor: document.getElementById('ctrl-amount-color').value,
-                textColor: document.getElementById('ctrl-text-color').value
-            };
-            socket.emit('update_alert', alertData);
-            alert('✅ บันทึกการตกแต่ง Alert สำเร็จ!');
-        };
-
-        window.saveTopDonorToOBS = function() {
-            const tdData = {
-                username: username,
-                title: document.getElementById('ctrl-td-title').value,
-                titleColor: document.getElementById('ctrl-td-tcolor').value,
-                textColor: document.getElementById('ctrl-td-color').value,
-                boxColor: document.getElementById('ctrl-td-bg').value,
-                isTransparent: document.getElementById('ctrl-td-transparent-toggle').checked,
-                hasBorder: document.getElementById('ctrl-td-border-toggle').checked,
-                borderColor: document.getElementById('ctrl-td-border-color').value
-            };
-            socket.emit('update_top_donor', tdData);
-            alert('✅ บันทึกตารางจัดอันดับ สำเร็จ!');
-        };
-
         socket.on('apply_goal', (goal) => {
             if (!goal) return;
-            if (document.getElementById('ctrl-goal-title')) document.getElementById('ctrl-goal-title').value = goal.title;
-            if (document.getElementById('ctrl-goal-target')) document.getElementById('ctrl-goal-target').value = goal.target;
-            if (document.getElementById('ctrl-goal-current')) document.getElementById('ctrl-goal-current').value = goal.current;
+            if (document.getElementById('ctrl-goal-title')) document.getElementById('ctrl-goal-title').value = goal.title || 'เป้าหมายโดเนท';
+            if (document.getElementById('ctrl-goal-target')) document.getElementById('ctrl-goal-target').value = goal.target || 100;
+            if (document.getElementById('ctrl-goal-current')) document.getElementById('ctrl-goal-current').value = goal.current || 0;
             if (document.getElementById('ctrl-goal-color')) document.getElementById('ctrl-goal-color').value = goal.barColor || '#0EA5E9';
-            updateGoalPreview(); // อัปเดต Preview ให้ขยับทันที
+            if (document.getElementById('ctrl-goal-text-color')) document.getElementById('ctrl-goal-text-color').value = goal.textColor || '#ffffff';
+            updateGoalPreview();
         });
-        
-        // 🟢 1. ระบบ Live Preview Top Donator ขยับตามที่พิมพ์!
+
         function updateTopDonorPreview() {
             const title = document.getElementById('ctrl-td-title')?.value || '🏆 Top Donators';
             const titleColor = document.getElementById('ctrl-td-tcolor')?.value || '#5BC0EB';
@@ -920,14 +1225,8 @@
                 titleEl.innerText = title;
                 titleEl.style.color = titleColor;
             }
-
-            // เปลี่ยนสีตัวหนังสือของรายชื่อคนโดเนท
-            document.querySelectorAll('.preview-td-item').forEach(item => {
-                item.style.color = textColor;
-            });
         }
 
-        // ดักจับเวลาคลิกเปลี่ยนสี หรือพิมพ์เปลี่ยนชื่อ
         ['ctrl-td-title', 'ctrl-td-tcolor', 'ctrl-td-color', 'ctrl-td-bg', 'ctrl-td-border-color'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', updateTopDonorPreview);
@@ -937,7 +1236,6 @@
             if(el) el.addEventListener('change', updateTopDonorPreview);
         });
 
-        // 🟢 2. ดึงข้อมูลตั้งค่าจาก DB มาแสดงในช่องตั้งค่า (กรณี Refresh หน้าเว็บ)
         socket.on('apply_top_donor', (settings) => {
             if (!settings) return;
             if (document.getElementById('ctrl-td-title')) document.getElementById('ctrl-td-title').value = settings.title || '🏆 Top Donators';
@@ -951,31 +1249,21 @@
             updateTopDonorPreview();
         });
 
-        // 🟢 3. ดึง "ชื่อคนโอนเงินจริงๆ" มาโชว์ในช่องตัวอย่าง (Real-time)
-        socket.on('update_leaderboard', (topDonators) => {
-            const tdPreviewBox = document.getElementById('preview-td-box');
-            if (!tdPreviewBox) return;
-            
-            const currentTitle = document.getElementById('ctrl-td-title')?.value || '🏆 Top Donators';
-            const titleHTML = `<div id="preview-td-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 10px;">${currentTitle}</div>`;
-            
-            let itemsHTML = '';
-            if (topDonators && topDonators.length > 0) {
-                // ดึงมาโชว์แค่ 3 อันดับแรกในช่องตัวอย่าง
-                topDonators.slice(0, 3).forEach((d, i) => {
-                    itemsHTML += `<div class="preview-td-item" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left;">${i+1}. ${d.name} <span style="float:right; color:#10b981;">${d.amount.toLocaleString()} ฿</span></div>`;
-                });
-            } else {
-                itemsHTML = `<div class="preview-td-item" style="background: transparent; padding: 10px; border-radius: 8px; margin-bottom: 5px; text-align: left;">ยังไม่มีคนโดเนท <span style="float:right; color:#10b981;">0 ฿</span></div>`;
-            }
-            
-            tdPreviewBox.innerHTML = titleHTML + itemsHTML;
-            updateTopDonorPreview(); // โหลดสีทับเข้าไปใหม่ให้สวยงาม
-        });
-
-
+        window.saveTopDonorToOBS = function() {
+            const tdData = {
+                username: username,
+                token: token,
+                title: document.getElementById('ctrl-td-title').value,
+                titleColor: document.getElementById('ctrl-td-tcolor').value,
+                textColor: document.getElementById('ctrl-td-color').value,
+                boxColor: document.getElementById('ctrl-td-bg').value,
+                isTransparent: document.getElementById('ctrl-td-transparent-toggle').checked,
+                hasBorder: document.getElementById('ctrl-td-border-toggle').checked,
+                borderColor: document.getElementById('ctrl-td-border-color').value
+            };
+            socket.emit('update_top_donor', tdData);
+            alert('✅ บันทึกตารางจัดอันดับ สำเร็จ!');
+        };
     </script>
-</body>
-</html>
 </body>
 </html>

@@ -38,8 +38,8 @@
         .profile-bio { color: var(--text); font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5; }
         
         .social-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
-        .social-links a { color: var(--text); font-size: 1.2rem; transition: 0.3s; display: none; }
-        .social-links a:hover { color: var(--blue); transform: translateY(-3px); }
+        .social-links a { color: var(--text); font-size: 1.3rem; transition: 0.3s; display: none; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); align-items: center; justify-content: center; text-decoration: none; }
+        .social-links a:hover { color: white; background: var(--blue); transform: translateY(-3px); }
 
         .top-donor-box { background: rgba(58, 134, 255, 0.05); border: 1px solid rgba(58, 134, 255, 0.2); padding: 15px; border-radius: 15px; display: flex; align-items: center; gap: 15px; text-align: left; }
         .top-donor-icon { width: 40px; height: 40px; background: rgba(58, 134, 255, 0.1); color: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
@@ -53,11 +53,6 @@
         .amount-presets { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .amount-btn { flex: 1; min-width: 60px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: normal; }
         .amount-btn:hover { background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
-
-        .amount-input-wrapper { position: relative; display: flex; align-items: center; }
-        .amount-input-wrapper input { padding-right: 50px; font-size: 1.2rem; font-weight: bold; color: var(--blue); }
-        .amount-input-wrapper span { position: absolute; right: 15px; color: var(--text); font-weight: 500; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
         .payment-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
         .pay-method-card { border: 2px solid var(--border); background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; overflow: hidden; }
@@ -76,7 +71,6 @@
         .btn-close-qr { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s;}
         .btn-close-qr:hover { opacity: 0.9; }
 
-        /* ปุ่มเปลี่ยนภาษา */
         .lang-toggle-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .lang-toggle-btn:hover { background: rgba(255,255,255,0.15); }
     </style>
@@ -104,13 +98,14 @@
         <div class="profile-section">
             <div class="card" style="padding: 0 0 30px 0; overflow: hidden;">
                 <div class="profile-cover"></div>
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Zantots" alt="Profile" class="profile-avatar">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=OceanDIWa" alt="Profile" class="profile-avatar">
                 
                 <div style="padding: 0 20px;">
-                    <h2 class="profile-name" id="streamer-name">Zantots</h2>
+                    <h2 class="profile-name" id="streamer-name">สตรีมเมอร์</h2>
                     <p id="streamer-bio" style="color: var(--text); font-size: 0.95rem; margin-top: 5px;">กำลังโหลดข้อมูล...</p>
                     
-                    <div class="social-links">
+                    <!-- 🟢 ช่องทางโซเชียลมีเดียที่โหลดสด -->
+                    <div class="social-links" id="social-links-container">
                         <a href="#" id="view-yt" target="_blank"><i class="fab fa-youtube" style="color:#ff0000;"></i></a>
                         <a href="#" id="view-fb" target="_blank"><i class="fab fa-facebook" style="color:#1877f2;"></i></a>
                         <a href="#" id="view-twitch" target="_blank"><i class="fab fa-twitch" style="color:#9146ff;"></i></a>
@@ -155,12 +150,32 @@
 
                 <div class="form-group">
                     <label class="lang-el" data-th="ชื่อของคุณ (แสดงบนหน้าจอไลฟ์)" data-en="Your Name (Shows on live screen)">ชื่อของคุณ (แสดงบนหน้าจอไลฟ์)</label>
-                    <input type="text" id="donate-name" class="form-control lang-el" data-th-placeholder="นามแฝงของคุณ" data-en-placeholder="Your Nickname" placeholder="นามแฝงของคุณ" required>
+                    <input type="text" id="donate-name" maxlength="40" class="form-control lang-el" data-th-placeholder="นามแฝงของคุณ (สูงสุด 40 ตัวอักษร)" data-en-placeholder="Your Nickname" placeholder="นามแฝงของคุณ" required>
                 </div>
 
+                <!-- 🟢 ฟีเจอร์: จำกัดจำนวนตัวอักษรข้อความโดเนท พร้อมตัวนับสด -->
                 <div class="form-group">
-                    <label class="lang-el" data-th="ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)" data-en="Message to streamer (TTS will read this)">ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)</label>
-                    <textarea id="donate-msg" class="form-control lang-el" rows="3" data-th-placeholder="พิมพ์ข้อความให้กำลังใจ..." data-en-placeholder="Type a supportive message..." placeholder="พิมพ์ข้อความให้กำลังใจ..."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label class="lang-el" style="margin: 0;" data-th="ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)" data-en="Message to streamer (TTS will read this)">ข้อความถึงสตรีมเมอร์ (สิริจะอ่านข้อความนี้)</label>
+                        <span style="font-size: 0.85rem; color: #a0aec0;"><span id="msg-char-count">0</span> / <span id="msg-max-count">150</span></span>
+                    </div>
+                    <textarea id="donate-msg" maxlength="150" class="form-control lang-el" rows="3" data-th-placeholder="พิมพ์ข้อความให้กำลังใจ..." data-en-placeholder="Type a supportive message..." placeholder="พิมพ์ข้อความให้กำลังใจ..."></textarea>
+                </div>
+
+                <!-- 🟢 ฟีเจอร์: ให้คนโดเนทใส่รูปภาพหรือ GIF เอง -->
+                <div class="form-group" id="donor-image-group">
+                    <label class="lang-el" data-th="✨ แนบรูปภาพ หรือ GIF ขึ้นจอ (ไม่บังคับ)" data-en="✨ Attach Image / GIF to stream (Optional)">✨ แนบรูปภาพ หรือ GIF ขึ้นจอ (ไม่บังคับ)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="donate-image-url" class="form-control lang-el" data-th-placeholder="วางลิงก์รูปภาพ หรือ GIF (Giphy / Tenor / Discord)" data-en-placeholder="Paste Image or GIF URL" placeholder="วางลิงก์รูปภาพ หรือ GIF">
+                        <button type="button" class="amount-btn" onclick="testDonorImagePreview()" style="width: 80px; flex: none;">ดูรูป</button>
+                    </div>
+
+                    <!-- พรีวิวรูปภาพ -->
+                    <div id="donor-image-preview-box" style="display: none; margin-top: 12px; position: relative; width: fit-content;">
+                        <img id="donor-image-preview" src="" style="max-width: 140px; max-height: 100px; border-radius: 10px; border: 2px solid var(--blue); object-fit: cover; display: block;">
+                        <button type="button" onclick="clearDonorImage()" style="position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;">✕</button>
+                    </div>
+                    <p id="image-min-notice" style="font-size: 0.8rem; color: #a0aec0; margin-top: 6px;">* รูปจะแสดงบนหน้าจอเมื่อโดเนทตั้งแต่ <span id="image-min-val" style="color: var(--blue); font-weight: bold;">20</span> บาทขึ้นไป</p>
                 </div>
 
                 <div class="form-group">
@@ -191,6 +206,7 @@
         </div>
     </div>
 
+    <!-- Modal PromptPay QR -->
     <div class="qr-modal" id="qr-modal">
         <div class="qr-box">
             <h3 style="color: #1155cc; margin-bottom: 10px;"><i class="fas fa-qrcode"></i> <span class="lang-el" data-th="สแกนเพื่อจ่ายเงิน" data-en="Scan to Pay">สแกนเพื่อจ่ายเงิน</span></h3>
@@ -202,6 +218,7 @@
         </div>
     </div>
 
+    <!-- Modal Bank Transfer -->
     <div class="qr-modal" id="bank-modal">
         <div class="qr-box">
             <h3 style="color: #f5a623; margin-bottom: 10px;"><i class="fas fa-university"></i> <span class="lang-el" data-th="โอนเงินผ่านธนาคาร" data-en="Bank Transfer">โอนเงินผ่านธนาคาร</span></h3>
@@ -218,6 +235,7 @@
         </div>
     </div>
 
+    <!-- Thank you modal -->
     <div class="qr-modal" id="thankyou-modal">
         <div class="qr-box" style="padding: 40px 30px;">
             <div style="font-size: 3.5rem; color: #10b981; margin-bottom: 10px;">
@@ -231,8 +249,7 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-
-        // ================= 📌 ระบบแปลภาษา (ย้ายขึ้นมาบนสุด!) =================
+        // ================= 📌 ระบบแปลภาษา =================
         let currentLang = 'th';
         const langToggle = document.getElementById('langToggle');
         const flagImg = document.getElementById('flagImg');
@@ -251,17 +268,9 @@
                 }
             });
 
-            // อัปเดตปุ่มโดเนทและ Text ต่างๆ
             const amountInput = document.getElementById('input-amount');
             const amount = amountInput ? (amountInput.value || 50) : 50;
-            if(typeof updateDonateButton === 'function') updateDonateButton(amount);
-            
-            // อัปเดต Top Donor
-            const tdAmount = document.getElementById('top-donor-amount');
-            if (tdAmount && tdAmount.innerText !== '0 ฿') {
-                const val = tdAmount.innerText.replace(/[^0-9,.]/g, '');
-                tdAmount.innerText = `${val} ${currentLang === 'en' ? 'THB' : '฿'}`;
-            }
+            updateDonateButton(amount);
         }
 
         if(langToggle) {
@@ -274,50 +283,161 @@
         const urlParams = new URLSearchParams(window.location.search);
         const streamerName = urlParams.get('u') || 'OceanDIWa';
         
-        // อัปเดตชื่อ รูปภาพ และ Title
         const nameEl = document.getElementById('streamer-name');
         const avatarEl = document.querySelector('.profile-avatar');
         if(nameEl) nameEl.innerText = streamerName;
         if(avatarEl) avatarEl.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${streamerName}`;
         document.title = `โดเนทให้ ${streamerName} | Ocean Donate`;
-        
+
+        let bannedWordsList = ['ควย', 'สัส', 'เหี้ย', 'เย็ด', 'มึง', 'กู', 'พนัน', 'คาสิโน'];
+        let maxMessageLength = 150;
+        let allowDonorImages = true;
+        let minAmountForImage = 20;
+        let paymentSettings = null;
+        let selectedPayment = 'promptpay';
+
+        // 🟢 โหลดข้อมูลโปรไฟล์สตรีมเมอร์ผ่าน REST API เพื่อความรวดเร็วและตรวจสอบว่ามีผู้ใช้จริง
+        async function fetchStreamerData() {
+            try {
+                const res = await fetch(`/api/streamer/${encodeURIComponent(streamerName)}`);
+                if (!res.ok) {
+                    document.getElementById('streamer-bio').innerText = '⚠️ ไม่พบชื่อสตรีมเมอร์นี้ในระบบ';
+                    return;
+                }
+                const data = await res.json();
+                
+                if (data.bio) document.getElementById('streamer-bio').innerText = data.bio;
+                if (data.thankMsg) document.getElementById('thankyou-text').innerText = data.thankMsg;
+                if (data.bgUrl) {
+                    document.body.style.backgroundImage = `url('${data.bgUrl}')`;
+                }
+
+                if (data.bannedWords && Array.isArray(data.bannedWords)) {
+                    bannedWordsList = data.bannedWords;
+                }
+                if (data.maxMessageLength) {
+                    maxMessageLength = parseInt(data.maxMessageLength) || 150;
+                    document.getElementById('donate-msg').maxLength = maxMessageLength;
+                    document.getElementById('msg-max-count').innerText = maxMessageLength;
+                }
+                if (data.minAmountForImage !== undefined) {
+                    minAmountForImage = data.minAmountForImage;
+                    document.getElementById('image-min-val').innerText = minAmountForImage;
+                }
+                if (data.allowDonorImages === false) {
+                    document.getElementById('donor-image-group').style.display = 'none';
+                }
+
+                // 🟢 แสดงปุ่ม Social Links ถ้าสตรีมเมอร์ใส่ไว้
+                applySocialLinks(data.socialLinks);
+
+                // ตั้งค่าช่องทางชำระเงิน
+                applyPaymentMethods(data.paymentMethods);
+
+                if (data.topDonator) {
+                    document.getElementById('top-donor-name').innerText = data.topDonator.name;
+                    document.getElementById('top-donor-amount').innerText = `${data.topDonator.amount.toLocaleString()} ฿`;
+                }
+            } catch (err) {
+                console.error("Fetch streamer error:", err);
+            }
+        }
+        fetchStreamerData();
+
+        // 🟢 ฟังก์ชันแสดง Social Links
+        function applySocialLinks(links) {
+            if (!links) return;
+            const yt = document.getElementById('view-yt');
+            const fb = document.getElementById('view-fb');
+            const twitch = document.getElementById('view-twitch');
+
+            if (links.youtube && links.youtube.trim() !== '') {
+                yt.href = links.youtube;
+                yt.style.display = 'inline-flex';
+            } else {
+                yt.style.display = 'none';
+            }
+
+            if (links.facebook && links.facebook.trim() !== '') {
+                fb.href = links.facebook;
+                fb.style.display = 'inline-flex';
+            } else {
+                fb.style.display = 'none';
+            }
+
+            if (links.twitch && links.twitch.trim() !== '') {
+                twitch.href = links.twitch;
+                twitch.style.display = 'inline-flex';
+            } else {
+                twitch.style.display = 'none';
+            }
+        }
+
+        // 🟢 ระบบนับตัวอักษรข้อความโดเนทสด
+        const msgInput = document.getElementById('donate-msg');
+        const charCountEl = document.getElementById('msg-char-count');
+        if (msgInput && charCountEl) {
+            msgInput.addEventListener('input', () => {
+                charCountEl.innerText = msgInput.value.length;
+            });
+        }
+
+        // 🟢 ระบบพรีวิวรูปภาพที่ผู้โดเนทแนบ
+        window.testDonorImagePreview = function() {
+            const url = document.getElementById('donate-image-url').value.trim();
+            const previewBox = document.getElementById('donor-image-preview-box');
+            const previewImg = document.getElementById('donor-image-preview');
+
+            if (!url) return alert(currentLang === 'en' ? 'Please paste an image/GIF link' : 'กรุณาวางลิงก์รูปภาพหรือ GIF ครับ');
+            previewImg.src = url;
+            previewImg.onerror = () => {
+                alert(currentLang === 'en' ? 'Cannot load image from this URL.' : 'ไม่สามารถโหลดรูปจากลิงก์นี้ได้ กรุณาตรวจสอบลิงก์อีกครั้ง');
+                previewBox.style.display = 'none';
+            };
+            previewImg.onload = () => {
+                previewBox.style.display = 'block';
+            };
+        };
+
+        window.clearDonorImage = function() {
+            document.getElementById('donate-image-url').value = '';
+            document.getElementById('donor-image-preview').src = '';
+            document.getElementById('donor-image-preview-box').style.display = 'none';
+        };
+
         const socket = io(); 
 
         socket.on('connect', () => {
             socket.emit('join_profile', streamerName);
         });
 
-        let paymentSettings = null;
-        let selectedPayment = 'promptpay';
-
-        // 🟢 1. ระบบจัดการธีมและ Bio
         socket.on('apply_page_settings', (settings) => {
-            const bioEl = document.getElementById('streamer-bio');
-            if(settings && settings.bio) {
-                if(bioEl) bioEl.innerText = settings.bio;
-            } else {
-                if(bioEl) bioEl.innerText = `ยินดีต้อนรับสู่ช่องของ ${streamerName}!`;
-            }
-
-            if(settings && settings.bgUrl) {
+            if (!settings) return;
+            if (settings.bio) document.getElementById('streamer-bio').innerText = settings.bio;
+            if (settings.thankMsg) document.getElementById('thankyou-text').innerText = settings.thankMsg;
+            if (settings.bgUrl) {
                 document.body.style.backgroundImage = `url('${settings.bgUrl}')`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundAttachment = 'fixed';
-            } else {
-                document.body.style.backgroundImage = 'none';
             }
-
-            // ถ้าสตรีมเมอร์ตั้งคำขอบคุณไว้
-            if(settings && settings.thankMsg) {
-                document.getElementById('thankyou-text').innerText = settings.thankMsg;
-            } else {
-                document.getElementById('thankyou-text').innerText = "ขอบคุณสำหรับการสนับสนุนมากๆ ครับ!";
+            if (settings.maxMessageLength) {
+                maxMessageLength = parseInt(settings.maxMessageLength) || 150;
+                document.getElementById('donate-msg').maxLength = maxMessageLength;
+                document.getElementById('msg-max-count').innerText = maxMessageLength;
+            }
+            if (settings.minAmountForImage !== undefined) {
+                minAmountForImage = settings.minAmountForImage;
+                document.getElementById('image-min-val').innerText = minAmountForImage;
             }
         });
 
-        // 🟢 2. ระบบซ่อน/แสดงช่องทางชำระเงิน
+        socket.on('apply_social', (links) => {
+            applySocialLinks(links);
+        });
+
         socket.on('apply_payment', (settings) => {
+            applyPaymentMethods(settings);
+        });
+
+        function applyPaymentMethods(settings) {
             paymentSettings = settings;
             const ppCard = document.getElementById('pay-promptpay');
             const bankCard = document.getElementById('pay-bank');
@@ -326,52 +446,50 @@
 
             let hasActiveMethod = false;
 
-            if(settings && settings.promptpay && settings.promptpay.active) {
-                if(ppCard) ppCard.style.display = 'flex';
+            if (settings && settings.promptpay && settings.promptpay.active) {
+                if (ppCard) ppCard.style.display = 'flex';
                 hasActiveMethod = true;
                 selectPayment('promptpay');
             } else {
-                if(ppCard) ppCard.style.display = 'none';
+                if (ppCard) ppCard.style.display = 'none';
             }
 
-            if(settings && settings.bank && settings.bank.active) {
-                if(bankCard) bankCard.style.display = 'flex';
-                if(!hasActiveMethod) {
+            if (settings && settings.bank && settings.bank.active) {
+                if (bankCard) bankCard.style.display = 'flex';
+                if (!hasActiveMethod) {
                     hasActiveMethod = true;
                     selectPayment('bank');
                 }
             } else {
-                if(bankCard) bankCard.style.display = 'none';
+                if (bankCard) bankCard.style.display = 'none';
             }
 
-            if(!hasActiveMethod) {
-                if(noPayMsg) noPayMsg.style.display = 'block';
-                if(btnDonate) {
+            if (!hasActiveMethod) {
+                if (noPayMsg) noPayMsg.style.display = 'block';
+                if (btnDonate) {
                     btnDonate.style.opacity = '0.5';
                     btnDonate.style.pointerEvents = 'none';
-                    btnDonate.innerHTML = `<i class="fas fa-lock"></i> <span class="lang-el" data-th="ปิดรับโดเนทชั่วคราว" data-en="Donations Closed">${currentLang === 'en' ? 'Donations Closed' : 'ปิดรับโดเนทชั่วคราว'}</span>`;
+                    btnDonate.innerHTML = `<i class="fas fa-lock"></i> <span>${currentLang === 'en' ? 'Donations Closed' : 'ปิดรับโดเนทชั่วคราว'}</span>`;
                 }
             } else {
-                if(noPayMsg) noPayMsg.style.display = 'none';
-                if(btnDonate) {
+                if (noPayMsg) noPayMsg.style.display = 'none';
+                if (btnDonate) {
                     btnDonate.style.opacity = '1';
                     btnDonate.style.pointerEvents = 'auto';
                     updateDonateButton(document.getElementById('input-amount').value || 50);
                 }
             }
-        });
+        }
 
-        // 🟢 3. ระบบอัปเดตตัวเลขและสีปุ่ม
         window.setAmount = function(amount) {
             const amountInput = document.getElementById('input-amount');
-            if(amountInput && amountInput.value != amount) {
+            if (amountInput && amountInput.value != amount) {
                 amountInput.value = amount;
             }
             updateDonateButton(amount);
 
-            // อัปเดตสีปุ่ม
             document.querySelectorAll('.amount-btn').forEach(btn => {
-                if(parseInt(btn.innerText) === parseInt(amount)) {
+                if (parseInt(btn.innerText) === parseInt(amount)) {
                     btn.style.background = 'var(--blue)';
                     btn.style.borderColor = 'var(--blue)';
                     btn.style.fontWeight = 'bold';
@@ -381,73 +499,78 @@
                     btn.style.fontWeight = 'normal';
                 }
             });
-        }
+        };
 
         function updateDonateButton(amount) {
             const btnDonate = document.getElementById('btn-submit-donate');
-            // เช็คก่อนว่าปุ่มไม่ได้โดนล็อกอยู่
-            if(btnDonate && btnDonate.style.pointerEvents !== 'none') {
+            if (btnDonate && btnDonate.style.pointerEvents !== 'none') {
                 btnDonate.innerHTML = `
                     <i class="fas fa-heart"></i> 
-                    <span class="lang-el" data-th="โดเนทเลย" data-en="Donate">${currentLang === 'en' ? 'Donate' : 'โดเนทเลย'}</span> 
+                    <span>${currentLang === 'en' ? 'Donate' : 'โดเนทเลย'}</span> 
                     <span id="btn-amount-text">${amount}</span> 
-                    <span class="lang-el" data-th="บาท" data-en="THB">${currentLang === 'en' ? 'THB' : 'บาท'}</span>
+                    <span>${currentLang === 'en' ? 'THB' : 'บาท'}</span>
                 `;
             }
         }
 
-        const amountInput = document.getElementById('input-amount');
-        if(amountInput) {
-            amountInput.addEventListener('input', function(e) {
-                setAmount(e.target.value || 0);
-            });
-        }
-
-        // ฟังก์ชันสลับวิธีชำระเงิน
         window.selectPayment = function(method) {
             selectedPayment = method;
             document.querySelectorAll('.pay-method-card').forEach(card => card.classList.remove('active'));
             const targetCard = document.getElementById('pay-' + method);
-            if(targetCard) targetCard.classList.add('active');
+            if (targetCard) targetCard.classList.add('active');
         };
 
-        // ฟังก์ชันเปิดหน้าต่าง
+        // 🟢 ตรวจสอบคำหยาบก่อนเปิด Modal ชำระเงิน (Profanity Filter Prevention)
+        function checkProfanity(text) {
+            if (!text) return false;
+            const lower = text.toLowerCase();
+            return bannedWordsList.some(w => w && lower.includes(w.toLowerCase().trim()));
+        }
+
         window.openPaymentModal = function() {
-            const amount = document.getElementById('input-amount').value || 50;
-            const nameInput = document.getElementById('donate-name').value;
+            const amount = parseFloat(document.getElementById('input-amount').value) || 0;
+            const name = (document.getElementById('donate-name').value || '').trim();
+            const msg = (document.getElementById('donate-msg').value || '').trim();
             
-            if(!amount || amount <= 0) return alert(currentLang === 'en' ? 'Please enter an amount.' : 'กรุณาระบุจำนวนเงินครับ');
-            if(!nameInput) return alert(currentLang === 'en' ? 'Please enter your name.' : 'กรุณาระบุชื่อของคุณครับ');
+            if (!amount || amount <= 0) return alert(currentLang === 'en' ? 'Please enter a valid amount.' : 'กรุณาระบุจำนวนเงินที่ถูกต้องครับ');
+            if (!name) return alert(currentLang === 'en' ? 'Please enter your name.' : 'กรุณาระบุชื่อของคุณครับ');
+
+            // 🛑 ดักจับคำหยาบ
+            if (checkProfanity(name) || checkProfanity(msg)) {
+                return alert(currentLang === 'en' 
+                    ? '⚠️ Your name or message contains inappropriate words. Please edit before proceeding.' 
+                    : '⚠️ ขออภัยครับ ข้อความหรือชื่อของคุณมีคำที่ไม่สุภาพ กรุณาแก้ไขก่อนทำรายการ');
+            }
 
             const currencyStr = currentLang === 'en' ? ' THB' : ' บาท';
 
-            if(selectedPayment === 'promptpay') {
+            if (selectedPayment === 'promptpay') {
                 const modal = document.getElementById('qr-modal');
                 const qrAmountText = document.getElementById('qr-amount-text');
                 const qrName = document.getElementById('qr-account-name');
                 const phone = paymentSettings?.promptpay?.phone || '0000000000';
                 
-                if(qrAmountText) qrAmountText.innerText = parseFloat(amount).toFixed(2) + currencyStr;
-                if(qrName) qrName.innerText = phone;
+                if (qrAmountText) qrAmountText.innerText = amount.toFixed(2) + currencyStr;
+                if (qrName) qrName.innerText = phone;
                 
                 const qrImg = modal.querySelector('img');
-                if(qrImg) qrImg.src = `https://promptpay.io/${phone}/${amount}.png`;
+                if (qrImg) qrImg.src = `https://promptpay.io/${phone}/${amount}.png`;
 
                 modal.classList.add('active');
 
-            } else if(selectedPayment === 'bank') {
+            } else if (selectedPayment === 'bank') {
                 const modal = document.getElementById('bank-modal');
                 const bankAmt = document.getElementById('bank-amount-text');
                 const bName = document.getElementById('bank-name-display');
                 const bOwner = document.getElementById('bank-owner-display');
                 const bAcc = document.getElementById('bank-acc-display');
 
-                if(bankAmt) bankAmt.innerText = parseFloat(amount).toFixed(2) + currencyStr;
-                if(bName) bName.innerText = paymentSettings?.bank?.bankName || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
-                if(bOwner) bOwner.innerText = paymentSettings?.bank?.accountName || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
-                if(bAcc) bAcc.innerText = paymentSettings?.bank?.accountNumber || (currentLang === 'en' ? 'Loading data...' : 'กำลังโหลดข้อมูล...');
+                if (bankAmt) bankAmt.innerText = amount.toFixed(2) + currencyStr;
+                if (bName) bName.innerText = paymentSettings?.bank?.bankName || '-';
+                if (bOwner) bOwner.innerText = paymentSettings?.bank?.accountName || '-';
+                if (bAcc) bAcc.innerText = paymentSettings?.bank?.accountNumber || '-';
 
-                if(modal) modal.classList.add('active');
+                modal.classList.add('active');
             }
         };
 
@@ -456,33 +579,41 @@
         window.closeThankYouModal = function() { document.getElementById('thankyou-modal').classList.remove('active'); };
 
         window.successMockup = function() {
-            const amount = document.getElementById('input-amount').value || 50;
-            const name = document.getElementById('donate-name').value || 'Anonymous';
-            const msg = document.getElementById('donate-msg').value || '';
+            const amount = parseFloat(document.getElementById('input-amount').value) || 50;
+            const name = (document.getElementById('donate-name').value || 'Anonymous').trim();
+            const msg = (document.getElementById('donate-msg').value || '').trim();
+            const imageUrl = (document.getElementById('donate-image-url').value || '').trim();
 
             socket.emit('new_donation', {
                 username: streamerName,
                 name: name,
-                amount: parseFloat(amount),
-                message: msg
+                amount: amount,
+                message: msg,
+                imageUrl: imageUrl
             });
+        };
 
+        // ฟังคำตอบจาก Server
+        socket.on('donation_success', (res) => {
             closeQRModal();
             closeBankModal();
-            
             const tkModal = document.getElementById('thankyou-modal');
-            if(tkModal) tkModal.classList.add('active');
+            if (tkModal) tkModal.classList.add('active');
             
             document.getElementById('donate-name').value = '';
             document.getElementById('donate-msg').value = '';
+            document.getElementById('msg-char-count').innerText = '0';
+            clearDonorImage();
             setAmount(50);
-        };
+        });
 
-        // 🟢 ระบบอัปเดต Top Donator หน้าโดเนทแบบ Real-time
+        socket.on('donation_rejected', (err) => {
+            alert(err.message || 'การโดเนทไม่สำเร็จ');
+        });
+
         socket.on('update_leaderboard', (topDonators) => {
             const tdName = document.getElementById('top-donor-name');
             const tdAmount = document.getElementById('top-donor-amount');
-            
             const currSymbol = currentLang === 'en' ? 'THB' : '฿';
 
             if (topDonators && topDonators.length > 0) {

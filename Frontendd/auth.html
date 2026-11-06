@@ -21,7 +21,7 @@
 
         /* 🟢 ปุ่มมุมขวาบน (กลับหน้าแรก & เปลี่ยนภาษา) */
         .top-nav { position: absolute; top: 30px; right: 40px; display: flex; gap: 15px; z-index: 1000; }
-        .top-btn { padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(10px); transition: 0.3s; font-size: 0.95rem; font-weight: 500; }
+        .top-btn { padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 12px; cursor: pointer; text-decoration: none; display: flex; align-items: gap: 8px; backdrop-filter: blur(10px); transition: 0.3s; font-size: 0.95rem; font-weight: 500; }
         .top-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--blue); transform: translateY(-2px); }
 
         /* Container */
@@ -242,6 +242,9 @@
                 const data = await res.json();
                 
                 if(res.ok) {
+                    // 🟢 บันทึก Token และชื่อผู้ใช้ไว้ใน localStorage
+                    localStorage.setItem('ocean_token', data.token);
+                    localStorage.setItem('ocean_user', data.username);
                     window.location.href = `dashboard.html?u=${data.username}`;
                 } else {
                     alert('⚠️ ' + (data.message || 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'));
