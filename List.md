@@ -10,12 +10,15 @@
 - `Frontendd/auth.html` — สมัครและเข้าสู่ระบบ
 - `Frontendd/dashboard.html` — ตั้งค่าบัญชี สถิติ ประวัติ และ overlay
 - `Frontendd/donate.html` — โปรไฟล์สาธารณะ, หน้าชำระเงิน, แนบสลิป และโหมดทดสอบ
-- `Frontendd/widget.html` — Alert overlay
+- `Frontendd/widget.html` — Alert overlay with durable queue and gift effects
+- `Frontendd/timer.html` — OBS timer overlay
 - `Frontendd/goal.html` — Goal overlay
 - `Frontendd/top-donator.html` — Leaderboard overlay
 - `Backend/test/security.test.js` — Integration/security tests using temporary MongoDB and Socket.IO
 - `Backend/server.js` — collection `Donation` สำหรับรายการ pending/confirmed/test และตรวจสลิป EasySlip
 - `scripts/scrub-legacy-setting-tokens.js` — dry-run-first cleanup utility for JWTs saved in settings
+- `.agents/skills/` — Agent Skills สำหรับ workflow/TDD, frontend, backend architecture, MongoDB, code simplification และ security review
+- `skills-lock.json` — รายการแหล่งและเวอร์ชันของ Agent Skills ที่ติดตั้งด้วย skills.sh
 - `Frontendd/mainstyle.css` — สไตล์ร่วม
 - `Frontendd/main.js` — ไฟล์ว่างในขณะสำรวจ
 - `Frontendd/image1.png`, `image2.png`, `image3.png`, `logo.png` — รูปภาพประกอบ
@@ -29,10 +32,14 @@
 - `npm start` ที่ root หรือ `npm start` ใน `Backend/`; ค่าเริ่มต้นพอร์ต 3000
 - ต้องมี MongoDB; ค่าเริ่มต้น `mongodb://127.0.0.1:27017/ocean_donate`
 - รองรับ `MONGODB_URI`, `JWT_SECRET`, `EASYSLIP_API_KEY`, `PORT`; server หยุดเริ่มเมื่อไม่มี `JWT_SECRET`; ไม่มี API key EasySlip จะปิดการรับโดเนทจริง
+- Google OAuth: `APP_BASE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`; Discord OAuth: `APP_BASE_URL`, `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`; password reset email: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `APP_BASE_URL` (ดู `docs/superpowers/operations/oauth-email-setup.md`)
 - `start-server.bat` ใช้เส้นทาง MongoDB ที่ติดตั้งไว้เฉพาะเครื่อง
 
 ## 4. Schema
-- `User`: username, email, password, widgetToken, stats, pageSettings, socialLinks, bannedWords, paymentMethods, goalSettings, alertSettings, topDonorSettings, history
+- `User`: username, email, optional password, authVersion, widgetToken, stats, pageSettings (including layout/theme), socialLinks, bannedWords, paymentMethods, goalSettings, alertSettings, topDonorSettings, timerSettings, timerState, alertControl, history
+- `AuthIdentity`, `OAuthAttempt`, `OAuthSignup`, `OAuthHandoff`, `PasswordResetToken`: provider identity and hashed short-lived OAuth/reset flow tokens; temporary flows use expiry indexes
+- `AlertQueue`: durable, unique-per-donation OBS queue with queued/playing/played/skipped states and playback lease
+- `GiftCatalogItem`: owner-scoped fixed-price gift catalog; `Donation.giftSnapshot` preserves the selected gift details on a pending order
 - `Donation`: userId, username, name, amount, message, imageUrl, paymentMethod, snapshot บัญชีผู้รับ, status (`pending`, `confirmed`, `rejected`, `test`, `deleted`), providerRef, createdAt, date, expiresAt; มี unique index ป้องกันใช้ transaction reference ซ้ำ และ TTL สำหรับรายการ pending ที่หมดเวลา
 - รายการเงินจริงที่ยืนยันแล้วถูกเก็บใน `Donation` และยัง mirror ลง `User.history` เพื่อให้หน้าเดิมทำงาน; รายการทดสอบอยู่ใน `Donation` เท่านั้น; migration รายการเก่ายังไม่ทำ
 - การเปิดรับเงินจริงต้องบันทึกบัญชีผู้รับใน EasySlip และมี `verifiedAccountId`; เก็บเฉพาะ EasySlip account ID ใน OceanDonate ไม่เก็บ API key ในฐานข้อมูล
@@ -49,12 +56,12 @@
 - Static files ให้บริการจาก `Frontendd/`
 
 ## 6. Socket.IO Events
-- Client→Server: `auth_dashboard`, `join_widget`, `join_profile`, `new_donation` (deprecated; ปฏิเสธการเพิ่มยอด), `test_alert`, `regenerate_widget_token`, `delete_donation`, `reset_stats`, `save_payment`, `save_page_settings`, `save_social`, `save_banned_words`, `update_goal`, `update_alert`, `update_top_donor`
+- Client→Server: `auth_dashboard`, `join_widget`, `join_profile`, `new_donation` (deprecated; ปฏิเสธการเพิ่มยอด), `test_alert`, `pause_alerts`, `resume_alerts`, `skip_current_alert`, `alert_finished`, `timer_config`, `timer_start`, `timer_set`, `timer_adjust`, `save_gifts`, `regenerate_widget_token`, `delete_donation`, `reset_stats`, `save_payment`, `save_page_settings`, `save_social`, `save_banned_words`, `update_goal`, `update_alert`, `update_top_donor`
 - คำสั่งตั้งค่าหลังบ้านส่วนใหญ่เรียก `checkAuth`; `join_profile` และ `new_donation` เป็นสาธารณะ แต่ `new_donation` ไม่บันทึกยอด; การ test ของผู้โดเนทใช้ REST ที่มี rate limit
 - `join_widget` ต้องใช้ `widgetToken`; username อย่างเดียวเข้าไม่ได้
 - ห้องแยกเป็น `owner:<username>`, `widget:<username>`, `public:<username>`; ข้อมูลประวัติ/สถิติส่งเฉพาะ owner, alert ส่งเฉพาะ widget, leaderboard ส่งให้ทุกกลุ่มตามการใช้งาน
 - `goalSettings`, `alertSettings`, `topDonorSettings` ผ่าน whitelist ก่อนบันทึกและส่งออกเพื่อไม่ให้ JWT จาก client ถูกเก็บ/ส่งต่อ
-- Server→Client: `auth_error`, `auth_success`, `update_stats`, `update_history`, `apply_page_settings`, `apply_payment`, `apply_social`, `apply_banned_words`, `apply_security_settings`, `apply_goal`, `apply_settings`, `apply_top_donor`, `update_leaderboard`, `show_alert`, `donation_rejected` (legacy `new_donation`), `payment_error`, `notify_success`
+- Server→Client: `auth_error`, `auth_success`, `update_stats`, `update_history`, `apply_page_settings`, `apply_payment`, `apply_social`, `apply_banned_words`, `apply_security_settings`, `apply_goal`, `apply_settings`, `apply_top_donor`, `apply_timer`, `apply_alert_control`, `stop_alert`, `apply_gifts`, `update_leaderboard`, `show_alert`, `donation_rejected` (legacy `new_donation`), `payment_error`, `notify_success`
 
 ## 7. Logic หลัก
 - Login เก็บ JWT ใน localStorage; Dashboard ตรวจผ่าน REST แล้วเชื่อม Socket.IO
@@ -62,6 +69,10 @@
 - โดเนทจริงเริ่มเป็น `pending`; ผู้โดเนทแนบสลิปแล้ว server เรียก EasySlip โดยไม่เชื่อจำนวนเงินจากผล client, ตรวจ matchAccount/matchAmount/checkDuplicate และเทียบเลขบัญชี/ชื่อ/ธนาคารกับผู้รับที่ลงทะเบียนไว้; MongoDB transaction เปลี่ยนเป็น confirmed พร้อมอัปเดต history/stats/Goal ก่อนส่ง OBS alert/leaderboard
 - โหมดทดสอบสร้าง Donation status `test`, ลง log ใน Dashboard และส่ง OBS test alert แต่ไม่นับ stats/Goal/leaderboard; event เก่า `new_donation` ถูกปิด
 - Top donors รวมยอดตามชื่อแบบตรงตัวจาก history ทั้งหมด
+- OAuth รองรับ Google/Discord เมื่อกำหนด credentials; บัญชีใหม่ต้องยืนยันอีเมลและตั้ง username; การผูกบัญชีเดิมเริ่มจากบัญชีที่ล็อกอินอยู่เท่านั้นและไม่ auto-link ด้วยอีเมล; reset password ใช้ลิงก์ครั้งเดียวและยกเลิก JWT รุ่นเก่า
+- Timer ใช้ `endsAt` ฝั่ง server, กฎยอดไม่ทับช่วง, ไม่มีเพดานธุรกิจ; เวลาที่ได้/ตั้งขณะหยุดหรือหลังถึงศูนย์เก็บเป็นโบนัสไลฟ์ถัดไป
+- คิว OBS บันทึกใน MongoDB หลังยืนยันเงินจริง; pause เก็บรายการไว้, skip ข้ามรายการที่กำลังเล่น, widget ยืนยันจบเพื่อเลื่อนคิว; Test เล่นทันทีและไม่บันทึกยอด
+- Gift ใช้ราคาจาก catalog ฝั่ง server และ snapshot ราคา/เอฟเฟกต์ในรายการ; หน้า Donate มี 3 layouts/3 themes และ Preview ที่ปิดการส่งเงิน
 - หน้า donate สร้าง QR พร้อมเพย์ตามเบอร์และยอดรายการผ่าน PromptPay.io; ต้องแนบสลิปหลังโอนเพื่อให้ EasySlip ยืนยัน; หน้า donate ยังมีช่องทางโอนธนาคารและ Test Donation
 
 ## 8. ข้อสังเกต / ความเสี่ยงที่พบ
@@ -84,3 +95,5 @@
 | 2026-11-13 | `Backend/package-lock.json` | เพิ่ม test dependencies; audit production dependencies พบ 7 advisories ที่ต้องวางแผนอัปเดต | รองรับ integration tests และบันทึกความเสี่ยงที่ตรวจพบ |
 | 2026-11-14 | `Backend/server.js`, `Frontendd/dashboard.html`, `Frontendd/donate.html`, `Backend/test/security.test.js`, `List.md`, `Issue.md` | เพิ่ม pending/confirmed/test Donation flow, ตรวจสลิปผ่าน EasySlip, match ผู้รับ/ชื่อ/ยอด/รายการซ้ำ, จำกัดรายการและเก็บ log Test โดยไม่คิดยอด; เพิ่มธนาคารที่รองรับและย้ายการลบประวัติไปใช้อ้างอิง ID | ปิดการเพิ่มยอดผ่าน `new_donation` โดยไม่ยืนยันเงินจริงและทำตาม flow ที่ผู้ใช้เลือก; ผู้ใช้แจ้งภายหลังว่าตั้ง API key แล้ว แต่ยังไม่ได้ทดสอบการเชื่อมต่อจริงหรือ deploy โค้ดชุดนี้ |
 | 2026-11-14 | `Backend/server.js`, `Frontendd/dashboard.html`, `List.md`, `Issue.md` | แยกข้อความผิดพลาดตอนลงทะเบียนบัญชีผู้รับ EasySlip ออกจากข้อผิดพลาดตรวจสลิป; รองรับค้นหาและเชื่อมบัญชีเดิมโดยจับคู่ธนาคาร/เลขบัญชีแล้วใช้ชื่อ canonical จาก EasySlip; แก้ประกอบ URL ให้รักษา path `/v2`; เพิ่มคำแนะนำในฟอร์ม | หน้า production แสดงเฉพาะ Test Donation เพราะ endpoint EasySlip ถูกเรียกผิด path; ข้อมูลฟอร์มเดิมไม่บอกเลขเต็มและรูปแบบชื่อที่ต้องใช้ |
+| 2026-11-14 | `.agents/skills/`, `skills-lock.json`, `List.md` | ติดตั้ง Agent Skills 14 รายการสำหรับ workflow/TDD, frontend/UI, backend, MongoDB, code simplification และ security review พร้อมบันทึกโครงสร้างไฟล์ | เพิ่มแนวทางที่ Codex เรียกใช้ได้ในงานพัฒนาเว็บ Full Stack |
+| 2026-11-14 | `Backend/server.js`, `Backend/test/security.test.js`, `Frontendd/auth.html`, `Frontendd/dashboard.html`, `Frontendd/donate.html`, `Frontendd/widget.html`, `Frontendd/timer.html`, `docs/superpowers/operations/oauth-email-setup.md`, `List.md` | เพิ่ม Google/Discord OAuth และ password reset, ปุ่มคุม alert พร้อมคิวที่ทนต่อ OBS reconnect, timer และโบนัสนอกไลฟ์, gift ราคา fix พร้อมเอฟเฟกต์, 3 รูปแบบ/3 theme หน้า Donate และ Preview | ทำตามข้อกำหนดที่ยืนยันไว้; integration tests ผ่าน 15/15; OAuth/SMTP ต้องตั้งค่าบน Render ก่อนเปิดให้ใช้; ยังไม่ deploy production |

@@ -154,6 +154,7 @@
                 <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payment Methods">ช่องทางรับเงิน</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-laptop-house"></i> <span class="lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="gifts"><i class="fas fa-gift"></i> <span>ของขวัญ</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ต & แจ้งเตือน" data-en="Widgets & Alerts">วิดเจ็ต & แจ้งเตือน</span></a></li>
                 <li style="margin-top: 30px;"><a href="javascript:void(0)" onclick="logout()" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
             </ul>
@@ -168,6 +169,56 @@
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-wallet'></i> ยอดโดเนททั้งหมด" data-en="<i class='fas fa-wallet'></i> Total Donation"><i class="fas fa-wallet"></i> ยอดโดเนททั้งหมด</h4><div class="amount"><span id="dash-stat-total">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-eye'></i> จำนวนผู้เข้าชม" data-en="<i class='fas fa-eye'></i> Total Views"><i class="fas fa-eye"></i> จำนวนผู้เข้าชม</h4><div class="amount"><span id="dash-stat-views">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="ครั้ง" data-en="Views">ครั้ง</span></div></div>
                 </div>
+
+                <section class="card" id="live-controls-card" style="margin: 24px 0;">
+                    <h2 class="lang-el" data-th="ควบคุมระหว่างไลฟ์" data-en="Live controls" style="margin-bottom: 18px;">ควบคุมระหว่างไลฟ์</h2>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px;">
+                        <strong id="alert-pause-status" aria-live="polite">กำลังเล่นแจ้งเตือนตามปกติ</strong>
+                        <label for="pause-alert-minutes" class="lang-el" data-th="พักแจ้งเตือน" data-en="Pause alerts">พักแจ้งเตือน</label>
+                        <select id="pause-alert-minutes" class="form-control" style="width:auto;">
+                            <option value="1">1 นาที</option><option value="5" selected>5 นาที</option><option value="10">10 นาที</option><option value="30">30 นาที</option><option value="60">1 ชั่วโมง</option>
+                        </select>
+                        <button type="button" class="btn-outline" onclick="pauseAlerts()">พัก</button>
+                        <button type="button" class="btn-outline" onclick="resumeAlerts()">เล่นต่อ</button>
+                        <button type="button" class="btn-danger" onclick="skipCurrentAlert()">ข้ามรายการที่กำลังเล่น</button>
+                    </div>
+                    <div style="border-top:1px solid var(--border);padding-top:18px;">
+                        <h3 style="margin-bottom:8px;">Timer ไลฟ์</h3>
+                        <div id="timer-current" role="timer" aria-live="off" style="font-size:2rem;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;">00:00:00</div>
+                        <p id="timer-banked" style="color:var(--text);margin:4px 0 14px;">โบนัสไลฟ์ถัดไป: 0 วินาที</p>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
+                            <label>เวลาเริ่ม (ชม.)<input id="timer-initial-hours" type="number" class="form-control" min="0" value="1" style="width:110px;"></label>
+                            <label>(นาที)<input id="timer-initial-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <label>(วินาที)<input id="timer-initial-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <button type="button" class="btn-outline" onclick="saveTimerSettings()">บันทึกเวลาเริ่ม</button>
+                            <button type="button" class="btn-primary" onclick="startTimer()">เริ่ม / เริ่มไลฟ์ใหม่</button>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:18px;">
+                            <label>ตั้งเวลา (ชม.)<input id="timer-set-hours" type="number" class="form-control" min="0" value="0" style="width:110px;"></label>
+                            <label>(นาที)<input id="timer-set-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <label>(วินาที)<input id="timer-set-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <button type="button" class="btn-outline" onclick="setTimer()">ตั้งเวลา</button>
+                            <label>ปรับเวลา<select id="timer-adjust-action" class="form-control"><option value="add">เพิ่ม</option><option value="subtract">ลด</option></select></label>
+                            <label>ชม.<input id="timer-adjust-hours" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <label>นาที<input id="timer-adjust-minutes" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <label>วินาที<input id="timer-adjust-seconds" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <button type="button" class="btn-outline" onclick="adjustTimer()">ปรับเวลา</button>
+                        </div>
+                        <h4>กฎตามยอดโดเนท</h4>
+                        <p style="color:var(--text);margin:4px 0 10px;">ระบุช่วงยอดไม่ให้ทับกัน; แต่ละรายการใช้กฎเดียว ของขวัญใช้กฎเวลาของตัวเองแทน</p>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                            <label>ตั้งแต่ (บาท)<input id="timer-rule-min" type="number" min="0" step="0.01" class="form-control" value="10" style="width:120px;"></label>
+                            <label>ถึง (บาท)<input id="timer-rule-max" type="number" min="0.01" step="0.01" class="form-control" value="50" style="width:120px;"></label>
+                            <label>การทำงาน<select id="timer-rule-action" class="form-control"><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
+                            <label>ชม.<input id="timer-rule-hours" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
+                            <label>นาที<input id="timer-rule-minutes" type="number" min="0" class="form-control" value="1" style="width:85px;"></label>
+                            <label>วินาที<input id="timer-rule-seconds" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
+                            <button type="button" class="btn-outline" onclick="addTimerRule()">เพิ่มกฎ</button>
+                            <button type="button" class="btn-primary" onclick="saveTimerSettings()">บันทึกกฎ</button>
+                        </div>
+                        <ul id="timer-rules-list" style="margin-top:10px;padding-left:20px;"></ul>
+                    </div>
+                </section>
 
                 <div class="page-title">
                     <span class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</span>
@@ -261,7 +312,7 @@
                         <div class="form-group"><label class="lang-el" data-th="ข้อความแนะนำตัว (Bio)" data-en="Biography (Bio)">ข้อความแนะนำตัว (Bio)</label><textarea id="dash-bio" class="form-control" rows="3">ยินดีต้อนรับสู่ช่องของฉัน!</textarea></div>
                         <div class="form-group"><label class="lang-el" data-th="ข้อความขอบคุณหลังโดเนท" data-en="Thank You Message">ข้อความขอบคุณหลังโดเนท</label><input type="text" id="dash-thank" class="form-control" value="ขอบคุณสำหรับการโดเนทครับ!"></div>
                         <div class="form-group">
-                            <label class="lang-el" data-th="ธีมหน้าเว็บ (Theme)" data-en="Page Theme">ธีมหน้าเว็บ (Theme)</label>
+                            <label class="lang-el" data-th="รูปพื้นหลังหน้าเว็บ" data-en="Page background">รูปพื้นหลังหน้าเว็บ</label>
                             <select id="dash-theme-preset" class="form-control" style="margin-bottom: 10px;" onchange="toggleCustomBg()">
                                 <option value="" class="lang-el" data-th="Ocean Dark (สีดำ ค่าเริ่มต้น)" data-en="Ocean Dark (Default)">Ocean Dark (สีดำ ค่าเริ่มต้น)</option>
                                 <option value="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop">Cyberpunk City</option>
@@ -271,6 +322,23 @@
                                 <option value="custom" class="lang-el" data-th="✨ ใส่ลิงก์รูปภาพ / GIF เอง..." data-en="✨ Custom Image / GIF Link...">✨ ใส่ลิงก์รูปภาพ / GIF เอง...</option>
                             </select>
                             <input type="text" id="dash-bg" class="form-control" placeholder="วางลิงก์รูปภาพ/GIF ที่นี่..." style="display: none;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="donate-layout">รูปแบบหน้าโดเนท</label>
+                            <select id="donate-layout" class="form-control" onchange="updateDonatePreview()">
+                                <option value="ocean">Ocean — แบบปัจจุบัน</option>
+                                <option value="minimal">Minimal — เรียบง่าย</option>
+                                <option value="neon">Neon — แสงสีไลฟ์</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="donate-palette">ชุดสี</label>
+                            <select id="donate-palette" class="form-control" onchange="updateDonatePreview()">
+                                <option value="ocean">Ocean — น้ำเงินทะเล</option>
+                                <option value="soft">Soft — สว่างนุ่ม</option>
+                                <option value="neon">Neon — ม่วงชมพู</option>
+                            </select>
                         </div>
 
                         <!-- 🟢 การจำกัดความยาวข้อความ และ การแนบรูปภาพ -->
@@ -315,6 +383,38 @@
                         <button class="btn-success w-100 lang-el" onclick="saveBannedWords()" data-th="<i class='fas fa-save'></i> บันทึกรายการคำต้องห้าม" data-en="<i class='fas fa-save'></i> Save Banned Words"><i class="fas fa-save"></i> บันทึกรายการคำต้องห้าม</button>
                     </div>
                 </div>
+                <div class="card" style="margin-top:24px;">
+                    <h3>วิธีเข้าสู่ระบบ</h3>
+                    <p style="color:var(--text);margin:8px 0 12px;">บัญชีเดิมต้องเข้าสู่ระบบอยู่ก่อนจึงจะผูก Google หรือ Discord ได้</p>
+                    <div id="auth-identity-status" aria-live="polite" style="margin-bottom:12px;">กำลังโหลดบัญชีที่ผูกไว้...</div>
+                    <button class="btn-outline" type="button" onclick="linkOAuthProvider('google')">ผูก Google</button>
+                    <button class="btn-outline" type="button" onclick="linkOAuthProvider('discord')">ผูก Discord</button>
+                </div>
+                <div class="card" style="margin-top:24px;">
+                    <h3 style="margin-bottom:8px;">Preview หน้า Donate</h3>
+                    <p style="color:var(--text);margin-bottom:12px;">ลองเปลี่ยนรูปแบบและชุดสีก่อนบันทึก หน้า Preview จะปิดการจ่ายเงินจริงและ Test Donation</p>
+                    <iframe id="donate-preview-frame" title="ตัวอย่างหน้าโดเนท" style="width:100%;height:680px;border:1px solid var(--border);border-radius:12px;background:#050811;"></iframe>
+                </div>
+            </div>
+
+            <div id="gifts" class="tab-content">
+                <div class="page-title">ของขวัญโดเนท</div>
+                <div class="card">
+                    <p style="color:var(--text);margin-bottom:16px;">ตั้งชื่อ ราคาแน่นอน ไอคอน และเอฟเฟกต์สำเร็จรูป ของขวัญแต่ละชิ้นใช้ได้หนึ่งกฎ Timer ต่อรายการ และผู้โดเนทยังพิมพ์ข้อความได้</p>
+                    <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+                        <label>ชื่อของขวัญ<input id="gift-name" class="form-control" maxlength="40" placeholder="เช่น เพชรทะเล"></label>
+                        <label>ราคา (บาท)<input id="gift-price" class="form-control" type="number" min="1" max="50000" step="0.01" value="50"></label>
+                        <label>ไอคอน<select id="gift-icon" class="form-control"><option value="wave">🌊 คลื่น</option><option value="gift">🎁 กล่องของขวัญ</option><option value="star">⭐ ดาว</option><option value="gem">💎 อัญมณี</option><option value="dolphin">🐬 โลมา</option><option value="jellyfish">🪼 แมงกะพรุน</option></select></label>
+                        <label>เอฟเฟกต์<select id="gift-effect" class="form-control"><option value="sparkle">ประกาย</option><option value="burst">ระเบิดแสง</option><option value="coins">เหรียญ</option><option value="heart">หัวใจ</option></select></label>
+                        <label>ผลต่อ Timer<select id="gift-timer-action" class="form-control"><option value="none">ไม่เปลี่ยนเวลา</option><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
+                        <label>ชั่วโมง<input id="gift-hours" class="form-control" type="number" min="0" step="1" value="0"></label>
+                        <label>นาที<input id="gift-minutes" class="form-control" type="number" min="0" step="1" value="0"></label>
+                        <label>วินาที<input id="gift-seconds" class="form-control" type="number" min="0" step="1" value="0"></label>
+                        <button type="button" class="btn-outline" onclick="addGift()">เพิ่มของขวัญ</button>
+                        <button type="button" class="btn-primary" onclick="saveGifts()">บันทึกของขวัญ</button>
+                    </div>
+                    <div id="gift-catalog-list" style="display:grid;gap:10px;margin-top:20px;"></div>
+                </div>
             </div>
 
             <!-- WIDGETS TAB -->
@@ -346,6 +446,11 @@
                         <span style="min-width: 100px; font-size: 0.85rem; color: #fbbf24;">Top Donor:</span>
                         <input type="text" id="obs-td-url" readonly value="กำลังเจนลิงก์...">
                         <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-td-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
+                    </div>
+                    <div class="obs-link-item">
+                        <span style="min-width: 100px; font-size: 0.85rem; color: #10b981;">Live Timer:</span>
+                        <input type="text" id="obs-timer-url" readonly value="กำลังเจนลิงก์...">
+                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-timer-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
                     </div>
                 </div>
 
@@ -756,6 +861,144 @@
             alert('⚠️ ' + (err.message || 'การยืนยันตัวตนล้มเหลว'));
             window.location.href = 'auth.html';
         });
+        window.linkOAuthProvider = async function(provider) {
+            if (!['google','discord'].includes(provider)) return;
+            const response = await fetch(`/api/auth/${provider}/link/start`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.url) return alert(result.message || 'เริ่มผูกบัญชีไม่สำเร็จ');
+            location.href = result.url;
+        };
+        const identityStatusElement = document.getElementById('auth-identity-status');
+        fetch('/api/auth/identities', { headers:{ Authorization:`Bearer ${token}` } }).then(response => response.ok ? response.json() : {providers:[]}).then(result => {
+            const providers = new Set(result.providers || []);
+            if (identityStatusElement?.isConnected) identityStatusElement.textContent = `ผูกไว้แล้ว: ${[...providers].map(name => name === 'google' ? 'Google' : 'Discord').join(', ') || 'ยังไม่มี'}`;
+        }).catch(() => { if (identityStatusElement?.isConnected) identityStatusElement.textContent = 'โหลดบัญชีที่ผูกไว้ไม่สำเร็จ'; });
+        const oauthLinkResult = new URLSearchParams(location.search).get('oauth_link');
+        if (oauthLinkResult === 'success') alert('ผูกบัญชีเข้าสู่ระบบเรียบร้อยแล้ว');
+        if (oauthLinkResult === 'conflict') alert('บัญชีผู้ให้บริการนี้ถูกผูกกับ OceanDonate บัญชีอื่นแล้ว');
+        if (oauthLinkResult) history.replaceState(null, '', `dashboard.html?u=${encodeURIComponent(username)}`);
+        const donatePreviewFrame = document.getElementById('donate-preview-frame');
+        donatePreviewFrame.src = `/donate.html?u=${encodeURIComponent(username)}&preview=1`;
+        donatePreviewFrame.addEventListener('load', () => updateDonatePreview());
+        window.updateDonatePreview = function() {
+            const frame = document.getElementById('donate-preview-frame');
+            if (!frame?.contentWindow) return;
+            frame.contentWindow.postMessage({
+                type: 'oceandonate-preview',
+                settings: {
+                    layoutId: document.getElementById('donate-layout').value,
+                    themeId: document.getElementById('donate-palette').value,
+                    bio: document.getElementById('dash-bio').value,
+                    thankMsg: document.getElementById('dash-thank').value
+                }
+            }, location.origin);
+        };
+
+        let timerSettings = { initialSeconds: 3600, amountRules: [] };
+        let timerSnapshot = { isRunning: false, endsAt: null, remainingSeconds: 0, bankedSeconds: 0 };
+        function secondsFromInputs(prefix) {
+            const hours = Number(document.getElementById(`${prefix}-hours`).value) || 0;
+            const minutes = Number(document.getElementById(`${prefix}-minutes`).value) || 0;
+            const seconds = Number(document.getElementById(`${prefix}-seconds`).value) || 0;
+            const total = hours * 3600 + minutes * 60 + seconds;
+            if (![hours, minutes, seconds].every(Number.isSafeInteger) || [hours, minutes, seconds].some(value => value < 0) || total > Number.MAX_SAFE_INTEGER) throw new Error('กรุณากรอกเวลาเป็นจำนวนเต็มบวกหรือศูนย์');
+            return total;
+        }
+        function durationLabel(seconds) {
+            seconds = Math.max(0, Math.floor(seconds));
+            const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
+            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+        function renderTimerRules() {
+            const list = document.getElementById('timer-rules-list');
+            if (!list) return;
+            list.replaceChildren();
+            timerSettings.amountRules.forEach((rule, index) => {
+                const row = document.createElement('li'), label = document.createElement('span'), remove = document.createElement('button');
+                label.textContent = `${rule.minAmount}–${rule.maxAmount} บาท: ${rule.action === 'add' ? 'เพิ่ม' : 'ลด'} ${durationLabel(rule.seconds)}`;
+                remove.type = 'button'; remove.className = 'btn-danger'; remove.textContent = 'ลบ'; remove.style.marginLeft = '8px';
+                remove.addEventListener('click', () => { timerSettings.amountRules.splice(index, 1); renderTimerRules(); });
+                row.append(label, remove); list.appendChild(row);
+            });
+        }
+        function refreshTimerDisplay() {
+            if (timerSnapshot.isRunning && timerSnapshot.endsAt) timerSnapshot.remainingSeconds = Math.max(0, Math.ceil((Date.parse(timerSnapshot.endsAt) - Date.now()) / 1000));
+            document.getElementById('timer-current').textContent = durationLabel(timerSnapshot.remainingSeconds);
+            document.getElementById('timer-banked').textContent = `โบนัสไลฟ์ถัดไป: ${durationLabel(timerSnapshot.bankedSeconds)}`;
+            if (timerSnapshot.isRunning && timerSnapshot.remainingSeconds === 0) timerSnapshot.isRunning = false;
+        }
+        socket.on('apply_timer', state => {
+            timerSnapshot = { ...timerSnapshot, ...state };
+            timerSettings = { initialSeconds: state.initialSeconds || 3600, amountRules: Array.isArray(state.amountRules) ? state.amountRules : [] };
+            document.getElementById('timer-initial-hours').value = Math.floor(timerSettings.initialSeconds / 3600);
+            document.getElementById('timer-initial-minutes').value = Math.floor(timerSettings.initialSeconds % 3600 / 60);
+            document.getElementById('timer-initial-seconds').value = timerSettings.initialSeconds % 60;
+            renderTimerRules(); refreshTimerDisplay();
+        });
+        socket.on('timer_error', error => alert(error.message || 'ตั้งเวลาไม่สำเร็จ'));
+        setInterval(refreshTimerDisplay, 1000);
+        window.saveTimerSettings = function() {
+            try {
+                const initialSeconds = secondsFromInputs('timer-initial');
+                if (initialSeconds < 1) throw new Error('เวลาเริ่มต้นต้องมากกว่า 0');
+                socket.emit('timer_config', { username, token, initialSeconds, amountRules: timerSettings.amountRules });
+            } catch (error) { alert(error.message); }
+        };
+        window.startTimer = () => socket.emit('timer_start', { username, token });
+        window.setTimer = function() {
+            try { socket.emit('timer_set', { username, token, seconds: secondsFromInputs('timer-set') }); } catch (error) { alert(error.message); }
+        };
+        window.adjustTimer = function() {
+            try { socket.emit('timer_adjust', { username, token, action: document.getElementById('timer-adjust-action').value, seconds: secondsFromInputs('timer-adjust') }); } catch (error) { alert(error.message); }
+        };
+        window.addTimerRule = function() {
+            try {
+                const minAmount = Number(document.getElementById('timer-rule-min').value), maxAmount = Number(document.getElementById('timer-rule-max').value), seconds = secondsFromInputs('timer-rule');
+                if (!Number.isFinite(minAmount) || !Number.isFinite(maxAmount) || minAmount < 0 || maxAmount <= minAmount || seconds < 1) throw new Error('ตรวจช่วงยอดเงินและระยะเวลาให้ถูกต้อง');
+                const next = [...timerSettings.amountRules, { minAmount, maxAmount, action: document.getElementById('timer-rule-action').value, seconds }].sort((a,b) => a.minAmount - b.minAmount);
+                for (let i=1;i<next.length;i++) if (next[i].minAmount < next[i-1].maxAmount) throw new Error('ช่วงยอดเงินของกฎห้ามทับซ้อนกัน');
+                timerSettings.amountRules = next; renderTimerRules();
+            } catch (error) { alert(error.message); }
+        };
+        window.pauseAlerts = () => socket.emit('pause_alerts', { username, token, minutes: Number(document.getElementById('pause-alert-minutes').value) });
+        window.resumeAlerts = () => socket.emit('resume_alerts', { username, token });
+        window.skipCurrentAlert = () => socket.emit('skip_current_alert', { username, token });
+        socket.on('apply_alert_control', state => {
+            const until = state?.pausedUntil ? Date.parse(state.pausedUntil) : 0;
+            document.getElementById('alert-pause-status').textContent = until > Date.now() ? `พักแจ้งเตือนถึง ${new Date(until).toLocaleTimeString()}` : 'กำลังเล่นแจ้งเตือนตามปกติ';
+        });
+        socket.on('alert_control_error', error => alert(error.message || 'ตั้งค่าการแจ้งเตือนไม่สำเร็จ'));
+        let giftCatalog = [];
+        const giftIcons = { wave: '🌊', gift: '🎁', star: '⭐', gem: '💎', dolphin: '🐬', jellyfish: '🪼' };
+        const giftEffects = { sparkle: 'ประกาย', burst: 'ระเบิดแสง', coins: 'เหรียญ', heart: 'หัวใจ' };
+        function renderGiftCatalog() {
+            const list = document.getElementById('gift-catalog-list');
+            list.replaceChildren();
+            giftCatalog.forEach((gift, index) => {
+                const row = document.createElement('div'); row.className = 'card'; row.style.cssText = 'display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px;margin:0;';
+                const label = document.createElement('strong'); label.textContent = `${giftIcons[gift.iconId] || '🎁'} ${gift.name} · ${Number(gift.price).toFixed(2)} บาท · ${giftEffects[gift.effectId] || ''}`;
+                const timer = document.createElement('span'); timer.style.color = 'var(--text)'; timer.textContent = gift.timerAction === 'none' ? 'ไม่เปลี่ยนเวลา' : `${gift.timerAction === 'add' ? 'เพิ่ม' : 'ลด'} ${durationLabel(gift.seconds)} น.`;
+                const active = document.createElement('input'); active.type = 'checkbox'; active.checked = gift.active !== false; active.setAttribute('aria-label', `เปิดใช้ ${gift.name}`); active.addEventListener('change', () => { giftCatalog[index].active = active.checked; });
+                const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn-danger'; remove.textContent = 'ลบ'; remove.addEventListener('click', () => { giftCatalog.splice(index,1); renderGiftCatalog(); });
+                row.append(label, timer, active, remove); list.appendChild(row);
+            });
+        }
+        window.addGift = function() {
+            const name = document.getElementById('gift-name').value.trim();
+            const price = Number(document.getElementById('gift-price').value);
+            const timerAction = document.getElementById('gift-timer-action').value;
+            let seconds = 0;
+            if (timerAction !== 'none') {
+                try { seconds = secondsFromInputs('gift'); } catch (error) { return alert(error.message); }
+            }
+            if (!name || name.length > 40 || !Number.isFinite(price) || price < 1 || price > 50000 || Math.round(price * 100) / 100 !== price || (timerAction !== 'none' && seconds < 1)) return alert('กรุณาตรวจชื่อ ราคา และเวลาให้ถูกต้อง');
+            if (giftCatalog.length >= 30) return alert('ตั้งของขวัญได้ไม่เกิน 30 รายการ');
+            giftCatalog.push({ giftId: crypto.randomUUID(), name, price, iconId: document.getElementById('gift-icon').value, effectId: document.getElementById('gift-effect').value, active: true, timerAction, seconds });
+            document.getElementById('gift-name').value = ''; renderGiftCatalog();
+        };
+        window.saveGifts = () => socket.emit('save_gifts', { username, token, gifts: giftCatalog });
+        socket.on('apply_gifts', gifts => { giftCatalog = Array.isArray(gifts) ? gifts.map(gift => ({ ...gift, giftId: gift.giftId || gift._id })) : []; renderGiftCatalog(); });
+        socket.on('gift_error', error => alert(error.message || 'บันทึกของขวัญไม่สำเร็จ'));
 
         // 🟢 อัปเดตลิงก์ OBS ที่มี Stream Key / Widget Token
         socket.on('apply_security_settings', (sec) => {
@@ -763,6 +1006,7 @@
                 document.getElementById('obs-alert-url').value = `${baseUrl}/widget.html?token=${sec.widgetToken}`;
                 document.getElementById('obs-goal-url').value = `${baseUrl}/goal.html?token=${sec.widgetToken}`;
                 document.getElementById('obs-td-url').value = `${baseUrl}/top-donator.html?token=${sec.widgetToken}`;
+                document.getElementById('obs-timer-url').value = `${baseUrl}/timer.html?token=${sec.widgetToken}`;
             }
         });
 
@@ -838,6 +1082,8 @@
                 if(settings.maxMessageLength) document.getElementById('dash-max-len').value = settings.maxMessageLength;
                 if(settings.allowDonorImages !== undefined) document.getElementById('dash-allow-images').checked = settings.allowDonorImages;
                 if(settings.minAmountForImage !== undefined) document.getElementById('dash-min-image-amount').value = settings.minAmountForImage;
+                document.getElementById('donate-layout').value = ['ocean','minimal','neon'].includes(settings.layoutId) ? settings.layoutId : 'ocean';
+                document.getElementById('donate-palette').value = ['ocean','soft','neon'].includes(settings.themeId) ? settings.themeId : 'ocean';
 
                 if(settings.bgUrl) {
                     const presetEl = document.getElementById('dash-theme-preset');
@@ -849,6 +1095,7 @@
                         document.getElementById('dash-bg').style.display = 'block';
                     }
                 }
+                updateDonatePreview();
             }
         });
 
@@ -868,7 +1115,9 @@
                 bgUrl: bgUrl,
                 maxMessageLength: document.getElementById('dash-max-len').value,
                 allowDonorImages: document.getElementById('dash-allow-images').checked,
-                minAmountForImage: document.getElementById('dash-min-image-amount').value
+                minAmountForImage: document.getElementById('dash-min-image-amount').value,
+                layoutId: document.getElementById('donate-layout').value,
+                themeId: document.getElementById('donate-palette').value
             });
             alert('✅ บันทึกข้อมูลและหน้ารับเงินสำเร็จ!');
         };

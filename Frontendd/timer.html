@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OceanDonate Live Timer</title>
+    <style>
+        :root { color-scheme: dark; font-family: "Kanit", "Noto Sans Thai", system-ui, sans-serif; }
+        * { box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; margin: 0; background: transparent; overflow: hidden; }
+        body { display: grid; place-items: center; }
+        #timer { color: #67e8f9; font-size: clamp(3rem, 18vw, 12rem); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .04em; text-shadow: 0 3px 24px #042f2e, 0 0 10px #06b6d4; }
+        #timer[data-stopped="true"] { color: #cbd5e1; text-shadow: 0 3px 20px #0f172a; }
+        #status { position: fixed; bottom: 8%; color: #cbd5e1; font-size: clamp(.9rem, 3vw, 1.4rem); }
+        #status:empty { display: none; }
+        @media (prefers-reduced-motion: no-preference) { #timer { transition: color .25s ease; } }
+    </style>
+</head>
+<body>
+    <output id="timer" role="timer" aria-label="เวลาไลฟ์คงเหลือ" data-stopped="true">00:00:00</output>
+    <div id="status" role="status" aria-live="polite">เชื่อมต่อ Widget เพื่อรับเวลาไลฟ์</div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const widgetToken = new URLSearchParams(location.search).get('token');
+        const statusEl = document.getElementById('status');
+        const timerEl = document.getElementById('timer');
+        const socket = io();
+        let state = { isRunning: false, endsAt: null, remainingSeconds: 0 };
+        function render() {
+            const remaining = state.isRunning && state.endsAt
+                ? Math.max(0, Math.ceil((Date.parse(state.endsAt) - Date.now()) / 1000))
+                : Math.max(0, Number(state.remainingSeconds) || 0);
+            const hours = Math.floor(remaining / 3600);
+            const minutes = Math.floor(remaining % 3600 / 60);
+            const seconds = remaining % 60;
+            timerEl.textContent = [hours, minutes, seconds].map(value => String(value).padStart(2, '0')).join(':');
+            timerEl.dataset.stopped = String(!state.isRunning || remaining === 0);
+            if (state.isRunning && remaining === 0) {
+                state.isRunning = false;
+                statusEl.textContent = 'หมดเวลา';
+            }
+        }
+        socket.on('connect', () => {
+            if (!widgetToken) { statusEl.textContent = 'ลิงก์ Timer ไม่มี Widget token'; return; }
+            socket.emit('join_widget', { token: widgetToken, kind: 'timer' });
+            statusEl.textContent = 'กำลังเชื่อมต่อ';
+        });
+        socket.on('auth_error', error => { statusEl.textContent = error?.message || 'Widget token ไม่ถูกต้อง'; });
+        socket.on('apply_timer', incoming => { state = { ...state, ...incoming }; render(); statusEl.textContent = state.isRunning ? '' : 'หยุดอยู่'; });
+        socket.on('disconnect', () => { statusEl.textContent = 'กำลังเชื่อมต่อใหม่'; });
+        setInterval(render, 250);
+    </script>
+</body>
+</html>

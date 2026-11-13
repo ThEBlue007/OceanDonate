@@ -123,7 +123,7 @@
                     <input type="password" id="login-pass" class="form-control" placeholder="••••••••">
                 </div>
                 <div style="text-align: right; margin-bottom: 20px;">
-                    <a href="#" class="lang-el" data-th="ลืมรหัสผ่าน?" data-en="Forgot Password?" style="color: var(--blue); font-size: 0.85rem; text-decoration: none;">ลืมรหัสผ่าน?</a>
+                    <a href="#" onclick="showAuthForm('forgot'); return false;" class="lang-el" data-th="ลืมรหัสผ่าน?" data-en="Forgot Password?" style="color: var(--blue); font-size: 0.85rem; text-decoration: none;">ลืมรหัสผ่าน?</a>
                 </div>
                 
                 <button class="btn-primary lang-el" onclick="handleLogin()" data-th="<i class='fas fa-sign-in-alt'></i> เข้าสู่ระบบ" data-en="<i class='fas fa-sign-in-alt'></i> Login"><i class="fas fa-sign-in-alt"></i> เข้าสู่ระบบ</button>
@@ -131,8 +131,8 @@
                 <div class="social-login">
                     <p class="lang-el" data-th="หรือเข้าสู่ระบบด้วย" data-en="Or login with">หรือเข้าสู่ระบบด้วย</p>
                     <div class="social-btns">
-                        <button class="btn-social"><i class="fab fa-google" style="color: #ea4335;"></i> Google</button>
-                        <button class="btn-social"><i class="fab fa-discord" style="color: #5865F2;"></i> Discord</button>
+                        <button class="btn-social" onclick="beginOAuth('google')"><i class="fab fa-google" style="color: #ea4335;"></i> Google</button>
+                        <button class="btn-social" onclick="beginOAuth('discord')"><i class="fab fa-discord" style="color: #5865F2;"></i> Discord</button>
                     </div>
                 </div>
             </div>
@@ -152,6 +152,28 @@
                 </div>
                 
                 <button class="btn-primary lang-el" onclick="handleRegister()" data-th="<i class='fas fa-user-plus'></i> สร้างบัญชีฟรี" data-en="<i class='fas fa-user-plus'></i> Create Free Account"><i class="fas fa-user-plus"></i> สร้างบัญชีฟรี</button>
+            </div>
+
+            <div id="form-forgot" class="auth-form">
+                <h3>รีเซ็ตรหัสผ่าน</h3>
+                <p>กรอกอีเมลบัญชีของคุณ หากพบรายการจะส่งลิงก์รีเซ็ตที่ใช้ได้ 30 นาที</p>
+                <div class="form-group"><label for="forgot-email">อีเมล</label><input type="email" id="forgot-email" class="form-control" autocomplete="email"></div>
+                <button class="btn-primary" onclick="requestPasswordReset()">ส่งลิงก์รีเซ็ต</button>
+                <button class="btn-social" onclick="showAuthForm('login')">กลับไปเข้าสู่ระบบ</button>
+            </div>
+
+            <div id="form-reset" class="auth-form">
+                <h3>ตั้งรหัสผ่านใหม่</h3>
+                <div class="form-group"><label for="reset-password">รหัสผ่านใหม่ (12–128 ตัวอักษร)</label><input type="password" id="reset-password" class="form-control" minlength="12" maxlength="128" autocomplete="new-password"></div>
+                <button class="btn-primary" onclick="submitPasswordReset()">บันทึกรหัสผ่านใหม่</button>
+            </div>
+
+            <div id="form-oauth-register" class="auth-form">
+                <h3>ตั้งชื่อบัญชี OceanDonate</h3>
+                <p>อีเมลของคุณยืนยันจากผู้ให้บริการแล้ว เลือกชื่อผู้ใช้ที่ใช้ในลิงก์ Donate (3–24 ตัวอักษรอังกฤษ ตัวเลข _ หรือ -)</p>
+                <input type="hidden" id="oauth-signup-token">
+                <div class="form-group"><label for="oauth-signup-username">ชื่อผู้ใช้</label><input type="text" id="oauth-signup-username" class="form-control" minlength="3" maxlength="24" autocomplete="username"></div>
+                <button class="btn-primary" onclick="completeOAuthSignup()">สร้างบัญชี</button>
             </div>
         </div>
     </div>
@@ -253,6 +275,59 @@
                 alert('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่ารัน MongoDB และ Server.js แล้ว');
             }
         }
+
+        window.showAuthForm = function(form) {
+            document.querySelectorAll('.auth-form').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.auth-tab').forEach(item => item.classList.remove('active'));
+            const target = document.getElementById(`form-${form}`);
+            if (target) target.classList.add('active');
+            const tab = document.querySelector(`.auth-tab[data-tab="${form}"]`);
+            if (tab) tab.classList.add('active');
+        };
+        window.beginOAuth = provider => { if (['google','discord'].includes(provider)) location.href = `/api/auth/${provider}/start`; };
+        window.requestPasswordReset = async function() {
+            const email = document.getElementById('forgot-email').value.trim();
+            const response = await fetch('/api/password/forgot', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email}) });
+            const result = await response.json().catch(() => ({}));
+            alert(result.message || (response.ok ? 'หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์รีเซ็ตให้' : 'ส่งคำขอไม่สำเร็จ'));
+        };
+        window.submitPasswordReset = async function() {
+            const token = new URLSearchParams(location.search).get('reset');
+            const newPassword = document.getElementById('reset-password').value;
+            const response = await fetch('/api/password/reset', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token,newPassword}) });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) return alert(result.message || 'เปลี่ยนรหัสผ่านไม่สำเร็จ');
+            history.replaceState(null, '', '/auth.html'); showAuthForm('login');
+            alert(result.message || 'เปลี่ยนรหัสผ่านแล้ว กรุณาเข้าสู่ระบบใหม่');
+        };
+        window.completeOAuthSignup = async function() {
+            const signupToken = document.getElementById('oauth-signup-token').value;
+            const username = document.getElementById('oauth-signup-username').value.trim();
+            const response = await fetch('/api/auth/oauth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({signupToken,username}) });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) return alert(result.message || 'สมัครด้วยบัญชีภายนอกไม่สำเร็จ');
+            localStorage.setItem('ocean_token', result.token); localStorage.setItem('ocean_user', result.username);
+            location.href = `dashboard.html?u=${encodeURIComponent(result.username)}`;
+        };
+
+        (async function handleAuthReturn() {
+            const params = new URLSearchParams(location.search);
+            if (params.has('reset')) { showAuthForm('reset'); return; }
+            if (params.has('oauth_signup')) {
+                document.getElementById('oauth-signup-token').value = params.get('oauth_signup');
+                showAuthForm('oauth-register'); return;
+            }
+            if (params.get('oauth') === 'complete') {
+                const response = await fetch('/api/auth/oauth/complete', { method:'POST' });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) { alert(result.message || 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่'); return; }
+                localStorage.setItem('ocean_token', result.token); localStorage.setItem('ocean_user', result.username);
+                location.href = `dashboard.html?u=${encodeURIComponent(result.username)}`; return;
+            }
+            if (params.get('oauth_error') === 'link-required') alert('อีเมลนี้มีบัญชี OceanDonate แล้ว กรุณาเข้าสู่ระบบบัญชีเดิมก่อน แล้วจึงผูก Google/Discord จาก Dashboard');
+            else if (params.has('oauth_error')) alert('เข้าสู่ระบบภายนอกไม่สำเร็จ กรุณาลองใหม่');
+            if (params.has('oauth_error')) history.replaceState(null, '', '/auth.html');
+        })();
     </script>
 </body>
 </html>

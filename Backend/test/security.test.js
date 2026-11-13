@@ -6,6 +6,7 @@ const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const fs = require('node:fs');
+const crypto = require('node:crypto');
 const { after, before, test } = require('node:test');
 const { JSDOM } = require('jsdom');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
@@ -29,6 +30,7 @@ let token;
 let widgetToken;
 let slipApiServer;
 let slipApiPort;
+let mockGoogleProfile = { sub: 'google-subject-1', email: 'oauth-user@example.test', email_verified: true };
 
 function findFreePort() {
     return new Promise((resolve, reject) => {
@@ -81,6 +83,9 @@ before(async () => {
     process.env.MONGOMS_DOWNLOAD_DIR = mongoDownloadPath;
     slipApiPort = await findFreePort();
     slipApiServer = http.createServer((req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        if (req.url === '/google-token') return res.end(JSON.stringify({ access_token: 'mock-provider-access-token', token_type: 'Bearer' }));
+        if (req.url === '/google-profile') return res.end(JSON.stringify(mockGoogleProfile));
         let rawBody = '';
         req.setEncoding('utf8');
         req.on('data', chunk => { rawBody += chunk; });
@@ -116,7 +121,7 @@ before(async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     serverProcess = spawn(process.execPath, [serverPath], {
         cwd: projectRoot,
-        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
+        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: '', DISCORD_CLIENT_SECRET: '', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -124,7 +129,7 @@ before(async () => {
     serverProcess.stdout.on('data', chunk => { output += chunk.toString(); });
     serverProcess.stderr.on('data', chunk => { output += chunk.toString(); });
     const startedAt = Date.now();
-    while (!output.includes('Server running on port')) {
+    while (!output.includes('Server running on port') || !output.includes('Connected to MongoDB:')) {
         if (serverProcess.exitCode !== null) throw new Error(`Test server exited early:\n${output}`);
         if (Date.now() - startedAt > 15000) throw new Error(`Test server did not start:\n${output}`);
         await delay(50);
@@ -235,6 +240,14 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     owner.emit('auth_dashboard', { token, username });
     await ownerAuth;
 
+    const timerConfigured = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_config', { username, token, initialSeconds: 3600, amountRules: [{ minAmount: 20, maxAmount: 50, action: 'add', seconds: 30 }] });
+    await timerConfigured;
+
+    const paused = socketEvent(owner, 'apply_alert_control');
+    owner.emit('pause_alerts', { username, token, minutes: 5 });
+    await paused;
+
     const bankSaved = socketEvent(owner, 'apply_payment');
     owner.emit('save_payment', { username, token, type: 'bank', data: {
         active: true, bankName: 'กรุงเทพ (BBL)', accountNumber: '123-4-56789-0',
@@ -246,6 +259,17 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     const promptpaySaved = socketEvent(owner, 'apply_payment');
     owner.emit('save_payment', { username, token, type: 'promptpay', data: { active: true, phone: '0812345678' } });
     await promptpaySaved;
+
+    const ownerRecord = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('giftcatalogitems').insertOne({ userId: ownerRecord._id, giftId: 'gift-test', name: 'Test Gem', price: 40, iconId: 'gem', effectId: 'sparkle', active: true, timerAction: 'add', seconds: 15 });
+    const giftOrder = await request(baseUrl).post('/api/donations').send({ username, paymentMethod: 'promptpay', amount: 1, giftId: 'gift-test', name: 'Gift donor' });
+    assert.equal(giftOrder.status, 201, JSON.stringify(giftOrder.body));
+    assert.equal(giftOrder.body.amount, 40);
+    const giftSnapshot = await dbConnection.collection('donations').findOne({ _id: new mongoose.Types.ObjectId(String(giftOrder.body.donationId)) });
+    assert.equal(giftSnapshot.giftSnapshot.price, 40);
+    const publicProfile = await request(baseUrl).get(`/api/streamer/${username}`);
+    assert.equal(publicProfile.body.giftCatalog[0].name, 'Test Gem');
+    assert.equal(publicProfile.body.giftCatalog[0].timerAction, undefined);
 
     const widget = await connectSocket();
     const widgetSettings = socketEvent(widget, 'apply_settings');
@@ -260,16 +284,32 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     assert.match(order.body.qrUrl, /0812345678\/25\.50\.png/);
     let user = await dbConnection.collection('users').findOne({ username });
     assert.equal(user.stats.total, 0);
-    assert.equal(await dbConnection.collection('donations').countDocuments({ username, status: 'pending' }), 1);
+    assert.equal(await dbConnection.collection('donations').countDocuments({ username, status: 'pending' }), 2);
 
     await dbConnection.collection('users').updateOne({ username }, { $set: { 'paymentMethods.bank.accountNumber': '999-9-99999-9', 'paymentMethods.bank.accountName': 'บัญชีใหม่' } });
     const confirmed = await request(baseUrl).post(`/api/donations/${order.body.donationId}/slip`).send({ base64: 'data:image/png;base64,SLIPREUSED00001' });
     assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
-    assert.equal((await showAlert).name, 'Verified donor');
+    const queuedAlert = await dbConnection.collection('alertqueues').findOne({ donationId: new mongoose.Types.ObjectId(String(order.body.donationId)) });
+    assert.equal(queuedAlert.status, 'queued');
+    const resumed = socketEvent(owner, 'apply_alert_control');
+    owner.emit('resume_alerts', { username, token });
+    await resumed;
+    const confirmedAlert = await showAlert;
+    assert.equal(confirmedAlert.name, 'Verified donor');
+    widget.emit('alert_finished', { queueId: confirmedAlert.queueId });
+    let queueAcknowledged = false;
+    for (let attempt = 0; attempt < 30; attempt++) {
+        const queueEntry = await dbConnection.collection('alertqueues').findOne({ _id: new mongoose.Types.ObjectId(confirmedAlert.queueId) });
+        if (queueEntry?.status === 'played') { queueAcknowledged = true; break; }
+        await delay(10);
+    }
+    assert.equal(queueAcknowledged, true, 'completed OBS alert should be acknowledged before disconnect');
+    assert.equal(await dbConnection.collection('alertqueues').countDocuments({ username, donationId: new mongoose.Types.ObjectId(String(order.body.donationId)) }), 1);
     await dbConnection.collection('users').updateOne({ username }, { $set: { 'paymentMethods.bank.accountNumber': '123-4-56789-0', 'paymentMethods.bank.accountName': 'ผู้รับทดสอบ' } });
     user = await dbConnection.collection('users').findOne({ username });
     assert.equal(user.stats.total, 25.5);
     assert.equal(user.stats.today, 25.5);
+    assert.equal(user.timerState.bankedSeconds, 30);
 
     const second = await request(baseUrl).post('/api/donations').send({ username, paymentMethod: 'promptpay', amount: 25.5, name: 'Second donor' });
     assert.equal(second.status, 201);
@@ -373,5 +413,184 @@ test('donor history fields are rendered as text in the dashboard', async () => {
     assert.equal(dom.window.document.querySelector('#dash-history-list img'), null);
     assert.equal(dom.window.document.querySelector('#dash-history-list').textContent.includes(payload), true);
     assert.equal(dom.window.__xss, undefined);
+    dom.window.close();
+});
+
+test('owner can configure an uncapped live timer and carry stopped-time changes into the next stream', async () => {
+    const owner = await connectSocket();
+    const authenticated = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await authenticated;
+
+    const clearBonus = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_set', { username, token, seconds: 0 });
+    await clearBonus;
+
+    const configured = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_config', { username, token, initialSeconds: 600, amountRules: [] });
+    const config = await configured;
+    assert.equal(config.initialSeconds, 600);
+
+    const adjusted = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_adjust', { username, token, seconds: 120 });
+    assert.equal((await adjusted).bankedSeconds, 120);
+    const savedBonus = await dbConnection.collection('users').findOne({ username });
+    assert.equal(savedBonus.timerState.bankedSeconds, 120, JSON.stringify(savedBonus.timerState));
+
+    const started = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_start', { username, token });
+    const state = await started;
+    assert.equal(state.isRunning, true);
+    assert.ok(Date.parse(state.endsAt) - Date.now() >= 719_000, JSON.stringify(state));
+
+    const stopped = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_set', { username, token, seconds: 0 });
+    const zero = await stopped;
+    assert.equal(zero.isRunning, false);
+    assert.equal(zero.remainingSeconds, 0);
+    owner.disconnect();
+});
+
+test('OBS gift effects render an allowlisted icon and untrusted gift names as text', () => {
+    const handlers = new Map();
+    const fakeSocket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
+    const html = fs.readFileSync(path.join(frontendPath, 'widget.html'), 'utf8');
+    const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/widget.html?token=test', beforeParse(window) { window.io = () => fakeSocket; } });
+    const unsafeName = '<img src=x onerror="window.__xss=1">';
+    handlers.get('show_alert')({ name: 'Donor', amount: 50, giftSnapshot: { name: unsafeName, iconId: 'gem', effectId: 'sparkle' } });
+    const effect = dom.window.document.getElementById('gift-effect');
+    assert.equal(effect.textContent, `💎 ${unsafeName}`);
+    assert.equal(effect.querySelector('img'), null);
+    assert.equal(effect.classList.contains('gift-sparkle'), true);
+    assert.equal(dom.window.__xss, undefined);
+    dom.window.close();
+});
+
+test('OAuth start is configured and forgot-password responses do not reveal accounts', async () => {
+    const oauth = await request(baseUrl).get('/api/auth/google/start');
+    assert.equal(oauth.status, 302);
+    assert.match(oauth.headers.location, /^https:\/\/accounts\.google\.com\//);
+    assert.ok(oauth.headers['set-cookie'].some(cookie => cookie.startsWith('ocean_oauth_google=')));
+    const unavailableProvider = await request(baseUrl).get('/api/auth/discord/start');
+    assert.equal(unavailableProvider.status, 503);
+    const unknown = await request(baseUrl).post('/api/password/forgot').send({ email: 'missing@example.test' });
+    const existing = await request(baseUrl).post('/api/password/forgot').send({ email: `${username}@example.test` });
+    assert.equal(unknown.status, 202);
+    assert.equal(existing.status, 202);
+    assert.deepEqual(unknown.body, existing.body);
+});
+
+test('Google OAuth verifies state, creates a username account, and issues a one-use login handoff', async () => {
+    async function startGoogle() {
+        const response = await request(baseUrl).get('/api/auth/google/start');
+        const state = new URL(response.headers.location).searchParams.get('state');
+        const stateCookie = response.headers['set-cookie'].find(cookie => cookie.startsWith('ocean_oauth_google=')).split(';')[0];
+        return { state, stateCookie };
+    }
+    async function callbackGoogle(flow, state = flow.state) {
+        return request(baseUrl).get('/api/auth/google/callback').query({ code: 'mock-code', state }).set('Cookie', flow.stateCookie).redirects(0);
+    }
+
+    const signupFlow = await startGoogle();
+    const signupCallback = await callbackGoogle(signupFlow);
+    assert.equal(signupCallback.status, 302);
+    const signupToken = new URL(signupCallback.headers.location, baseUrl).searchParams.get('oauth_signup');
+    assert.ok(signupToken);
+    const signup = await request(baseUrl).post('/api/auth/oauth/register').send({ signupToken, username: 'oauth_streamer' });
+    assert.equal(signup.status, 201, JSON.stringify(signup.body));
+    assert.equal(signup.body.username, 'oauth_streamer');
+    assert.equal(await dbConnection.collection('authidentities').countDocuments({ provider: 'google', providerSubject: 'google-subject-1' }), 1);
+
+    const loginFlow = await startGoogle();
+    const loginCallback = await callbackGoogle(loginFlow);
+    assert.equal(new URL(loginCallback.headers.location, baseUrl).searchParams.get('oauth'), 'complete');
+    const handoffCookie = loginCallback.headers['set-cookie'].find(cookie => cookie.startsWith('ocean_oauth_handoff=')).split(';')[0];
+    const handoff = await request(baseUrl).post('/api/auth/oauth/complete').set('Cookie', handoffCookie);
+    assert.equal(handoff.status, 200, JSON.stringify(handoff.body));
+    const verified = await request(baseUrl).get('/api/verify').set('Authorization', `Bearer ${handoff.body.token}`);
+    assert.equal(verified.status, 200);
+    const reusedHandoff = await request(baseUrl).post('/api/auth/oauth/complete').set('Cookie', handoffCookie);
+    assert.equal(reusedHandoff.status, 401);
+
+    const collisionProfile = { sub: 'google-subject-collision', email: `${username}@example.test`, email_verified: true };
+    mockGoogleProfile = collisionProfile;
+    const collision = await callbackGoogle(await startGoogle());
+    assert.equal(new URL(collision.headers.location, baseUrl).searchParams.get('oauth_error'), 'link-required');
+    assert.equal(await dbConnection.collection('authidentities').countDocuments({ provider: 'google', providerSubject: collisionProfile.sub }), 0);
+
+    mockGoogleProfile = { sub: 'google-unverified', email: 'unverified@example.test', email_verified: false };
+    const unverified = await callbackGoogle(await startGoogle());
+    assert.equal(new URL(unverified.headers.location, baseUrl).searchParams.get('oauth_error'), 'email');
+
+    mockGoogleProfile = { sub: 'google-subject-1', email: 'oauth-user@example.test', email_verified: true };
+    const mismatchedStateFlow = await startGoogle();
+    const mismatchedState = await callbackGoogle(mismatchedStateFlow, 'wrong-state');
+    assert.equal(new URL(mismatchedState.headers.location, baseUrl).searchParams.get('oauth_error'), 'state');
+});
+
+test('password reset token is one-use and revokes old HTTP and Socket.IO sessions', async () => {
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    await dbConnection.collection('passwordresettokens').insertOne({
+        tokenHash: crypto.createHash('sha256').update(rawToken).digest('hex'),
+        userId: (await dbConnection.collection('users').findOne({ username }))._id,
+        expiresAt: new Date(Date.now() + 60_000), usedAt: null
+    });
+    const reset = await request(baseUrl).post('/api/password/reset').send({ token: rawToken, newPassword: 'new-reset-password-123' });
+    assert.equal(reset.status, 200, JSON.stringify(reset.body));
+    const oldSession = await request(baseUrl).get('/api/verify').set('Authorization', `Bearer ${token}`);
+    assert.equal(oldSession.status, 401);
+    const replay = await request(baseUrl).post('/api/password/reset').send({ token: rawToken, newPassword: 'another-reset-password-123' });
+    assert.equal(replay.status, 400);
+    const newLogin = await request(baseUrl).post('/api/login').send({ email: `${username}@example.test`, password: 'new-reset-password-123' });
+    assert.equal(newLogin.status, 200, JSON.stringify(newLogin.body));
+
+    const staleSocket = await connectSocket();
+    const authError = socketEvent(staleSocket, 'auth_error');
+    staleSocket.emit('auth_dashboard', { token, username });
+    assert.match((await authError).message, /เซสชันหมดอายุ/);
+    staleSocket.disconnect();
+    token = newLogin.body.token;
+});
+
+test('Donate layout and palette accept only built-in choices and background URLs require HTTPS', async () => {
+    const owner = await connectSocket();
+    const authenticated = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await authenticated;
+    const applied = socketEvent(owner, 'apply_page_settings');
+    owner.emit('save_page_settings', { username, layoutId: 'minimal', themeId: 'soft', bgUrl: 'javascript:alert(1)' });
+    const settings = await applied;
+    assert.equal(settings.layoutId, 'minimal');
+    assert.equal(settings.themeId, 'soft');
+    assert.equal(settings.bgUrl, '');
+    owner.disconnect();
+});
+
+test('Donate Preview applies temporary design choices but blocks all payment submission', async () => {
+    const handlers = new Map();
+    const fakeSocket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
+    const fetchCalls = [];
+    const html = fs.readFileSync(path.join(frontendPath, 'donate.html'), 'utf8');
+    const dom = new JSDOM(html, {
+        runScripts: 'dangerously', url: 'http://localhost/donate.html?u=preview-user&preview=1',
+        beforeParse(window) {
+            window.io = () => fakeSocket;
+            window.alert = () => {};
+            window.fetch = async (url, options) => {
+                fetchCalls.push({ url: String(url), options });
+                return { ok: true, json: async () => ({ username:'Preview', giftCatalog:[], paymentMethods:{}, layoutId:'ocean', themeId:'ocean' }) };
+            };
+        }
+    });
+    await delay(20);
+    assert.equal(dom.window.document.getElementById('btn-submit-donate').disabled, true);
+    dom.window.dispatchEvent(new dom.window.MessageEvent('message', {
+        origin: 'http://localhost', source: dom.window,
+        data: { type:'oceandonate-preview', settings:{ layoutId:'minimal', themeId:'soft', bio:'Preview bio' } }
+    }));
+    assert.equal(dom.window.document.body.dataset.layout, 'minimal');
+    assert.equal(dom.window.document.body.dataset.theme, 'soft');
+    await dom.window.openPaymentModal();
+    assert.equal(fetchCalls.some(call => call.url.includes('/api/donations')), false);
     dom.window.close();
 });
