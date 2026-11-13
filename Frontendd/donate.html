@@ -184,7 +184,7 @@
                     <div id="no-payment-msg" style="display: none; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3);">
                         <i class="fas fa-lock" style="font-size: 1.5rem; margin-bottom: 5px; display: block;"></i>
                         <strong style="font-size: 1.1rem;" class="lang-el" data-th="ปิดรับโดเนทชั่วคราว" data-en="Donations Temporarily Closed">ปิดรับโดเนทชั่วคราว</strong><br>
-                        <span style="font-size: 0.9rem;" class="lang-el" data-th="สตรีมเมอร์ยังไม่ได้เปิดช่องทางการรับเงินครับ" data-en="The streamer hasn't enabled any payment methods.">สตรีมเมอร์ยังไม่ได้เปิดช่องทางการรับเงินครับ</span>
+                        <span style="font-size: 0.9rem;" class="lang-el" data-th="ช่องทางเงินจริงยังไม่พร้อม แต่ยังเลือกทดสอบโดเนทได้" data-en="Real payment methods are not ready yet, but you can still test the alert.">ช่องทางเงินจริงยังไม่พร้อม แต่ยังเลือกทดสอบโดเนทได้</span>
                     </div>
 
                     <div class="payment-methods" id="payment-methods-container">
@@ -195,6 +195,10 @@
                         <div class="pay-method-card" id="pay-bank" onclick="selectPayment('bank')">
                             <i class="fas fa-university" style="color: #f5a623;"></i>
                             <span class="lang-el" data-th="โอนผ่านธนาคาร" data-en="Bank Transfer">โอนผ่านธนาคาร</span>
+                        </div>
+                        <div class="pay-method-card" id="pay-test" onclick="selectPayment('test')">
+                            <i class="fas fa-vial" style="color: #a78bfa;"></i>
+                            <span class="lang-el" data-th="ทดสอบโดเนท" data-en="Test Donation">ทดสอบโดเนท</span>
                         </div>
                     </div>
                 </div>
@@ -212,9 +216,12 @@
             <h3 style="color: #1155cc; margin-bottom: 10px;"><i class="fas fa-qrcode"></i> <span class="lang-el" data-th="สแกนเพื่อจ่ายเงิน" data-en="Scan to Pay">สแกนเพื่อจ่ายเงิน</span></h3>
             <p style="font-size: 0.9rem; color: #555;"><span class="lang-el" data-th="โอนเงินให้:" data-en="Transfer to:">โอนเงินให้:</span> <strong id="qr-account-name">กำลังโหลดข้อมูล...</strong></p>
             <p style="font-size: 1.2rem; font-weight: bold; color: #e11d48; margin-top: 5px;" id="qr-amount-text">50.00 บาท</p>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="QR Code">
+            <img id="promptpay-qr-image" src="" alt="QR Code พร้อมเพย์">
+            <label for="promptpay-slip-file" class="lang-el" data-th="แนบสลิปหลังโอน (JPG/PNG/WebP/GIF ไม่เกิน 4 MB)" data-en="Upload your slip (JPG/PNG/WebP/GIF, up to 4 MB)" style="display:block;color:#555;font-size:.85rem;">แนบสลิปหลังโอน (JPG/PNG/WebP/GIF ไม่เกิน 4 MB)</label>
+            <input id="promptpay-slip-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="width:100%;margin-top:8px;color:#333;">
+            <p id="promptpay-slip-status" role="status" style="color:#555;font-size:.85rem;margin-top:8px;"></p>
+            <button class="btn-close-qr lang-el" style="background:#10b981;margin-top:10px;" onclick="submitSlip('promptpay')" data-th="ตรวจสอบสลิปและยืนยันโดเนท" data-en="Verify Slip and Confirm Donation">ตรวจสอบสลิปและยืนยันโดเนท</button>
             <button class="btn-close-qr lang-el" onclick="closeQRModal()" data-th="ยกเลิก / ปิดหน้าต่าง" data-en="Cancel / Close">ยกเลิก / ปิดหน้าต่าง</button>
-            <button class="btn-close-qr lang-el" style="background: #10b981; margin-top: 10px;" onclick="successMockup()" data-th="จำลองว่าโอนสำเร็จแล้ว" data-en="Mock Successful Transfer">จำลองว่าโอนสำเร็จแล้ว</button>
         </div>
     </div>
 
@@ -229,9 +236,11 @@
                 <p style="margin-bottom: 8px; font-size: 0.9rem; color: #333;"><span class="lang-el" data-th="ชื่อบัญชี:" data-en="Account Name:">ชื่อบัญชี:</span> <strong id="bank-owner-display">-</strong></p>
                 <p style="margin: 0; font-size: 1.1rem; color: #111;"><span class="lang-el" data-th="เลขบัญชี:" data-en="Account Number:">เลขบัญชี:</span> <strong id="bank-acc-display" style="color: #f5a623; letter-spacing: 1px;">-</strong></p>
             </div>
-            
+            <label for="bank-slip-file" class="lang-el" data-th="แนบสลิปหลังโอน (JPG/PNG/WebP/GIF ไม่เกิน 4 MB)" data-en="Upload your slip (JPG/PNG/WebP/GIF, up to 4 MB)" style="display:block;color:#555;font-size:.85rem;">แนบสลิปหลังโอน (JPG/PNG/WebP/GIF ไม่เกิน 4 MB)</label>
+            <input id="bank-slip-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="width:100%;margin-top:8px;color:#333;">
+            <p id="bank-slip-status" role="status" style="color:#555;font-size:.85rem;margin-top:8px;"></p>
+            <button class="btn-close-qr lang-el" style="background:#10b981;margin-top:10px;" onclick="submitSlip('bank')" data-th="ตรวจสอบสลิปและยืนยันโดเนท" data-en="Verify Slip and Confirm Donation">ตรวจสอบสลิปและยืนยันโดเนท</button>
             <button class="btn-close-qr lang-el" onclick="closeBankModal()" style="background: #ef4444;" data-th="ยกเลิก / ปิดหน้าต่าง" data-en="Cancel / Close">ยกเลิก / ปิดหน้าต่าง</button>
-            <button class="btn-close-qr lang-el" style="background: #10b981; margin-top: 10px;" onclick="successMockup()" data-th="จำลองว่าโอนสำเร็จแล้ว" data-en="Mock Successful Transfer">จำลองว่าโอนสำเร็จแล้ว</button>
         </div>
     </div>
 
@@ -241,7 +250,7 @@
             <div style="font-size: 3.5rem; color: #10b981; margin-bottom: 10px;">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h2 style="color: #10b981; margin-bottom: 15px; font-weight: bold;" class="lang-el" data-th="โอนเงินสำเร็จ!" data-en="Transfer Successful!">โอนเงินสำเร็จ!</h2>
+            <h2 id="thankyou-title" style="color: #10b981; margin-bottom: 15px; font-weight: bold;" class="lang-el" data-th="ยืนยันโดเนทแล้ว" data-en="Donation Confirmed">ยืนยันโดเนทแล้ว</h2>
             <p style="font-size: 1.1rem; color: #333; margin-bottom: 25px; line-height: 1.5;" id="thankyou-text">ขอบคุณสำหรับการสนับสนุนมากๆ ครับ!</p>
             <button class="btn-close-qr lang-el" style="background: var(--blue); width: 100%; font-size: 1.1rem; padding: 12px;" onclick="closeThankYouModal()" data-th="ตกลง / ปิดหน้าต่าง" data-en="OK / Close">ตกลง / ปิดหน้าต่าง</button>
         </div>
@@ -345,27 +354,35 @@
         fetchStreamerData();
 
         // 🟢 ฟังก์ชันแสดง Social Links
+        function safeHttpsLink(value) {
+            try {
+                return new URL(value).protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+
         function applySocialLinks(links) {
             if (!links) return;
             const yt = document.getElementById('view-yt');
             const fb = document.getElementById('view-fb');
             const twitch = document.getElementById('view-twitch');
 
-            if (links.youtube && links.youtube.trim() !== '') {
+            if (links.youtube && safeHttpsLink(links.youtube)) {
                 yt.href = links.youtube;
                 yt.style.display = 'inline-flex';
             } else {
                 yt.style.display = 'none';
             }
 
-            if (links.facebook && links.facebook.trim() !== '') {
+            if (links.facebook && safeHttpsLink(links.facebook)) {
                 fb.href = links.facebook;
                 fb.style.display = 'inline-flex';
             } else {
                 fb.style.display = 'none';
             }
 
-            if (links.twitch && links.twitch.trim() !== '') {
+            if (links.twitch && safeHttpsLink(links.twitch)) {
                 twitch.href = links.twitch;
                 twitch.style.display = 'inline-flex';
             } else {
@@ -464,12 +481,16 @@
                 if (bankCard) bankCard.style.display = 'none';
             }
 
+            const testCard = document.getElementById('pay-test');
+            if (testCard) testCard.style.display = 'flex';
+            if (!hasActiveMethod) selectPayment('test');
+
             if (!hasActiveMethod) {
                 if (noPayMsg) noPayMsg.style.display = 'block';
                 if (btnDonate) {
-                    btnDonate.style.opacity = '0.5';
-                    btnDonate.style.pointerEvents = 'none';
-                    btnDonate.innerHTML = `<i class="fas fa-lock"></i> <span>${currentLang === 'en' ? 'Donations Closed' : 'ปิดรับโดเนทชั่วคราว'}</span>`;
+                    btnDonate.style.opacity = '1';
+                    btnDonate.style.pointerEvents = 'auto';
+                    updateDonateButton(document.getElementById('input-amount').value || 50);
                 }
             } else {
                 if (noPayMsg) noPayMsg.style.display = 'none';
@@ -527,89 +548,102 @@
             return bannedWordsList.some(w => w && lower.includes(w.toLowerCase().trim()));
         }
 
-        window.openPaymentModal = function() {
-            const amount = parseFloat(document.getElementById('input-amount').value) || 0;
+        let currentDonationId = null;
+
+        window.openPaymentModal = async function() {
+            const amount = Number(document.getElementById('input-amount').value);
             const name = (document.getElementById('donate-name').value || '').trim();
-            const msg = (document.getElementById('donate-msg').value || '').trim();
-            
-            if (!amount || amount <= 0) return alert(currentLang === 'en' ? 'Please enter a valid amount.' : 'กรุณาระบุจำนวนเงินที่ถูกต้องครับ');
-            if (!name) return alert(currentLang === 'en' ? 'Please enter your name.' : 'กรุณาระบุชื่อของคุณครับ');
-
-            // 🛑 ดักจับคำหยาบ
-            if (checkProfanity(name) || checkProfanity(msg)) {
-                return alert(currentLang === 'en' 
-                    ? '⚠️ Your name or message contains inappropriate words. Please edit before proceeding.' 
-                    : '⚠️ ขออภัยครับ ข้อความหรือชื่อของคุณมีคำที่ไม่สุภาพ กรุณาแก้ไขก่อนทำรายการ');
+            const message = (document.getElementById('donate-msg').value || '').trim();
+            const imageUrl = (document.getElementById('donate-image-url').value || '').trim();
+            if (!Number.isFinite(amount) || amount < 1 || amount > 50000 || Math.round(amount * 100) / 100 !== amount) {
+                return alert(currentLang === 'en' ? 'Enter an amount from 1 to 50,000 THB.' : 'กรุณาระบุจำนวน 1 ถึง 50,000 บาท');
             }
-
-            const currencyStr = currentLang === 'en' ? ' THB' : ' บาท';
-
+            if (!name) return alert(currentLang === 'en' ? 'Please enter your name.' : 'กรุณาระบุชื่อของคุณครับ');
+            if (checkProfanity(name) || checkProfanity(message)) {
+                return alert(currentLang === 'en' ? 'Your name or message contains inappropriate words.' : 'ชื่อหรือข้อความมีคำที่ไม่เหมาะสม');
+            }
+            const payload = { username: streamerName, amount, name, message, imageUrl };
+            if (selectedPayment === 'test') {
+                const response = await fetch('/api/donations/test', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) return alert(result.message || 'ส่งการทดสอบไม่สำเร็จ');
+                showThankYou(currentLang === 'en' ? 'Test alert sent. This was not counted as a real donation.' : 'ส่ง Test Alert แล้ว รายการนี้ไม่นับเป็นโดเนทจริง', true);
+                return;
+            }
+            const response = await fetch('/api/donations', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...payload, paymentMethod: selectedPayment })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) return alert(result.message || 'สร้างรายการโดเนทไม่สำเร็จ');
+            currentDonationId = result.donationId;
             if (selectedPayment === 'promptpay') {
-                const modal = document.getElementById('qr-modal');
-                const qrAmountText = document.getElementById('qr-amount-text');
-                const qrName = document.getElementById('qr-account-name');
-                const phone = paymentSettings?.promptpay?.phone || '0000000000';
-                
-                if (qrAmountText) qrAmountText.innerText = amount.toFixed(2) + currencyStr;
-                if (qrName) qrName.innerText = phone;
-                
-                const qrImg = modal.querySelector('img');
-                if (qrImg) qrImg.src = `https://promptpay.io/${phone}/${amount}.png`;
-
-                modal.classList.add('active');
-
-            } else if (selectedPayment === 'bank') {
-                const modal = document.getElementById('bank-modal');
-                const bankAmt = document.getElementById('bank-amount-text');
-                const bName = document.getElementById('bank-name-display');
-                const bOwner = document.getElementById('bank-owner-display');
-                const bAcc = document.getElementById('bank-acc-display');
-
-                if (bankAmt) bankAmt.innerText = amount.toFixed(2) + currencyStr;
-                if (bName) bName.innerText = paymentSettings?.bank?.bankName || '-';
-                if (bOwner) bOwner.innerText = paymentSettings?.bank?.accountName || '-';
-                if (bAcc) bAcc.innerText = paymentSettings?.bank?.accountNumber || '-';
-
-                modal.classList.add('active');
+                document.getElementById('qr-account-name').textContent = result.receiverName || '-';
+                document.getElementById('qr-amount-text').textContent = Number(result.amount).toFixed(2) + (currentLang === 'en' ? ' THB' : ' บาท');
+                document.getElementById('promptpay-qr-image').src = result.qrUrl;
+                document.getElementById('promptpay-slip-status').textContent = '';
+                document.getElementById('promptpay-slip-file').value = '';
+                document.getElementById('qr-modal').classList.add('active');
+            } else {
+                document.getElementById('bank-amount-text').textContent = Number(result.amount).toFixed(2) + (currentLang === 'en' ? ' THB' : ' บาท');
+                document.getElementById('bank-name-display').textContent = result.bank?.bankName || '-';
+                document.getElementById('bank-owner-display').textContent = result.bank?.accountName || '-';
+                document.getElementById('bank-acc-display').textContent = result.bank?.accountNumber || '-';
+                document.getElementById('bank-slip-status').textContent = '';
+                document.getElementById('bank-slip-file').value = '';
+                document.getElementById('bank-modal').classList.add('active');
             }
         };
+
+        window.submitSlip = async function(method) {
+            const fileInput = document.getElementById(method === 'promptpay' ? 'promptpay-slip-file' : 'bank-slip-file');
+            const status = document.getElementById(method === 'promptpay' ? 'promptpay-slip-status' : 'bank-slip-status');
+            const file = fileInput?.files?.[0];
+            if (!currentDonationId) return status.textContent = currentLang === 'en' ? 'Create a payment request first.' : 'กรุณาสร้างรายการชำระเงินก่อน';
+            if (!file) return status.textContent = currentLang === 'en' ? 'Choose your transfer slip.' : 'กรุณาเลือกไฟล์สลิป';
+            if (file.size > 4 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+                return status.textContent = currentLang === 'en' ? 'Use a JPG, PNG, WebP, or GIF image up to 4 MB.' : 'ใช้ไฟล์ JPG, PNG, WebP หรือ GIF ขนาดไม่เกิน 4 MB';
+            }
+            status.textContent = currentLang === 'en' ? 'Verifying with the bank...' : 'กำลังตรวจสอบรายการกับธนาคาร...';
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            }).catch(() => null);
+            if (!base64) return status.textContent = currentLang === 'en' ? 'Could not read the image.' : 'อ่านไฟล์ภาพไม่สำเร็จ';
+            const response = await fetch('/api/donations/' + encodeURIComponent(currentDonationId) + '/slip', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ base64 })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) return status.textContent = result.message || (currentLang === 'en' ? 'Slip verification failed.' : 'ตรวจสอบสลิปไม่สำเร็จ');
+            currentDonationId = null;
+            closeQRModal();
+            closeBankModal();
+            showThankYou(currentLang === 'en' ? 'Payment verified. Thank you for your donation!' : 'ตรวจสอบการโอนแล้ว ขอบคุณสำหรับโดเนทครับ!');
+        };
+
+        function showThankYou(message, isTest = false) {
+            const thankTitle = document.getElementById('thankyou-title');
+            const titleTh = isTest ? 'ส่งการทดสอบแล้ว' : 'ยืนยันโดเนทแล้ว';
+            const titleEn = isTest ? 'Test Alert Sent' : 'Donation Confirmed';
+            thankTitle.setAttribute('data-th', titleTh);
+            thankTitle.setAttribute('data-en', titleEn);
+            thankTitle.textContent = currentLang === 'en' ? titleEn : titleTh;
+            document.getElementById('thankyou-text').textContent = message;
+            document.getElementById('thankyou-modal').classList.add('active');
+            document.getElementById('donate-name').value = '';
+            document.getElementById('donate-msg').value = '';
+            document.getElementById('msg-char-count').textContent = '0';
+            clearDonorImage();
+            setAmount(50);
+        }
 
         window.closeQRModal = function() { document.getElementById('qr-modal').classList.remove('active'); };
         window.closeBankModal = function() { document.getElementById('bank-modal').classList.remove('active'); };
         window.closeThankYouModal = function() { document.getElementById('thankyou-modal').classList.remove('active'); };
-
-        window.successMockup = function() {
-            const amount = parseFloat(document.getElementById('input-amount').value) || 50;
-            const name = (document.getElementById('donate-name').value || 'Anonymous').trim();
-            const msg = (document.getElementById('donate-msg').value || '').trim();
-            const imageUrl = (document.getElementById('donate-image-url').value || '').trim();
-
-            socket.emit('new_donation', {
-                username: streamerName,
-                name: name,
-                amount: amount,
-                message: msg,
-                imageUrl: imageUrl
-            });
-        };
-
-        // ฟังคำตอบจาก Server
-        socket.on('donation_success', (res) => {
-            closeQRModal();
-            closeBankModal();
-            const tkModal = document.getElementById('thankyou-modal');
-            if (tkModal) tkModal.classList.add('active');
-            
-            document.getElementById('donate-name').value = '';
-            document.getElementById('donate-msg').value = '';
-            document.getElementById('msg-char-count').innerText = '0';
-            clearDonorImage();
-            setAmount(50);
-        });
-
-        socket.on('donation_rejected', (err) => {
-            alert(err.message || 'การโดเนทไม่สำเร็จ');
-        });
 
         socket.on('update_leaderboard', (topDonators) => {
             const tdName = document.getElementById('top-donor-name');

@@ -565,6 +565,7 @@
                 <label class="switch"><input type="checkbox" id="pp-active" checked><span class="slider"></span></label>
             </div>
             <div class="form-group"><label>เบอร์โทรศัพท์ / เลขประจำตัว</label><input type="text" class="form-control" id="pp-phone" value="0000000000"></div>
+            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">เพื่อให้ระบบตรวจชื่อและบัญชีผู้รับในสลิปได้ ให้บันทึกบัญชีที่ผูกกับ PromptPay ในเมนู “ธนาคาร” ด้วย</p>
             <button class="btn-success w-100" onclick="savePromptPay()"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')">ปิด</button>
         </div>
@@ -576,6 +577,7 @@
                 <div><h3><i class="fas fa-university" style="color:#3A86FF;"></i> ธนาคาร</h3></div>
                 <label class="switch"><input type="checkbox" id="bank-active" checked><span class="slider"></span></label>
             </div>
+            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">บัญชีนี้ใช้ตรวจผู้รับในสลิปทั้งช่องทางธนาคารและ PromptPay ต้องกรอกชื่อให้ตรงกับบัญชีธนาคาร</p>
             <div class="form-group">
                 <label>ธนาคาร</label>
                 <select class="form-control" id="bank-name">
@@ -584,10 +586,25 @@
                     <option value="กรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
                     <option value="กรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
                     <option value="ทหารไทยธนชาต (TTB)">ธนาคารทหารไทยธนชาต (TTB)</option>
+                    <option value="ซีไอเอ็มบีไทย (CIMBT)">ธนาคารซีไอเอ็มบีไทย (CIMBT)</option>
+                    <option value="ยูโอบี (UOBT)">ธนาคารยูโอบี (UOBT)</option>
+                    <option value="กรุงศรีอยุธยา (BAY)">ธนาคารกรุงศรีอยุธยา (BAY)</option>
+                    <option value="ออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
+                    <option value="อาคารสงเคราะห์ (GHB)">ธนาคารอาคารสงเคราะห์ (GHB)</option>
+                    <option value="เพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)">ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)</option>
+                    <option value="เพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM)">ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย (EXIM)</option>
+                    <option value="ทิสโก้ (TISCO)">ธนาคารทิสโก้ (TISCO)</option>
+                    <option value="เกียรตินาคินภัทร (KKP)">ธนาคารเกียรตินาคินภัทร (KKP)</option>
+                    <option value="ไอซีบีซี (ไทย) (ICBCT)">ธนาคารไอซีบีซี (ไทย) (ICBCT)</option>
+                    <option value="ไทยเครดิตเพื่อรายย่อย (TCD)">ธนาคารไทยเครดิตเพื่อรายย่อย (TCD)</option>
+                    <option value="แลนด์ แอนด์ เฮ้าส์ (LHFG)">ธนาคารแลนด์ แอนด์ เฮ้าส์ (LHFG)</option>
+                    <option value="คลิกซ์ (CLICX)">ธนาคารคลิกซ์ (CLICX)</option>
+                    <option value="พัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME)">ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME)</option>
                 </select>
             </div>
             <div class="form-group"><label>หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="เลขบัญชี"></div>
             <div class="form-group"><label>ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="ชื่อ นามสกุล"></div>
+            <div class="form-group"><label>ชื่อบัญชีภาษาอังกฤษ (ตามธนาคาร)</label><input type="text" class="form-control" id="bank-owner-en" placeholder="ACCOUNT HOLDER NAME"></div>
             <button class="btn-success w-100" onclick="saveBank()"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')">ปิด</button>
         </div>
@@ -759,6 +776,10 @@
             alert('✅ ' + msg);
         });
 
+        socket.on('payment_error', (res) => {
+            alert(res.message || 'บันทึกช่องทางรับเงินไม่สำเร็จ');
+        });
+
         // ================= 📌 4. จัดการ Payment Methods =================
         socket.on('apply_payment', (settings) => {
             const ppCard = document.querySelectorAll('.payment-card')[0];
@@ -778,6 +799,7 @@
             if(settings?.bank?.bankName) document.getElementById('bank-name').value = settings.bank.bankName;
             if(settings?.bank?.accountNumber) document.getElementById('bank-acc').value = settings.bank.accountNumber;
             if(settings?.bank?.accountName) document.getElementById('bank-owner').value = settings.bank.accountName;
+            if(settings?.bank?.accountNameEn) document.getElementById('bank-owner-en').value = settings.bank.accountNameEn;
 
             if(bankCard) { bankCard.style.opacity = isBankActive ? '1' : '0.5'; }
         });
@@ -790,7 +812,7 @@
             } else if (type === 'bank') {
                 const isActive = document.getElementById('outer-bank-active').checked;
                 document.getElementById('bank-active').checked = isActive; 
-                socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+                socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value, accountNameEn: document.getElementById('bank-owner-en').value } });
             }
         };
 
@@ -804,7 +826,7 @@
         window.saveBank = function() {
             const isActive = document.getElementById('bank-active').checked;
             document.getElementById('outer-bank-active').checked = isActive;
-            socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value } });
+            socket.emit('save_payment', { username, token, type: 'bank', data: { active: isActive, bankName: document.getElementById('bank-name').value, accountNumber: document.getElementById('bank-acc').value, accountName: document.getElementById('bank-owner').value, accountNameEn: document.getElementById('bank-owner-en').value } });
             closeModal('modal-bank');
         };
 
@@ -902,26 +924,63 @@
         socket.on('update_history', (history) => {
             const tbody = document.getElementById('dash-history-list');
             if (!tbody) return;
-            if (!history || history.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #a0aec0;">ยังไม่มีประวัติการโดเนทในขณะนี้</td></tr>';
-            
-            tbody.innerHTML = [...history].reverse().map((item, reversedIndex) => {
-                const originalIndex = history.length - 1 - reversedIndex; 
-                const dateStr = item.date ? new Date(item.date).toLocaleString('th-TH') : 'ไม่ระบุเวลา';
-                const imageBadge = item.imageUrl ? `<a href="${item.imageUrl}" target="_blank" style="margin-left: 8px; color: #3A86FF; text-decoration: none; font-size: 0.85rem;"><i class="fas fa-image"></i> [ดูรูป]</a>` : '';
-                return `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 15px;">${dateStr}</td>
-                    <td style="padding: 15px; font-weight: 500;">${item.name}</td>
-                    <td style="padding: 15px; color: var(--blue); font-weight: bold;">${item.amount.toLocaleString()} ฿</td>
-                    <td style="padding: 15px;">${item.message || '-'}${imageBadge}</td>
-                    <td style="padding: 15px; text-align: center;"><button class="btn-danger" style="padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;" onclick="deleteHistory(${originalIndex})"><i class="fas fa-trash"></i> ลบ</button></td>
-                </tr>`;
-            }).join('');
+            tbody.replaceChildren();
+            if (!history || history.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 5;
+                cell.style.cssText = 'text-align: center; padding: 30px; color: #a0aec0;';
+                cell.textContent = 'ยังไม่มีประวัติการโดเนทในขณะนี้';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+                return;
+            }
+
+            [...history].reverse().forEach((item, reversedIndex) => {
+                const originalIndex = history.length - 1 - reversedIndex;
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                const dateCell = document.createElement('td');
+                dateCell.style.padding = '15px';
+                dateCell.textContent = item.date ? new Date(item.date).toLocaleString('th-TH') : 'ไม่ระบุเวลา';
+                const nameCell = document.createElement('td');
+                nameCell.style.cssText = 'padding: 15px; font-weight: 500;';
+                nameCell.textContent = item.isTest ? `${item.name || ''} (ทดสอบ)` : (item.name || '');
+                const amountCell = document.createElement('td');
+                amountCell.style.cssText = 'padding: 15px; color: var(--blue); font-weight: bold;';
+                amountCell.textContent = `${Number(item.amount || 0).toLocaleString()} ฿`;
+                const messageCell = document.createElement('td');
+                messageCell.style.padding = '15px';
+                messageCell.textContent = item.message || '-';
+                if (typeof item.imageUrl === 'string' && item.imageUrl.startsWith('https://')) {
+                    const imageLink = document.createElement('a');
+                    imageLink.href = item.imageUrl;
+                    imageLink.target = '_blank';
+                    imageLink.rel = 'noopener noreferrer';
+                    imageLink.style.cssText = 'margin-left: 8px; color: #3A86FF; text-decoration: none; font-size: 0.85rem;';
+                    imageLink.textContent = '[ดูรูป]';
+                    messageCell.appendChild(imageLink);
+                }
+                const actionCell = document.createElement('td');
+                actionCell.style.cssText = 'padding: 15px; text-align: center;';
+                if (!item.isTest) {
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'btn-danger';
+                    deleteButton.style.cssText = 'padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;';
+                    deleteButton.textContent = 'ลบ';
+                    deleteButton.addEventListener('click', () => window.deleteHistory(item._id || item.id || originalIndex));
+                    actionCell.appendChild(deleteButton);
+                } else {
+                    actionCell.textContent = '—';
+                }
+                row.append(dateCell, nameCell, amountCell, messageCell, actionCell);
+                tbody.appendChild(row);
+            });
         });
 
-        window.deleteHistory = function(index) {
+        window.deleteHistory = function(id) {
             if(confirm('คุณต้องการลบประวัติการโดเนทนี้ใช่หรือไม่?')) {
-                socket.emit('delete_donation', { username, token, index: index });
+                socket.emit('delete_donation', { username, token, id });
             }
         };
 

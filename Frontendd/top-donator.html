@@ -64,9 +64,12 @@
         socket.on('update_leaderboard', (topDonators) => {
             const container = document.getElementById('leaderboard-content');
             if (!container) return;
-            container.innerHTML = ''; 
+            container.replaceChildren();
             if (!topDonators || topDonators.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #a0aec0; padding: 15px;">ยังไม่มีข้อมูลการโดเนท</div>';
+                const empty = document.createElement('div');
+                empty.style.cssText = 'text-align: center; color: #a0aec0; padding: 15px;';
+                empty.textContent = 'ยังไม่มีข้อมูลการโดเนท';
+                container.appendChild(empty);
                 return;
             }
             topDonators.forEach((donator, index) => {
@@ -75,12 +78,20 @@
                 else if (index === 1) { rankClass = 'rank-2'; rankText = '🥈'; }
                 else if (index === 2) { rankClass = 'rank-3'; rankText = '🥉'; }
 
-                container.innerHTML += `
-                    <div class="list-item">
-                        <div class="rank ${rankClass}">${rankText}</div>
-                        <div class="name">${donator.name}</div>
-                        <div class="amount" style="color: #10b981;">${donator.amount.toLocaleString()} ฿</div>
-                    </div>`;
+                const row = document.createElement('div');
+                row.className = 'list-item';
+                const rank = document.createElement('div');
+                rank.className = `rank ${rankClass}`;
+                rank.textContent = rankText;
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.textContent = donator.name || '';
+                const amount = document.createElement('div');
+                amount.className = 'amount';
+                amount.style.color = '#10b981';
+                amount.textContent = `${Number(donator.amount || 0).toLocaleString()} ฿`;
+                row.append(rank, name, amount);
+                container.appendChild(row);
             });
         });
     </script>
