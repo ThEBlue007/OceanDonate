@@ -179,13 +179,41 @@ async function registerEasySlipReceiver(bankSettings) {
     if (!bankCode || bankNumber.length < 8 || bankNumber.length > 16 || !bankSettings.accountName || !bankSettings.accountNameEn) {
         throw Object.assign(new Error('กรุณากรอกธนาคาร เลขบัญชี และชื่อบัญชีภาษาไทย/อังกฤษให้ครบ'), { status: 400 });
     }
-    return callEasySlip('/bank-accounts', {
+    const request = {
         bankCode,
         bankNumber,
         nameTh: String(bankSettings.accountName).trim().slice(0, 255),
         nameEn: String(bankSettings.accountNameEn).trim().slice(0, 255),
         type: 'NATURAL'
-    });
+    };
+    try {
+        return await callEasySlip('/bank-accounts', request);
+    } catch (error) {
+        if (error.code !== 'BANK_ACCOUNT_DUPLICATE') throw error;
+
+        // A previous save may have created the account before the response was lost.
+        // Reuse and link the matching account instead of making the streamer fail every retry.
+        let existing = null;
+        let page = 1;
+        let total = Infinity;
+        while (!existing && (page - 1) * 100 < total && page <= 50) {
+            const result = await callEasySlip(`/bank-accounts/all?page=${page}&limit=100`, undefined, 'GET');
+            const accounts = Array.isArray(result?.items) ? result.items : [];
+            total = Number(result?.total) || accounts.length;
+            existing = accounts.find(account =>
+                String(account.bankCode) === bankCode &&
+                normalizeAccountNumber(account.bankNumber) === bankNumber &&
+                normalizeAccountHolder(account.nameTh) === normalizeAccountHolder(request.nameTh) &&
+                normalizeAccountHolder(account.nameEn) === normalizeAccountHolder(request.nameEn)
+            ) || null;
+            page++;
+        }
+        if (!existing?.id) {
+            throw Object.assign(new Error('บัญชีนี้มีอยู่ใน EasySlip แล้ว แต่ไม่พบบัญชีชื่อ/เลขบัญชีเดียวกันในสาขานี้ กรุณาตรวจบัญชี EasySlip หรือให้ผู้ดูแลระบบช่วยตรวจ'), { status: 409, code: 'BANK_ACCOUNT_DUPLICATE' });
+        }
+        await callEasySlip(`/bank-accounts/${encodeURIComponent(existing.id)}/link`, undefined, 'POST');
+        return existing;
+    }
 }
 
 function normalizeAccountNumber(value) {
@@ -196,22 +224,51 @@ function normalizeAccountHolder(value) {
     return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('th-TH');
 }
 
-async function callEasySlip(pathname, body) {
+function easySlipErrorMessage(pathname, code, providerMessage) {
+    const accountSetup = pathname.startsWith('/bank-accounts');
+    const messages = accountSetup ? {
+        MISSING_API_KEY: 'ยังไม่ได้ตั้งค่า EASYSLIP_API_KEY บนเซิร์ฟเวอร์',
+        INVALID_API_KEY: 'EasySlip ปฏิเสธ API key กรุณาตรวจค่า EASYSLIP_API_KEY ใน Render',
+        IP_NOT_ALLOWED: 'EasySlip ปฏิเสธ IP ของเซิร์ฟเวอร์ กรุณาตรวจ IP whitelist ในบัญชี EasySlip',
+        BRANCH_INACTIVE: 'สาขา EasySlip ของ API key นี้ยังไม่เปิดใช้งาน',
+        SERVICE_BANNED: 'บัญชีบริการ EasySlip ถูกระงับ กรุณาติดต่อ EasySlip',
+        USER_BANNED: 'บัญชี EasySlip ถูกระงับ กรุณาติดต่อ EasySlip',
+        QUOTA_EXCEEDED: 'ใช้โควตา EasySlip หมดแล้ว กรุณาตรวจแพ็กเกจหรือโควตา',
+        INVALID_BANK_CODE: 'ธนาคารที่เลือกยังไม่รองรับโดย EasySlip กรุณาเลือกธนาคารอื่นหรือติดต่อผู้ดูแล',
+        BANK_ACCOUNT_DUPLICATE: 'บัญชีนี้ลงทะเบียนใน EasySlip แล้ว แต่ระบบยังเชื่อมบัญชีนั้นกับสาขานี้ไม่ได้',
+        VALIDATION_ERROR: 'EasySlip ไม่ยอมรับข้อมูลบัญชี กรุณาตรวจธนาคาร เลขบัญชี และชื่อบัญชีให้ตรงกับธนาคาร',
+        API_SERVER_ERROR: 'EasySlip ขัดข้องชั่วคราว กรุณาลองใหม่ภายหลัง'
+    } : {
+        MISSING_API_KEY: 'ยังไม่ได้ตั้งค่า EasySlip API key',
+        INVALID_API_KEY: 'EasySlip ปฏิเสธ API key กรุณาติดต่อผู้ดูแลระบบ',
+        IP_NOT_ALLOWED: 'EasySlip ปฏิเสธ IP ของเซิร์ฟเวอร์ กรุณาตรวจ IP whitelist',
+        BRANCH_INACTIVE: 'สาขา EasySlip ยังไม่เปิดใช้งาน',
+        QUOTA_EXCEEDED: 'ใช้โควตาตรวจสลิป EasySlip หมดแล้ว กรุณาลองใหม่ภายหลัง',
+        SLIP_NOT_FOUND: 'EasySlip ไม่พบรายการโอนจากธนาคาร',
+        API_SERVER_ERROR: 'EasySlip ขัดข้องชั่วคราว กรุณาลองใหม่ภายหลัง'
+    };
+    if (messages[code]) return messages[code];
+    const context = accountSetup ? 'ลงทะเบียนบัญชีรับเงินกับ EasySlip' : 'ตรวจสอบสลิปกับ EasySlip';
+    const detail = String(providerMessage || '').trim().slice(0, 240);
+    return `${context}ไม่สำเร็จ (${code})${detail ? `: ${detail}` : ''}`;
+}
+
+async function callEasySlip(pathname, body, method = 'POST') {
     const apiKey = process.env.EASYSLIP_API_KEY;
-    if (!apiKey) throw Object.assign(new Error('ยังไม่ได้ตั้งค่า EasySlip API key'), { status: 503 });
+    if (!apiKey) throw Object.assign(new Error(easySlipErrorMessage(pathname, 'MISSING_API_KEY')), { status: 503, code: 'MISSING_API_KEY' });
     const url = process.env.NODE_ENV === 'test' && process.env.EASYSLIP_API_BASE_URL
         ? new URL(pathname, process.env.EASYSLIP_API_BASE_URL)
         : new URL(pathname, 'https://api.easyslip.com/v2');
     const response = await fetch(url, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        method,
+        headers: { Authorization: `Bearer ${apiKey}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        ...(body ? { body: JSON.stringify(body) } : {}),
         signal: AbortSignal.timeout(15000)
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || result.success !== true) {
         const code = result.error?.code || 'VERIFICATION_UNAVAILABLE';
-        const error = new Error(code === 'SLIP_NOT_FOUND' ? 'ไม่พบรายการโอนจากธนาคาร' : 'ตรวจสอบสลิปไม่สำเร็จ กรุณาลองใหม่');
+        const error = new Error(easySlipErrorMessage(pathname, code, result.error?.message));
         error.status = response.status >= 500 || response.status === 429 ? 503 : 400;
         error.code = code;
         throw error;
