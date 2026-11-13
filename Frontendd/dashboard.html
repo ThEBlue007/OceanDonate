@@ -564,8 +564,8 @@
                 <div><h3><i class="fas fa-qrcode" style="color:#3A86FF;"></i> พร้อมเพย์</h3></div>
                 <label class="switch"><input type="checkbox" id="pp-active" checked><span class="slider"></span></label>
             </div>
-            <div class="form-group"><label>เบอร์โทรศัพท์ / เลขประจำตัว</label><input type="text" class="form-control" id="pp-phone" value="0000000000"></div>
-            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">เพื่อให้ระบบตรวจชื่อและบัญชีผู้รับในสลิปได้ ให้บันทึกบัญชีที่ผูกกับ PromptPay ในเมนู “ธนาคาร” ด้วย และต้องลงทะเบียนบัญชีกับ EasySlip สำเร็จก่อนช่องทางเงินจริงจะแสดงในหน้า Donate</p>
+            <div class="form-group"><label>เบอร์โทรศัพท์ / เลขประจำตัว</label><input type="text" inputmode="numeric" maxlength="13" class="form-control" id="pp-phone" placeholder="เบอร์ 10 หลัก หรือเลขประจำตัว 13 หลัก"></div>
+            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">ใส่หมายเลข PromptPay ที่ผูกกับบัญชีรับเงินจริง หากรับเงินเข้าบัญชีธนาคาร ให้บันทึกบัญชีเดียวกันในเมนู “ธนาคาร” ด้วย ระบบจะแสดง PromptPay บนหน้า Donate หลัง EasySlip ลงทะเบียนบัญชีนั้นสำเร็จ</p>
             <button class="btn-success w-100" onclick="savePromptPay()"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-promptpay')">ปิด</button>
         </div>
@@ -577,7 +577,7 @@
                 <div><h3><i class="fas fa-university" style="color:#3A86FF;"></i> ธนาคาร</h3></div>
                 <label class="switch"><input type="checkbox" id="bank-active" checked><span class="slider"></span></label>
             </div>
-            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">บัญชีนี้ใช้ตรวจผู้รับในสลิปทั้งช่องทางธนาคารและ PromptPay ต้องกรอกชื่อให้ตรงกับบัญชีธนาคาร และ EasySlip ต้องลงทะเบียนบัญชีสำเร็จก่อนเปิดรับเงินจริง</p>
+            <p style="color:#a0aec0;font-size:.82rem;line-height:1.5;">กรอกบัญชีที่จะรับเงินจริง ช่องทางธนาคารและ PromptPay ใช้บัญชีนี้ตรวจผู้รับในสลิป เมื่อบันทึกสำเร็จจึงจะแสดงช่องทางเงินจริงบนหน้า Donate</p>
             <div class="form-group">
                 <label>ธนาคาร</label>
                 <select class="form-control" id="bank-name">
@@ -602,9 +602,9 @@
                     <option value="พัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME)">ธนาคารพัฒนาวิสาหกิจขนาดกลางและขนาดย่อมแห่งประเทศไทย (SME)</option>
                 </select>
             </div>
-            <div class="form-group"><label>หมายเลขบัญชี</label><input type="text" class="form-control" id="bank-acc" value="เลขบัญชี"></div>
-            <div class="form-group"><label>ชื่อเจ้าของบัญชี</label><input type="text" class="form-control" id="bank-owner" value="ชื่อ นามสกุล"></div>
-            <div class="form-group"><label>ชื่อบัญชีภาษาอังกฤษ (ตามธนาคาร)</label><input type="text" class="form-control" id="bank-owner-en" placeholder="ACCOUNT HOLDER NAME"></div>
+            <div class="form-group"><label>หมายเลขบัญชี</label><input type="text" inputmode="numeric" maxlength="20" class="form-control" id="bank-acc" placeholder="เลขบัญชีเต็ม เช่น 123-4-56789-0"><small style="color:#a0aec0;">ใช้เลขเต็มตามแอปธนาคาร ไม่ใช้เลขที่ถูกปิดบังด้วย x หรือ •</small></div>
+            <div class="form-group"><label>ชื่อบัญชีภาษาไทย</label><input type="text" class="form-control" id="bank-owner" maxlength="255" placeholder="กรอกตามชื่อผู้รับที่แสดงในแอปธนาคาร"><small style="color:#a0aec0;">ใส่คำนำหน้าด้วยถ้าธนาคารแสดง เช่น นาย / นาง / นางสาว แล้วตามด้วยชื่อ-นามสกุล</small></div>
+            <div class="form-group"><label>ชื่อบัญชีภาษาอังกฤษ</label><input type="text" class="form-control" id="bank-owner-en" maxlength="255" placeholder="กรอกชื่อภาษาอังกฤษตามข้อมูลบัญชีธนาคาร"><small style="color:#a0aec0;">อย่าแปลชื่อไทยเอง ให้ใช้รูปสะกดภาษาอังกฤษจากแอปหรือสมุดบัญชี</small></div>
             <button class="btn-success w-100" onclick="saveBank()"><i class="fas fa-save"></i> บันทึก</button>
             <button class="btn-outline w-100" style="margin-top: 10px; justify-content: center;" onclick="closeModal('modal-bank')">ปิด</button>
         </div>

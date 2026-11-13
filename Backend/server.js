@@ -200,16 +200,18 @@ async function registerEasySlipReceiver(bankSettings) {
             const result = await callEasySlip(`/bank-accounts/all?page=${page}&limit=100`, undefined, 'GET');
             const accounts = Array.isArray(result?.items) ? result.items : [];
             total = Number(result?.total) || accounts.length;
-            existing = accounts.find(account =>
+            const candidates = accounts.filter(account =>
                 String(account.bankCode) === bankCode &&
-                normalizeAccountNumber(account.bankNumber) === bankNumber &&
+                normalizeAccountNumber(account.bankNumber) === bankNumber
+            );
+            existing = candidates.find(account =>
                 normalizeAccountHolder(account.nameTh) === normalizeAccountHolder(request.nameTh) &&
                 normalizeAccountHolder(account.nameEn) === normalizeAccountHolder(request.nameEn)
-            ) || null;
+            ) || (candidates.length === 1 ? candidates[0] : null);
             page++;
         }
         if (!existing?.id) {
-            throw Object.assign(new Error('บัญชีนี้มีอยู่ใน EasySlip แล้ว แต่ไม่พบบัญชีชื่อ/เลขบัญชีเดียวกันในสาขานี้ กรุณาตรวจบัญชี EasySlip หรือให้ผู้ดูแลระบบช่วยตรวจ'), { status: 409, code: 'BANK_ACCOUNT_DUPLICATE' });
+            throw Object.assign(new Error('บัญชีนี้มีอยู่ใน EasySlip แล้ว แต่ระบบจับคู่เลขบัญชีกับธนาคารไม่ได้ กรุณาตรวจธนาคารและเลขบัญชีเต็มให้ตรงกับ EasySlip'), { status: 409, code: 'BANK_ACCOUNT_DUPLICATE' });
         }
         await callEasySlip(`/bank-accounts/${encodeURIComponent(existing.id)}/link`, undefined, 'POST');
         return existing;
@@ -903,6 +905,9 @@ io.on('connection', (socket) => {
                     try {
                         const registered = await registerEasySlipReceiver(bank);
                         bank.verifiedAccountId = registered.id;
+                        bank.accountNumber = String(registered.bankNumber || bank.accountNumber);
+                        bank.accountName = String(registered.nameTh || bank.accountName);
+                        bank.accountNameEn = String(registered.nameEn || bank.accountNameEn);
                     } catch (error) {
                         bank.active = false;
                         user.paymentMethods.bank = bank;
