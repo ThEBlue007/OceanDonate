@@ -256,9 +256,12 @@ function easySlipErrorMessage(pathname, code, providerMessage) {
 async function callEasySlip(pathname, body, method = 'POST') {
     const apiKey = process.env.EASYSLIP_API_KEY;
     if (!apiKey) throw Object.assign(new Error(easySlipErrorMessage(pathname, 'MISSING_API_KEY')), { status: 503, code: 'MISSING_API_KEY' });
-    const url = process.env.NODE_ENV === 'test' && process.env.EASYSLIP_API_BASE_URL
-        ? new URL(pathname, process.env.EASYSLIP_API_BASE_URL)
-        : new URL(pathname, 'https://api.easyslip.com/v2');
+    const configuredBase = process.env.NODE_ENV === 'test' && process.env.EASYSLIP_API_BASE_URL
+        ? process.env.EASYSLIP_API_BASE_URL
+        : 'https://api.easyslip.com/v2/';
+    const baseUrl = configuredBase.endsWith('/') ? configuredBase : `${configuredBase}/`;
+    // A leading slash in pathname would reset the URL path and drop `/v2`.
+    const url = new URL(String(pathname).replace(/^\/+/, ''), baseUrl);
     const response = await fetch(url, {
         method,
         headers: { Authorization: `Bearer ${apiKey}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },

@@ -117,5 +117,6 @@
 ## 10. [แก้ไขเพิ่มเติม] ตั้งค่าช่องทางรับเงินแล้วไม่ปรากฏหน้า Donate
 - **อาการที่ยืนยันจาก production:** หน้า `/donate.html?u=OceanMaDiWa` แสดงเฉพาะ Test Donation และข้อความปิดรับเงินจริง
 - **สาเหตุในโค้ด:** Public payment settings จะปิด PromptPay และ Bank Transfer หากบัญชีผู้รับยังไม่มี `verifiedAccountId`; การ Save ธนาคารลงทะเบียนบัญชีกับ EasySlip และ error ทุกชนิดเคยถูกแสดงผิดเป็น “ตรวจสอบสลิปไม่สำเร็จ”
-- **แนวทางแก้:** แยกข้อความข้อผิดพลาดตาม endpoint/provider code และถ้า EasySlip แจ้งบัญชีซ้ำ ให้ค้นหาบัญชีที่ตรงกันแล้วเชื่อมเข้ากับ branch; เพิ่มคำอธิบายว่าต้องลงทะเบียนผู้รับสำเร็จก่อนเปิดเงินจริง
-- **ข้อจำกัด:** ยังไม่ทราบ error code จริงจาก EasySlip ในบัญชี production; ต้อง deploy แล้วลองบันทึกใหม่เพื่อรับข้อความระบุสาเหตุ หากยังล้มเหลวให้ตรวจ error code และรายละเอียดจากหน้าตั้งค่า/Render log โดยไม่ส่ง API key
+- **สาเหตุที่ยืนยันเพิ่ม:** `new URL('/bank-accounts', 'https://api.easyslip.com/v2')` ตัด path `/v2` ออกเพราะ path เริ่มด้วย slash จึงเรียก endpoint ผิดและคืน `VERIFICATION_UNAVAILABLE`; จุดเดียวกันกระทบ `/verify/bank`
+- **แนวทางแก้:** สร้าง URL โดยตัด leading slash ของ endpoint และใช้ base URL ที่ลงท้ายด้วย slash เพื่อคง `/v2`; คงการแยกข้อความ error และกู้คืนบัญชีเดิมเมื่อ API แจ้งบัญชีซ้ำ
+- **ข้อจำกัด:** ต้อง deploy แล้วบันทึกบัญชีอีกครั้ง; หาก API ตอบ error เพิ่มเติมหลังเรียก endpoint ถูกต้อง ข้อความใหม่จะแสดงสาเหตุจาก EasySlip
