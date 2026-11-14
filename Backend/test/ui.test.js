@@ -14,6 +14,7 @@ function createDashboard() {
     const emitted = [];
     const alerts = [];
     const confirms = [];
+    const copiedText = [];
     const socket = {
         on: (name, callback) => handlers.set(name, callback),
         emit: (...args) => emitted.push(args)
@@ -27,11 +28,12 @@ function createDashboard() {
             window.io = () => socket;
             window.alert = message => alerts.push(String(message));
             window.confirm = message => { confirms.push(String(message)); return false; };
+            Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: { writeText: value => { copiedText.push(String(value)); return Promise.resolve(); } } });
             window.fetch = async () => ({ ok: true, status: 200, json: async () => ({ providers: [] }) });
         }
     });
     openDoms.push(dom);
-    return { dom, handlers, emitted, alerts, confirms };
+    return { dom, handlers, emitted, alerts, confirms, copiedText };
 }
 
 test('Timer preview updates immediately from unsaved duration and appearance inputs', () => {
@@ -87,6 +89,9 @@ test('donation gift cards show their preview before selection and select fixed p
     handlers.get('apply_gifts')([{ giftId: 'flower-80', name: 'ดอกไม้', price: 80, iconId: 'flower', effectId: 'confetti', active: true, timerAction: 'none' }]);
     const giftCard = [...dom.window.document.querySelectorAll('.gift-option')].find(card => card.dataset.giftId === 'flower-80');
     assert.ok(giftCard);
+    const picker = dom.window.document.getElementById('gift-picker-disclosure');
+    assert.equal(picker.open, false, 'gift choices should be collapsed until the donor wants to browse');
+    picker.open = true;
     assert.equal(giftCard.querySelector('.gift-option-art').textContent, '🌸');
     assert.match(giftCard.textContent, /เอฟเฟกต์กระดาษสี/);
     giftCard.click();
@@ -96,8 +101,25 @@ test('donation gift cards show their preview before selection and select fixed p
     assert.equal(dom.window.document.getElementById('gift-selected-icon').textContent, '🌸');
     assert.match(dom.window.document.getElementById('gift-selected-meta').textContent, /80\.00 บาท · เอฟเฟกต์กระดาษสี/);
     assert.equal(dom.window.document.getElementById('input-amount').value, '80.00');
+    assert.equal(picker.open, false, 'selecting a gift should collapse the long gallery again');
     dom.window.selectGift('');
     assert.equal(preview.classList.contains('is-visible'), false);
+});
+
+test('OBS URLs stay hidden until requested but can be copied while hidden', () => {
+    const { dom, handlers, copiedText } = createDashboard();
+    const details = dom.window.document.getElementById('obs-links-details');
+    assert.equal(details.open, false);
+    handlers.get('apply_security_settings')({ widgetToken: 'private-widget-token' });
+    const copyButton = dom.window.document.querySelector('[data-copy-widget="obs-alert-url"]');
+    assert.ok(copyButton);
+    assert.equal(copyButton.closest('details'), null, 'copy action must remain outside the collapsed links');
+    details.querySelector('summary').click();
+    assert.equal(details.open, true, 'the owner should be able to reveal the private URLs on demand');
+    details.querySelector('summary').click();
+    assert.equal(details.open, false);
+    copyButton.click();
+    assert.deepEqual(copiedText, ['http://localhost/widget.html?token=private-widget-token']);
 });
 
 test('reset confirmation uses the OceanDonate dialog and only resets after approval', async () => {

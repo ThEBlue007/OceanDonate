@@ -86,6 +86,14 @@
         .confirm-accept.danger { background: linear-gradient(135deg,#e11d48,#be123c); }
         .confirm-cancel:focus-visible, .confirm-accept:focus-visible { outline: 3px solid rgba(96,165,250,.55); outline-offset: 2px; }
         @keyframes confirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .obs-copy-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(175px,1fr)); gap: 9px; margin: 14px 0 12px; }
+        .obs-copy-button { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; color: #e2e8f0; background: rgba(255,255,255,.04); border: 1px solid rgba(148,163,184,.2); border-radius: 11px; }
+        .obs-copy-button span { color: var(--text); font-size: .86rem; }
+        .obs-copy-button button { padding: 7px 11px; }
+        .obs-private-details { border-top: 1px solid rgba(148,163,184,.16); padding-top: 10px; }
+        .obs-private-details > summary { color: #fca5a5; cursor: pointer; font-size: .9rem; }
+        .obs-private-details[open] > summary { margin-bottom: 11px; }
+        .obs-private-details .obs-link-item { margin: 8px 0; }
         @keyframes toastIn { to { opacity: 1; transform: translateY(0); } }
         @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
         @media(max-width:600px) { #toast-container { top: auto; right: 16px; bottom: 16px; } }
@@ -425,28 +433,21 @@
                         <h4 style="color: #ef4444;" class="lang-el" data-th="🔒 ลิงก์ส่วนตัวสำหรับใส่ใน OBS (Browser Source พร้อม Stream Key)" data-en="🔒 Private OBS Browser Source Links (With Stream Key)">🔒 ลิงก์ส่วนตัวสำหรับใส่ใน OBS (Browser Source พร้อม Stream Key)</h4>
                         <button class="btn-danger" style="font-size: 0.8rem; padding: 6px 12px;" onclick="regenerateStreamKey()"><i class="fas fa-key"></i> รีเซ็ต OBS Stream Key</button>
                     </div>
-                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 15px;" class="lang-el" data-th="* คัดลอกลิงก์ด้านล่างไปใส่ใน OBS ลิงก์มี Token ลับเฉพาะตัวคุณ คนอื่นไม่สามารถแอบดึงหรือส่องได้" data-en="Copy your private links below to OBS for alert overlays.">* คัดลอกลิงก์ด้านล่างไปใส่ใน OBS ลิงก์มี Token ลับเฉพาะตัวคุณ คนอื่นไม่สามารถแอบดึงหรือส่องได้</p>
-                    
-                    <div class="obs-link-item">
-                        <span style="min-width: 100px; font-size: 0.85rem; color: var(--blue);">Alert Box:</span>
-                        <input type="text" id="obs-alert-url" readonly value="กำลังเจนลิงก์...">
-                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-alert-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
+                    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 10px;" class="lang-el" data-th="คัดลอกไป OBS ได้ทันที ลิงก์ส่วนตัวจะซ่อนอยู่จนกดเปิดดู" data-en="Copy to OBS anytime. Private URLs stay hidden until revealed.">คัดลอกไป OBS ได้ทันที ลิงก์ส่วนตัวจะซ่อนอยู่จนกดเปิดดู</p>
+                    <div class="obs-copy-grid">
+                        <div class="obs-copy-button"><span>Alert Box</span><button class="btn-primary lang-el" data-copy-widget="obs-alert-url" onclick="copyWidgetLink('obs-alert-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button></div>
+                        <div class="obs-copy-button"><span>Donate Goal</span><button class="btn-primary lang-el" data-copy-widget="obs-goal-url" onclick="copyWidgetLink('obs-goal-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button></div>
+                        <div class="obs-copy-button"><span>Top Donor</span><button class="btn-primary lang-el" data-copy-widget="obs-td-url" onclick="copyWidgetLink('obs-td-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button></div>
+                        <div class="obs-copy-button"><span>Live Timer</span><button class="btn-primary lang-el" data-copy-widget="obs-timer-url" onclick="copyWidgetLink('obs-timer-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button></div>
                     </div>
-                    <div class="obs-link-item">
-                        <span style="min-width: 100px; font-size: 0.85rem; color: #ef4444;">Donate Goal:</span>
-                        <input type="text" id="obs-goal-url" readonly value="กำลังเจนลิงก์...">
-                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-goal-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
-                    </div>
-                    <div class="obs-link-item">
-                        <span style="min-width: 100px; font-size: 0.85rem; color: #fbbf24;">Top Donor:</span>
-                        <input type="text" id="obs-td-url" readonly value="กำลังเจนลิงก์...">
-                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-td-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
-                    </div>
-                    <div class="obs-link-item">
-                        <span style="min-width: 100px; font-size: 0.85rem; color: #10b981;">Live Timer:</span>
-                        <input type="text" id="obs-timer-url" readonly value="กำลังเจนลิงก์...">
-                        <button class="btn-primary lang-el" onclick="copyWidgetLink('obs-timer-url')" data-th="คัดลอก" data-en="Copy">คัดลอก</button>
-                    </div>
+                    <details id="obs-links-details" class="obs-private-details">
+                        <summary class="lang-el" data-th="แสดงลิงก์ส่วนตัวสำหรับใส่ใน OBS" data-en="Reveal private OBS links">แสดงลิงก์ส่วนตัวสำหรับใส่ใน OBS</summary>
+                        <p style="font-size:.8rem;color:var(--text);margin:0 0 8px;">อย่าแชร์ลิงก์เหล่านี้ เพราะมี Stream Key สำหรับเชื่อมต่อ Widget ของคุณ</p>
+                        <div class="obs-link-item"><span style="min-width:100px;font-size:.85rem;color:var(--blue);">Alert Box:</span><input type="text" id="obs-alert-url" readonly value="กำลังเจนลิงก์..."></div>
+                        <div class="obs-link-item"><span style="min-width:100px;font-size:.85rem;color:#ef4444;">Donate Goal:</span><input type="text" id="obs-goal-url" readonly value="กำลังเจนลิงก์..."></div>
+                        <div class="obs-link-item"><span style="min-width:100px;font-size:.85rem;color:#fbbf24;">Top Donor:</span><input type="text" id="obs-td-url" readonly value="กำลังเจนลิงก์..."></div>
+                        <div class="obs-link-item"><span style="min-width:100px;font-size:.85rem;color:#10b981;">Live Timer:</span><input type="text" id="obs-timer-url" readonly value="กำลังเจนลิงก์..."></div>
+                    </details>
                 </div>
 
                 <div class="widget-nav">
@@ -1012,12 +1013,14 @@
             showToast('✅ คัดลอกลิงก์รับโดเนทเรียบร้อยแล้ว!');
         };
 
-        window.copyWidgetLink = function(targetId) {
+        window.copyWidgetLink = async function(targetId) {
             const inputEl = document.getElementById(targetId);
-            if(inputEl) {
-                inputEl.select();
-                navigator.clipboard.writeText(inputEl.value);
-                showToast('✅ คัดลอกลิงก์สำหรับใส่ OBS แล้ว!');
+            if (!inputEl?.value || inputEl.value === 'กำลังเจนลิงก์...') return showToast('ลิงก์ OBS ยังไม่พร้อม กรุณารอสักครู่', 'error');
+            try {
+                await navigator.clipboard.writeText(inputEl.value);
+                showToast('✅ คัดลอกลิงก์สำหรับใส่ OBS แล้ว!', 'success');
+            } catch (_) {
+                showToast('คัดลอกไม่ได้ กรุณาเปิดลิงก์ส่วนตัวแล้วคัดลอกด้วยตนเอง', 'error');
             }
         };
 

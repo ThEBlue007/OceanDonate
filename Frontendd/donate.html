@@ -60,16 +60,21 @@
         .gift-selected-details { min-width: 0; flex: 1; }
         .gift-selected-name { font-weight: 600; }
         .gift-selected-meta { color: var(--text); font-size: .9rem; }
-        .gift-selection-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(122px,1fr)); gap: 10px; margin: 10px 0; }
-        .gift-option { min-width: 0; padding: 10px 8px 11px; border: 1px solid rgba(148,163,184,.24); border-radius: 14px; background: linear-gradient(155deg,rgba(30,37,57,.94),rgba(12,16,28,.96)); color: white; text-align: center; cursor: pointer; transition: transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease; }
+        .gift-picker-disclosure { margin-top: 8px; }
+        .gift-picker-disclosure > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 13px; border: 1px solid rgba(148,163,184,.24); border-radius: 12px; color: #dbeafe; background: rgba(255,255,255,.045); cursor: pointer; font-size: .92rem; }
+        .gift-picker-disclosure > summary::-webkit-details-marker { display: none; }
+        .gift-picker-disclosure > summary::after { content: '⌄'; color: #9fc2ff; font-size: 1.2rem; transition: transform .16s ease; }
+        .gift-picker-disclosure[open] > summary::after { transform: rotate(180deg); }
+        .gift-selection-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(104px,1fr)); gap: 8px; margin: 9px 0; max-height: min(290px,38vh); overflow-y: auto; padding: 2px 5px 5px 1px; overscroll-behavior: contain; }
+        .gift-option { min-width: 0; padding: 7px 6px 8px; border: 1px solid rgba(148,163,184,.24); border-radius: 13px; background: linear-gradient(155deg,rgba(30,37,57,.94),rgba(12,16,28,.96)); color: white; text-align: center; cursor: pointer; transition: transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease; }
         .gift-option:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.7); box-shadow: 0 9px 22px rgba(0,0,0,.24); }
         .gift-option[aria-pressed="true"] { border-color: var(--blue); background: linear-gradient(155deg,rgba(58,134,255,.24),rgba(12,16,28,.96)); box-shadow: 0 0 0 2px rgba(58,134,255,.2),0 10px 24px rgba(58,134,255,.14); }
-        .gift-option-art { display: grid; place-items: center; min-height: 68px; margin-bottom: 7px; border-radius: 10px; background: radial-gradient(circle at 50% 42%,rgba(96,165,250,.3),rgba(139,92,246,.13) 48%,transparent 76%); font-size: 2.65rem; filter: drop-shadow(0 5px 8px rgba(0,0,0,.35)); }
+        .gift-option-art { display: grid; place-items: center; min-height: 52px; margin-bottom: 5px; border-radius: 10px; background: radial-gradient(circle at 50% 42%,rgba(96,165,250,.3),rgba(139,92,246,.13) 48%,transparent 76%); font-size: 2.15rem; filter: drop-shadow(0 5px 8px rgba(0,0,0,.35)); }
         .gift-option[data-effect="firework"] .gift-option-art, .gift-option[data-effect="burst"] .gift-option-art { background: radial-gradient(circle,rgba(251,191,36,.34),rgba(244,63,94,.12) 52%,transparent 76%); }
         .gift-option[data-effect="heart"] .gift-option-art, .gift-option[data-effect="shine"] .gift-option-art { background: radial-gradient(circle,rgba(244,114,182,.28),rgba(139,92,246,.12) 52%,transparent 76%); }
         .gift-option-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
         .gift-option-price { display: block; margin-top: 2px; color: var(--text); font-size: .85rem; }
-        .gift-option-effect { display: block; min-height: 1.15rem; margin-top: 4px; color: #9fc2ff; font-size: .73rem; }
+        .gift-option-effect { display: block; min-height: 1rem; margin-top: 3px; color: #9fc2ff; font-size: .68rem; }
         .gift-option-regular .gift-option-art { background: radial-gradient(circle,rgba(244,63,94,.25),transparent 72%); }
         body[data-theme="soft"] .gift-option { color: #172033; background: linear-gradient(155deg,#fff,#eaf0f8); border-color: #cbd5e1; }
         body[data-theme="soft"] .gift-option[aria-pressed="true"] { border-color: var(--blue); background: linear-gradient(155deg,#eff6ff,#fff); }
@@ -196,7 +201,10 @@
                 <div class="form-group" id="gift-picker-wrap" style="margin: -10px 0 24px;">
                     <span id="gift-selection-label" class="lang-el" data-th="เลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)" data-en="Choose one fixed-price gift">เลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)</span>
                     <input id="gift-selection" type="hidden" value="">
-                    <div id="gift-selection-grid" class="gift-selection-grid" role="group" aria-labelledby="gift-selection-label"></div>
+                    <details id="gift-picker-disclosure" class="gift-picker-disclosure">
+                        <summary id="gift-picker-summary">ดูของขวัญทั้งหมด</summary>
+                        <div id="gift-selection-grid" class="gift-selection-grid" role="group" aria-labelledby="gift-selection-label"></div>
+                    </details>
                     <small id="gift-selection-help" style="color:var(--text);">ถ้าเลือกของขวัญ ระบบจะใช้ราคาของขวัญนั้น และยังพิมพ์ข้อความได้</small>
                     <div id="gift-selected-preview" class="gift-selected-preview" role="status" aria-live="polite">
                         <span id="gift-selected-icon" class="gift-selected-icon" aria-hidden="true">🎁</span>
@@ -409,6 +417,11 @@
             };
             addOption(null, true);
             giftCatalog.forEach(gift => addOption(gift));
+            const summary = document.getElementById('gift-picker-summary');
+            const selected = giftCatalog.find(gift => gift.giftId === selectedGiftId);
+            if (summary) summary.textContent = selected
+                ? `เลือกแล้ว: ${selected.name} · ${Number(selected.price).toFixed(2)} บาท — เปลี่ยนของขวัญ`
+                : `ดูของขวัญทั้งหมด (${giftCatalog.length} แบบ)`;
         }
 
         function updateSelectedGiftPreview(gift) {
@@ -435,6 +448,8 @@
             const giftSelection = document.getElementById('gift-selection');
             if (giftSelection) giftSelection.value = selectedGiftId || '';
             const gift = giftCatalog.find(item => item.giftId === selectedGiftId);
+            const giftPicker = document.getElementById('gift-picker-disclosure');
+            if (giftPicker && gift) giftPicker.open = false;
             const amountInput = document.getElementById('input-amount');
             amountInput.disabled = Boolean(gift);
             document.querySelectorAll('.amount-btn').forEach(button => button.disabled = Boolean(gift));
