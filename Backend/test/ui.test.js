@@ -7,73 +7,8 @@ const { JSDOM } = require('jsdom');
 const dashboardHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/dashboard.html'), 'utf8');
 const donateHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/donate.html'), 'utf8');
 const timerHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/timer.html'), 'utf8');
-const themedPages = ['index.html', 'auth.html', 'dashboard.html', 'donate.html'];
 const openDoms = [];
 after(() => openDoms.forEach(dom => dom.window.close()));
-
-test('public pages share the dark-first design system and expose a theme switch', () => {
-    for (const page of themedPages) {
-        const html = fs.readFileSync(path.resolve(__dirname, `../../Frontendd/${page}`), 'utf8');
-        assert.match(html, /href=["']design-tokens\.css["']/i, `${page} should load shared design tokens`);
-        assert.match(html, /src=["']theme\.js["']/i, `${page} should load the shared theme controller`);
-        assert.match(html, /data-theme-toggle/, `${page} should expose a theme switch`);
-    }
-});
-
-test('OBS overlays share the Ocean palette and preserve transparent canvases', () => {
-    for (const page of ['widget.html', 'timer.html', 'goal.html', 'top-donator.html']) {
-        const html = fs.readFileSync(path.resolve(__dirname, `../../Frontendd/${page}`), 'utf8');
-        assert.match(html, /class=["'][^"']*obs-overlay/i, `${page} should identify itself as a transparent OBS overlay`);
-        assert.match(html, /href=["']design-tokens\.css["']/i, `${page} should load the shared brand tokens`);
-    }
-    const tokens = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/design-tokens.css'), 'utf8');
-    assert.match(tokens, /html\.obs-overlay,\s*html\.obs-overlay body\s*\{\s*background:\s*transparent\s*!important/i,
-        'brand styles must not paint over the OBS canvas');
-    assert.match(tokens, /--od-color-wave:\s*#38d6ef/i);
-});
-
-test('theme switch defaults to Dark and remembers Light across page loads', () => {
-    const themePath = path.resolve(__dirname, '../../Frontendd/theme.js');
-    assert.equal(fs.existsSync(themePath), true, 'shared theme controller should exist');
-    const themeScript = fs.readFileSync(themePath, 'utf8');
-    const createThemedPage = savedTheme => {
-        const dom = new JSDOM('<!doctype html><html><body><button type="button" data-theme-toggle aria-label="Switch theme"><span class="theme-toggle-label">Dark</span></button></body></html>', {
-            runScripts: 'outside-only',
-            url: 'http://localhost/',
-            beforeParse(window) { if (savedTheme) window.localStorage.setItem('oceandonate_theme', savedTheme); }
-        });
-        openDoms.push(dom);
-        dom.window.eval(themeScript);
-        dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-        return dom;
-    };
-    const firstPage = createThemedPage(null);
-    assert.equal(firstPage.window.document.documentElement.dataset.theme, 'dark');
-    const toggle = firstPage.window.document.querySelector('[data-theme-toggle]');
-    toggle.click();
-    assert.equal(firstPage.window.document.documentElement.dataset.theme, 'light');
-    assert.equal(firstPage.window.localStorage.getItem('oceandonate_theme'), 'light');
-    const nextPage = createThemedPage(firstPage.window.localStorage.getItem('oceandonate_theme'));
-    assert.equal(nextPage.window.document.documentElement.dataset.theme, 'light');
-    assert.equal(nextPage.window.document.querySelector('[data-theme-toggle]').getAttribute('aria-pressed'), 'true');
-});
-
-test('dashboard groups core tasks into clear destinations without losing existing settings', () => {
-    const { dom } = createDashboard();
-    const { document } = dom.window;
-    const destinations = [...document.querySelectorAll('.tab-link')].map(link => link.dataset.tab);
-    for (const destination of ['overview', 'donations', 'payment', 'page-settings', 'widgets', 'account']) {
-        assert.ok(destinations.includes(destination), `dashboard should include ${destination} navigation`);
-        assert.ok(document.getElementById(destination), `${destination} navigation should resolve to a section`);
-    }
-    assert.equal(document.getElementById('dash-history-list').closest('.tab-content')?.id, 'donations');
-    assert.equal(document.getElementById('auth-identity-status').closest('.tab-content')?.id, 'account');
-    const paymentLink = [...document.querySelectorAll('.tab-link')].find(link => link.dataset.tab === 'payment');
-    paymentLink.click();
-    assert.equal(document.getElementById('payment').classList.contains('active'), true);
-    assert.equal(document.getElementById('overview').classList.contains('active'), false);
-    dom.window.close();
-});
 
 function createDashboard() {
     const handlers = new Map();

@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="theme.js"></script>
     <title>Dashboard | Ocean Donate</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@400;600;700&family=Chakra+Petch:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&family=Mitr:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600;700&family=Prompt:wght@400;600;700&family=Sarabun:wght@400;600;700&display=swap">
@@ -30,7 +29,7 @@
         .btn-outline:hover { color: white; background: rgba(58, 134, 255, 0.1); border-color: var(--blue); }
 
         .dashboard-wrapper { display: flex; min-height: 100vh; padding-top: 65px; }
-        .dash-sidebar { width: 260px; background: rgba(11,39,68,.72); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; top: 65px; height: calc(100vh - 65px); overflow-y: auto; }
+        .dash-sidebar { width: 260px; background: rgba(255,255,255,0.01); border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; height: 100vh; overflow-y: auto; }
         .user-profile { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
         .user-profile img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--blue); margin-bottom: 10px; }
         .user-profile p { color: var(--success); font-size: 0.85rem; }
@@ -40,14 +39,8 @@
         .dash-menu a.active { background: rgba(58, 134, 255, 0.1); color: var(--blue); border-left: 3px solid var(--blue); font-weight: 500; }
 
         /* ================= MAIN CONTENT ================= */
-        .dash-main { flex: 1; width: calc(100% - 260px); max-width: 1680px; padding: 32px clamp(18px, 3vw, 46px); margin-left: 260px; }
+        .dash-main { flex: 1; padding: 40px; margin-left: 260px; }
         .page-title { margin-bottom: 30px; font-size: 1.8rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-        .dash-main .page-title { flex-wrap: wrap; margin-bottom: 22px; }
-        .dash-main .page-title .page-description { flex-basis: 100%; margin: -12px 0 0; color: var(--text); font-size: .95rem; font-weight: 400; }
-        .dash-menu a { min-height: 46px; }
-        .dash-menu a.active { color: var(--blue); background: rgba(22,135,232,.13); border-left-color: #38d6ef; }
-        .history-card { margin-top: 8px; }
-        .account-identity-card { max-width: 920px; }
         .history-toolbar { display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px; }
         .history-toolbar h2 { margin:0;font-size:1.35rem;font-weight:600; }
         .history-toolbar-controls { display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap; }
@@ -68,31 +61,6 @@
             .history-toolbar-controls select.form-control { flex:1;min-width:160px; }
             #donate-preview-frame { height:620px; }
             #donate-preview-frame[data-device="mobile"] { height:700px; }
-        }
-        @media (max-width:900px) {
-            .dash-nav { padding: 10px 14px; }
-            .dashboard-wrapper { display:block; padding-top:60px; }
-            .dash-sidebar { position:sticky; top:60px; z-index:900; width:100%; height:auto; padding:8px 12px; border-right:0; border-bottom:1px solid var(--border); }
-            .user-profile { display:none; }
-            .dash-menu { display:flex; gap:6px; overflow-x:auto; scrollbar-width:thin; }
-            .dash-menu li { flex:0 0 auto; margin:0 !important; }
-            .dash-menu a { min-height:42px; padding:9px 11px; white-space:nowrap; font-size:.88rem; }
-            .dash-main { width:100%; max-width:none; margin-left:0; padding:22px 14px 36px; }
-            .nav-right-tools { gap:6px; }
-            .nav-right-tools > a { display:none; }
-        }
-        @media (max-width:600px) {
-            .dash-nav .logo { font-size:1rem; }
-            .nav-right-tools #langToggle { padding:6px 8px !important; }
-            .nav-right-tools #langToggle img { display:none; }
-            .theme-toggle { padding:7px 9px; }
-            .stats-grid { grid-template-columns:1fr; gap:10px; }
-            .stat-card { padding:16px; }
-            .history-toolbar-controls { align-items:stretch; }
-            .history-toolbar-controls select.form-control { width:100%; }
-            .history-test-toggle { width:100%; }
-            .history-toolbar-controls .btn-danger { width:100%; }
-            .history-table { min-width:700px; }
         }
         .tab-content { display: none; animation: fadeIn 0.4s ease-out forwards; }
         .tab-content.active { display: block; }
@@ -236,9 +204,8 @@
         .history-table th { background: rgba(58, 134, 255, 0.1); color: var(--blue); font-weight: 600; padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(58, 134, 255, 0.3); }
         .history-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text); }
     </style>
-    <link rel="stylesheet" href="design-tokens.css">
 </head>
-<body class="dashboard-page">
+<body>
 
     <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
@@ -248,7 +215,6 @@
     <nav class="dash-nav">
         <div class="logo">OCEAN<span>DONATE</span></div>
         <div class="nav-right-tools">
-            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="สลับธีมสี"><i class="fas fa-moon" data-theme-icon aria-hidden="true"></i><span class="theme-toggle-label">มืด</span></button>
             <button class="btn-outline" id="langToggle" style="padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
                 <img src="https://flagcdn.com/w20/th.png" id="flagImg" alt="TH" width="20" style="border-radius: 3px;">
                 <span id="langText">TH</span>
@@ -265,12 +231,10 @@
                 <p><i class="fas fa-circle" style="font-size: 0.6rem;"></i> <span class="lang-el" data-th="ระบบออนไลน์ (ปลอดภัย)" data-en="Online (Secure)">ระบบออนไลน์ (ปลอดภัย)</span></p>
             </div>
             <ul class="dash-menu">
-                <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม" data-en="Overview">ภาพรวม</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="donations"><i class="fas fa-clock-rotate-left"></i> <span class="lang-el" data-th="ประวัติโดเนท" data-en="Donation History">ประวัติโดเนท</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payments">ช่องทางรับเงิน</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-palette"></i> <span class="lang-el" data-th="หน้ารับโดเนท" data-en="Donation Page">หน้ารับโดเนท</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ตและไลฟ์" data-en="Widgets & Live">วิดเจ็ตและไลฟ์</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="account"><i class="fas fa-user-shield"></i> <span class="lang-el" data-th="บัญชีและความปลอดภัย" data-en="Account & Security">บัญชีและความปลอดภัย</span></a></li>
+                <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payment Methods">ช่องทางรับเงิน</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-laptop-house"></i> <span class="lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</span></a></li>
+                <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ต & แจ้งเตือน" data-en="Widgets & Alerts">วิดเจ็ต & แจ้งเตือน</span></a></li>
                 <li style="margin-top: 30px;"><a href="javascript:void(0)" onclick="logout()" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
             </ul>
         </aside>
@@ -278,7 +242,7 @@
         <main class="dash-main">
             <!-- OVERVIEW TAB -->
             <div id="overview" class="tab-content active">
-                <div class="page-title lang-el" data-th="ภาพรวมช่องของคุณ" data-en="Your channel at a glance">ภาพรวมช่องของคุณ</div>
+                <div class="page-title lang-el" data-th="การวิเคราะห์ (Analytics)" data-en="Analytics">การวิเคราะห์ (Analytics)</div>
                 <div class="stats-grid">
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-calendar-day'></i> ยอดโดเนทวันนี้" data-en="<i class='fas fa-calendar-day'></i> Today's Donation"><i class="fas fa-calendar-day"></i> ยอดโดเนทวันนี้</h4><div class="amount"><span id="dash-stat-today">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-wallet'></i> ยอดโดเนททั้งหมด" data-en="<i class='fas fa-wallet'></i> Total Donation"><i class="fas fa-wallet"></i> ยอดโดเนททั้งหมด</h4><div class="amount"><span id="dash-stat-total">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="บาท" data-en="THB">บาท</span></div></div>
@@ -300,30 +264,39 @@
                     <small style="color:var(--text);">เมื่อพัก ระบบจะหยุด Alert ที่กำลังเล่นและเก็บไว้หน้าคิว; รายการใหม่จะเข้าคิว และเมื่อเล่นต่อหรือครบเวลา ระบบจะเล่นต่อจากรายการเดิม โดเนทยังรับได้ตามปกติ</small>
                 </section>
 
-            </div>
-
-            <!-- DONATION HISTORY TAB -->
-            <div id="donations" class="tab-content">
-                <div class="page-title"><span class="lang-el" data-th="ประวัติโดเนท" data-en="Donation History">ประวัติโดเนท</span><p class="page-description lang-el" data-th="รายการที่ยืนยันแล้วและรายการทดสอบของช่องคุณ" data-en="Confirmed donations and test entries for your channel">รายการที่ยืนยันแล้วและรายการทดสอบของช่องคุณ</p></div>
                 <div class="history-toolbar">
+                    <h2 class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</h2>
                     <div class="history-toolbar-controls">
                         <label class="lang-el" for="history-sort-order" data-th="เรียงตาม" data-en="Sort by">เรียงตาม</label>
                         <select id="history-sort-order" class="form-control" aria-label="เรียงประวัติการโดเนท">
-                            <option value="newest" selected>ใหม่ไปเก่า</option><option value="oldest">เก่าไปใหม่</option><option value="amount-high">ยอดมากไปน้อย</option><option value="amount-low">ยอดน้อยไปมาก</option>
+                            <option value="newest" selected>ใหม่ไปเก่า</option>
+                            <option value="oldest">เก่าไปใหม่</option>
+                            <option value="amount-high">ยอดมากไปน้อย</option>
+                            <option value="amount-low">ยอดน้อยไปมาก</option>
                         </select>
                         <label class="history-test-toggle"><input id="history-show-tests" type="checkbox" checked><span class="lang-el" data-th="แสดงรายการทดสอบ" data-en="Show test entries">แสดงรายการทดสอบ</span></label>
-                        <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตประวัติและยอด" data-en="<i class='fas fa-sync-alt'></i> Reset history and totals"><i class="fas fa-sync-alt"></i> รีเซ็ตประวัติและยอด</button>
+                    <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 0.95rem; padding: 8px 16px;">
+                        <i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูลทั้งหมด
+                    </button>
                     </div>
                 </div>
-                <div class="card history-card" style="padding:0;overflow:hidden;">
-                    <div style="overflow-x:auto;">
-                        <table class="history-table"><thead><tr>
-                            <th><span class="lang-el" data-th="วันที่/เวลา" data-en="Date/Time">วันที่/เวลา</span></th>
-                            <th><span class="lang-el" data-th="ชื่อผู้โดเนท" data-en="Donator">ชื่อผู้โดเนท</span></th>
-                            <th><span class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</span></th>
-                            <th><span class="lang-el" data-th="ข้อความ & รูปแนบ" data-en="Message & Media">ข้อความ & รูปแนบ</span></th>
-                            <th style="text-align:center;"><span class="lang-el" data-th="จัดการ" data-en="Action">จัดการ</span></th>
-                        </tr></thead><tbody id="dash-history-list"><tr><td colspan="5" style="text-align:center;padding:30px;" class="lang-el" data-th="กำลังโหลดข้อมูล..." data-en="Loading data...">กำลังโหลดข้อมูล...</td></tr></tbody></table>
+
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div style="overflow-x: auto;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th><span class="lang-el" data-th="วันที่/เวลา" data-en="Date/Time">วันที่/เวลา</span></th>
+                                    <th><span class="lang-el" data-th="ชื่อผู้โดเนท" data-en="Donator">ชื่อผู้โดเนท</span></th>
+                                    <th><span class="lang-el" data-th="จำนวนเงิน" data-en="Amount">จำนวนเงิน</span></th>
+                                    <th><span class="lang-el" data-th="ข้อความ & รูปแนบ" data-en="Message & Media">ข้อความ & รูปแนบ</span></th>
+                                    <th style="text-align: center;"><span class="lang-el" data-th="จัดการ" data-en="Action">จัดการ</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-history-list">
+                                <tr><td colspan="5" style="text-align: center; padding: 30px;" class="lang-el" data-th="กำลังโหลดข้อมูล..." data-en="Loading data...">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -465,6 +438,14 @@
                     </div>
                 </div>
                 <div class="card" style="margin-top:24px;">
+                    <h3>วิธีเข้าสู่ระบบ</h3>
+                    <p style="color:var(--text);margin:8px 0 12px;">บัญชีเดิมต้องเข้าสู่ระบบอยู่ก่อนจึงจะผูก Google หรือ Discord ได้</p>
+                    <div id="auth-identity-status" aria-live="polite" style="display:grid;gap:10px;margin-bottom:12px;">
+                        <p>กำลังโหลดบัญชีที่ผูกไว้...</p>
+                    </div>
+                    <p id="auth-identity-error" role="status" style="color:#ff7b85;" hidden></p>
+                </div>
+                <div class="card" style="margin-top:24px;">
                     <div class="donate-preview-toolbar">
                         <div>
                             <h3>Preview หน้า Donate</h3>
@@ -478,17 +459,6 @@
                     <div class="donate-preview-stage">
                         <iframe id="donate-preview-frame" data-device="desktop" title="ตัวอย่างหน้าโดเนท"></iframe>
                     </div>
-                </div>
-            </div>
-
-            <!-- ACCOUNT TAB -->
-            <div id="account" class="tab-content">
-                <div class="page-title"><span class="lang-el" data-th="บัญชีและความปลอดภัย" data-en="Account & Security">บัญชีและความปลอดภัย</span><p class="page-description lang-el" data-th="จัดการวิธีเข้าสู่ระบบและบัญชีที่เชื่อมไว้" data-en="Manage your sign-in methods and linked accounts">จัดการวิธีเข้าสู่ระบบและบัญชีที่เชื่อมไว้</p></div>
-                <div class="card account-identity-card">
-                    <h3>วิธีเข้าสู่ระบบ</h3>
-                    <p style="color:var(--text);margin:8px 0 12px;">บัญชีเดิมต้องเข้าสู่ระบบอยู่ก่อนจึงจะผูก Google หรือ Discord ได้</p>
-                    <div id="auth-identity-status" aria-live="polite" style="display:grid;gap:10px;margin-bottom:12px;"><p>กำลังโหลดบัญชีที่ผูกไว้...</p></div>
-                    <p id="auth-identity-error" role="status" style="color:#ff7b85;" hidden></p>
                 </div>
             </div>
 
