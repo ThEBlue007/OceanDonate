@@ -1,0 +1,249 @@
+:root {
+    color-scheme: dark;
+    --od-color-deep-sea: #06182e;
+    --od-color-night-current: #0b2744;
+    --od-color-ocean: #1687e8;
+    --od-color-wave: #38d6ef;
+    --od-color-coin: #ffc83d;
+    --od-color-mist: #f2f7fc;
+    --od-color-foam: #afc3d8;
+    --od-color-ink: #e8f2fa;
+    --od-color-muted: #afc3d8;
+    --od-color-surface: #0b2744;
+    --od-color-surface-raised: #103454;
+    --od-color-border: rgba(175, 195, 216, .18);
+    --od-font-body: 'IBM Plex Sans Thai', 'Kanit', sans-serif;
+    --od-font-display: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+    --od-space-1: .25rem;
+    --od-space-2: .5rem;
+    --od-space-3: .75rem;
+    --od-space-4: 1rem;
+    --od-space-6: 1.5rem;
+    --od-space-8: 2rem;
+    --od-radius-control: .7rem;
+    --od-radius-panel: 1rem;
+    --od-focus: 0 0 0 3px rgba(56, 214, 239, .35);
+
+    /* Legacy page variables map to the shared dark-first brand palette. */
+    --dark: var(--od-color-deep-sea);
+    --blue: var(--od-color-ocean);
+    --text: var(--od-color-muted);
+    --card-bg: rgba(11, 39, 68, .76);
+    --border: var(--od-color-border);
+    --success: #34d399;
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --od-color-ink: #102a43;
+    --od-color-muted: #4f6b82;
+    --od-color-surface: #ffffff;
+    --od-color-surface-raised: #e7f2f9;
+    --od-color-border: rgba(16, 42, 67, .15);
+    --od-color-ocean: #0879c9;
+    --od-color-wave: #087f97;
+    --od-color-coin: #916000;
+    --dark: #f2f8fc;
+    --blue: #0879c9;
+    --text: #4f6b82;
+    --card-bg: rgba(255, 255, 255, .94);
+    --border: var(--od-color-border);
+    --success: #08784f;
+}
+
+html { background: var(--dark); color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
+body { background-color: var(--dark); color: var(--od-color-ink); font-family: var(--od-font-body); transition: background-color .2s ease, color .2s ease; }
+html.obs-overlay, html.obs-overlay body { background: transparent !important; }
+* { font-family: var(--od-font-body); }
+h1, h2, h3, h4, .logo, .amount, .stat-card .amount, #timer { font-family: var(--od-font-display); }
+button, input, select, textarea { font: inherit; }
+:focus-visible { outline: none !important; box-shadow: var(--od-focus) !important; }
+
+.auth-page { min-height:100vh; padding:92px 20px 36px; overflow-x:hidden; overflow-y:auto !important; }
+.auth-container { width:min(1040px,100%); margin:auto; border-radius:22px; }
+.auth-left { flex-basis:42%; background:linear-gradient(145deg,rgba(22,135,232,.12),rgba(56,214,239,.035)); }
+.auth-right { flex-basis:58%; }
+.auth-left h1 span, .logo span { color:var(--od-color-wave); }
+.top-nav { position:fixed; top:18px; right:20px; gap:8px; }
+.donate-container { width:min(1200px,100%); max-width:1200px; grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr); gap:24px; margin:28px auto; }
+.donate-page .card { border-radius:18px; }
+.donate-page .simple-nav { padding:14px clamp(14px,3vw,40px); }
+.donate-page .form-title { color:var(--od-color-ink); }
+.donate-page .profile-cover { background:linear-gradient(135deg,#1687e8,#38d6ef); }
+.donate-page .top-donor-box { border-color:rgba(56,214,239,.25); background:rgba(22,135,232,.08); }
+.donate-page .gift-option[aria-pressed="true"] { border-color:var(--od-color-wave); box-shadow:0 0 0 2px rgba(56,214,239,.18); }
+.donate-page .btn-donate { background:linear-gradient(110deg,#087f97,#1687e8 62%,#ffc83d); box-shadow:0 10px 25px rgba(22,135,232,.22); }
+.donate-page .amount-btn.active, .donate-page .amount-btn[aria-pressed="true"] { border-color:var(--od-color-wave); background:rgba(56,214,239,.14); }
+.donate-page .pay-method-card.active { border-color:#0e9d73; }
+
+.theme-toggle { flex:0 0 auto; }
+:root[data-theme="light"] .auth-page .auth-container { background:#fff; }
+:root[data-theme="light"] .auth-page .auth-left { background:linear-gradient(145deg,#e2f3fc,#f4fbff); }
+:root[data-theme="light"] .auth-page .auth-right { background:#fff; }
+:root[data-theme="light"] .auth-page .auth-left h1,
+:root[data-theme="light"] .auth-page .auth-right h3,
+:root[data-theme="light"] .auth-page .auth-form h3 { color:#102a43; }
+:root[data-theme="light"] .donate-page .card,
+:root[data-theme="light"] .donate-page body[data-theme="soft"] .card { background:rgba(255,255,255,.97); color:#102a43; border-color:rgba(16,42,67,.15); }
+:root[data-theme="light"] .donate-page .gift-picker-disclosure > summary,
+:root[data-theme="light"] .donate-page .pay-method-card,
+:root[data-theme="light"] .donate-page .amount-btn,
+:root[data-theme="light"] .donate-page .gift-option { background:#f4f9fc; color:#102a43; border-color:rgba(16,42,67,.18); }
+:root[data-theme="light"] .donate-page .gift-option-effect { color:#087f97; }
+:root[data-theme="light"] .donate-page .gift-option-price { color:#4f6b82; }
+:root[data-theme="light"] .donate-page .amount-presets .amount-btn { color:#102a43; }
+:root[data-theme="light"] .landing-page .hero-text h3,
+:root[data-theme="light"] .landing-page .section-header h2,
+:root[data-theme="light"] .landing-page .streamer-name,
+:root[data-theme="light"] .landing-page .step-card h4,
+:root[data-theme="light"] .landing-page .pkg-header,
+:root[data-theme="light"] .landing-page .pkg-price { color:#102a43; }
+:root[data-theme="light"] .landing-page .hero-section::before { opacity:.28; }
+:root[data-theme="light"] .landing-page .package-card { background:linear-gradient(145deg,#fff,#edf7fc); }
+:root[data-theme="light"] .landing-page .reg-btn,
+:root[data-theme="light"] .landing-page .btn-primary { color:#fff; }
+
+.theme-toggle {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--od-color-border);
+    border-radius: var(--od-radius-control);
+    background: var(--od-color-surface);
+    color: var(--od-color-ink);
+    cursor: pointer;
+    font-weight: 600;
+    line-height: 1;
+    transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+}
+.theme-toggle:hover { border-color: var(--od-color-wave); transform: translateY(-1px); }
+.theme-toggle [data-theme-icon] { color: var(--od-color-coin); }
+
+:root[data-theme="light"] body { background-color: #f2f8fc; color: #102a43; }
+:root[data-theme="light"] nav,
+:root[data-theme="light"] .dash-nav,
+:root[data-theme="light"] .simple-nav { background: rgba(242, 248, 252, .94); border-color: var(--od-color-border); }
+:root[data-theme="light"] .nav-content { background: #ffffff; }
+:root[data-theme="light"] .sidebar-header,
+:root[data-theme="light"] .logo,
+:root[data-theme="light"] .section-header h2,
+:root[data-theme="light"] .streamer-name,
+:root[data-theme="light"] .step-card h4,
+:root[data-theme="light"] .pkg-header,
+:root[data-theme="light"] .pkg-price,
+:root[data-theme="light"] .confirm-dialog h2 { color: var(--od-color-ink); }
+:root[data-theme="light"] .streamer-card,
+:root[data-theme="light"] .step-card,
+:root[data-theme="light"] .contact-item,
+:root[data-theme="light"] .package-card,
+:root[data-theme="light"] .auth-container,
+:root[data-theme="light"] .auth-left,
+:root[data-theme="light"] .auth-right,
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .stat-card,
+:root[data-theme="light"] .payment-card {
+    color: var(--od-color-ink);
+    background: var(--od-color-surface);
+    border-color: var(--od-color-border);
+    box-shadow: 0 12px 32px rgba(16, 42, 67, .08);
+}
+:root[data-theme="light"] .auth-left { background: #e7f2f9; }
+:root[data-theme="light"] .auth-right { background: #fff; }
+:root[data-theme="light"] .feature-list li { color: var(--od-color-ink); }
+:root[data-theme="light"] .auth-tab,
+:root[data-theme="light"] .dash-menu a,
+:root[data-theme="light"] .menu-list a,
+:root[data-theme="light"] .auth-list a { color: var(--od-color-muted); }
+:root[data-theme="light"] .auth-tab.active,
+:root[data-theme="light"] .auth-tab:hover,
+:root[data-theme="light"] .dash-menu a.active,
+:root[data-theme="light"] .dash-menu a:hover { color: var(--od-color-ocean); }
+:root[data-theme="light"] .form-control,
+:root[data-theme="light"] input.form-control,
+:root[data-theme="light"] textarea.form-control,
+:root[data-theme="light"] select.form-control {
+    color: #102a43 !important;
+    background-color: #fff !important;
+    border-color: rgba(16, 42, 67, .22) !important;
+}
+:root[data-theme="light"] .form-control::placeholder { color: #71879a; }
+:root[data-theme="light"] .btn-outline,
+:root[data-theme="light"] .btn-social,
+:root[data-theme="light"] .top-btn,
+:root[data-theme="light"] .layout-item,
+:root[data-theme="light"] .widget-tab { color: var(--od-color-ink); background-color: #fff; border-color: var(--od-color-border); }
+:root[data-theme="light"] .dash-sidebar { background: #e7f2f9; }
+:root[data-theme="light"] .dash-menu a.active,
+:root[data-theme="light"] .widget-tab.active,
+:root[data-theme="light"] .layout-item.active { background: rgba(8, 121, 201, .1); }
+:root[data-theme="light"] .history-table th,
+:root[data-theme="light"] table th { color: var(--od-color-ocean); }
+:root[data-theme="light"] .history-table td,
+:root[data-theme="light"] table td { color: var(--od-color-ink); }
+:root[data-theme="light"] .confirm-dialog { background: #fff; color: var(--od-color-ink); border-color: var(--od-color-border); }
+:root[data-theme="light"] .confirm-dialog p { color: var(--od-color-muted); }
+:root[data-theme="light"] .app-toast { color: var(--od-color-ink); background: #fff; }
+:root[data-theme="light"] .streamer-category { background: #e7f2f9; }
+:root[data-theme="light"] .discovery-bg { background: #eaf4fa; border-color: var(--od-color-border); }
+:root[data-theme="light"] .bg-glow { opacity: .07; }
+:root[data-theme="light"] .url-box,
+:root[data-theme="light"] .streamer-category,
+:root[data-theme="light"] .social-links a,
+:root[data-theme="light"] .top-donor-box,
+:root[data-theme="light"] .top-donor-icon { color: var(--od-color-ink); background-color: #e7f2f9; border-color: var(--od-color-border); }
+:root[data-theme="light"] .form-title,
+:root[data-theme="light"] .profile-name,
+:root[data-theme="light"] .donate-container h2,
+:root[data-theme="light"] .donate-container h3,
+:root[data-theme="light"] .donate-container strong { color: var(--od-color-ink); }
+:root[data-theme="light"] .dash-nav { color: var(--od-color-ink); }
+:root[data-theme="light"] .dash-main { color: var(--od-color-ink); }
+:root[data-theme="light"] .widget-tab,
+:root[data-theme="light"] .btn-outline { color: var(--od-color-ink); }
+:root[data-theme="light"] .btn-primary,
+:root[data-theme="light"] .btn-donate { color: #fff; }
+:root[data-theme="light"] .profile-cover { background: linear-gradient(135deg, #1687e8, #38d6ef); }
+:root[data-theme="light"] .stat-card .amount { color: var(--od-color-ink); }
+
+/* Dashboard panels and controls use the same readable Light palette. */
+:root[data-theme="light"] .dash-header,
+:root[data-theme="light"] .dash-content,
+:root[data-theme="light"] .tab-content,
+:root[data-theme="light"] .settings-section,
+:root[data-theme="light"] .widget-section,
+:root[data-theme="light"] .settings-card,
+:root[data-theme="light"] .history-card,
+:root[data-theme="light"] .overview-card,
+:root[data-theme="light"] .gift-card,
+:root[data-theme="light"] .rule-card,
+:root[data-theme="light"] .timer-card {
+    color: var(--od-color-ink);
+    background-color: #fff;
+    border-color: rgba(16, 42, 67, .14);
+}
+:root[data-theme="light"] .tab-content p,
+:root[data-theme="light"] .dash-content p,
+:root[data-theme="light"] .settings-section p,
+:root[data-theme="light"] .help-text,
+:root[data-theme="light"] .muted { color: var(--od-color-muted); }
+:root[data-theme="light"] .donate-page .simple-nav { color: var(--od-color-ink); background: rgba(242,248,252,.96); }
+:root[data-theme="light"] .donate-page .gift-option[aria-pressed="true"] { background: #e5f6fb; }
+
+@media (max-width: 760px) {
+    .theme-toggle { min-height: 40px; padding: 7px 10px; }
+    .simple-nav { gap: 10px; padding-inline: 16px; }
+    .simple-nav > div { flex-wrap: wrap; justify-content: flex-end; gap: 8px !important; }
+    .auth-page { padding:76px 14px 24px; }
+    .auth-container { max-width:520px; }
+    .auth-right { padding:28px 22px; }
+    .donate-container { grid-template-columns:1fr; margin:18px auto; padding-inline:14px; }
+    .donate-page .profile-cover { height:96px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

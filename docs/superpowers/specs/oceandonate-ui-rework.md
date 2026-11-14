@@ -13,7 +13,7 @@ Reorganize OceanDonate's public pages, streamer dashboard, donation checkout, an
 
 ## Brand tokens (proposed from the logo)
 
-Logo colors are represented by approximate UI tokens; implementation should compare each value against the actual logo before applying it.
+Logo colors are represented by approximate UI tokens; implementation should compare each value against the actual logo before applying it. Dark is the default theme. A site-wide Dark/Light switch saves the visitor's choice and keeps it when moving between pages. The OBS overlays stay transparent and brand-dark because a background theme would interfere with the stream scene.
 
 | Token | Proposed value | Role |
 |---|---|---|
@@ -26,6 +26,21 @@ Logo colors are represented by approximate UI tokens; implementation should comp
 | Foam | `#AFC3D8` | Supporting text and dividers |
 
 Use red only for destructive/error states and green only for successful/verified states. Avoid the current unrelated purple/pink accents. Check text/action contrast before shipping.
+
+### Light theme equivalents
+
+| Token | Proposed value | Role |
+|---|---|---|
+| Sea Glass | `#F2F8FC` | Main light page background |
+| Cloud Surface | `#FFFFFF` | Forms and primary surfaces |
+| Deep Ink | `#102A43` | Main text on light surfaces |
+| Muted Current | `#4F6B82` | Supporting text on light surfaces |
+| Ocean Blue (light) | `#0879C9` | Primary actions and focus |
+| Wave Cyan (light) | `#087F97` | Selected states with readable contrast |
+
+Coin Gold remains a small money highlight; use a darker gold for text on light backgrounds when contrast requires it.
+
+The theme switch appears on the landing page, account page, dashboard, and public donation page. Default to Dark when there is no saved choice, persist a manual choice in local storage, and apply it before first paint. Keep the existing Thai/English switch separate.
 
 ## Type and visual language
 
@@ -74,6 +89,7 @@ Keep each overlay's transparent canvas and existing Socket.IO events, widget tok
 ## Acceptance criteria
 
 - All customer-facing pages use the shared logo-derived token set and consistent typography.
+- Landing, account, dashboard, and donation pages default to Dark, offer Light, and preserve the chosen theme while navigating between them.
 - A new streamer can find payment setup, donation-page appearance, live controls, history, and account access by their plain-language labels.
 - A donor can complete the existing amount/details/payment flow on phone and desktop without horizontal overflow or losing entered information.
 - All existing backend contracts, Socket.IO event names, preview restrictions, and transparent OBS behavior remain intact.

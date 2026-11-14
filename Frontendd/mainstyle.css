@@ -1,6 +1,6 @@
 /* --- Base --- */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
-:root { --dark: #050811; --blue: #3A86FF; --text: #a0aec0; }
+:root { --dark: #06182e; --blue: #1687e8; --text: #afc3d8; }
 body { background: var(--dark); color: white; overflow-x: hidden; position: relative; }
 
 
@@ -249,4 +249,37 @@ section { scroll-margin-top: 80px; }
 .btn-primary:hover {
     box-shadow: 0 0 20px rgba(58, 134, 255, 0.6);
     background: #4a90ff;
+}
+
+/* OceanDonate brand layer: dark sea surfaces, wave highlights, and clear page rhythm. */
+.hero-section { min-height: auto; padding: 136px 0 68px; }
+.hero-content { align-items: flex-start; text-align: left; width: 100%; max-width: 1280px; }
+.hero-text { max-width: 760px; }
+.hero-text h3 { max-width: 16ch; font-size: clamp(2.25rem, 5.3vw, 4.3rem); line-height: 1.12; }
+.hero-text p { max-width: 64ch; line-height: 1.8; }
+.version-badge { color: #8cecff; background: rgba(56,214,239,.1); border-color: rgba(56,214,239,.28); }
+.cta-group { align-items: flex-start; }
+.url-box { border-radius: 12px; border-color: rgba(175,195,216,.18); background: rgba(11,39,68,.72); }
+.url-box span { color: #38d6ef; }
+.btn-primary { background: #1687e8; border-radius: 12px; box-shadow: 0 10px 26px rgba(22,135,232,.2); }
+.content-section { padding: 78px 0; }
+.section-header { margin-bottom: 34px; }
+.section-header h2 { font-family: 'Kanit', sans-serif; font-size: clamp(1.8rem, 3.3vw, 2.5rem); }
+.streamer-grid { gap: 16px; }
+.streamer-card, .step-card, .contact-item { border-color: rgba(175,195,216,.15); border-radius: 16px; }
+.streamer-card:hover, .step-card:hover, .contact-item:hover { border-color: rgba(56,214,239,.42); box-shadow: 0 15px 36px rgba(6,24,46,.24); }
+.step-number { background: #087f97; box-shadow: none; }
+nav { background: rgba(6,24,46,.92); border-color: rgba(175,195,216,.12); }
+.nav-content { background: #0b2744; }
+.mobile-toggle { color: #38d6ef; }
+section { scroll-margin-top: 88px; }
+:focus-visible { outline: 3px solid #38d6ef !important; outline-offset: 3px; }
+@media (max-width: 768px) {
+    .hero-section { padding: 110px 0 42px; }
+    .hero-content { align-items: center; text-align: center; }
+    .hero-text h3 { max-width: 100%; }
+    .hero-text p { font-size: .98rem; }
+    .cta-group { align-items: center; }
+    .hero-preview-grid { max-width: 620px; margin-top: 34px; gap: 14px; }
+    .content-section { padding: 58px 0; }
 }

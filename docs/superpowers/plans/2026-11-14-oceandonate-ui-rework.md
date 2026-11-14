@@ -29,8 +29,9 @@
 
 ## File Map
 
-- Create `Frontendd/design-tokens.css` — shared brand colors, type roles, spacing, focus, surfaces, and responsive primitives.
-- Modify `Frontendd/index.html`, `Frontendd/auth.html`, `Frontendd/dashboard.html`, `Frontendd/donate.html`, `Frontendd/widget.html`, `Frontendd/timer.html`, `Frontendd/goal.html`, `Frontendd/top-donator.html` — load shared tokens and redesign each corresponding experience while preserving IDs and runtime behavior.
+- Create `Frontendd/design-tokens.css` — shared Dark and Light brand colors, type roles, spacing, focus, surfaces, and responsive primitives.
+- Create `Frontendd/theme.js` — apply saved theme before interaction, default to Dark, persist the switch, and update its accessible label/state.
+- Modify `Frontendd/index.html`, `Frontendd/auth.html`, `Frontendd/dashboard.html`, `Frontendd/donate.html`, `Frontendd/widget.html`, `Frontendd/timer.html`, `Frontendd/goal.html`, `Frontendd/top-donator.html` — load shared tokens and redesign each corresponding experience while preserving IDs and runtime behavior. Add a theme switch to the first four pages; OBS overlays remain transparent and dark-brand.
 - Modify `Frontendd/mainstyle.css` — align landing-page shared components with the new tokens; avoid duplicating the token definitions here.
 - Modify `Backend/test/ui.test.js` — pin page structure, responsive controls, labels, focus, and preview behavior as the UI is reshaped.
 - Modify `Backend/test/security.test.js` only if UI changes touch a contract that requires an integration regression assertion; do not change backend behavior for visual work.
@@ -38,17 +39,18 @@
 
 ---
 
-### Task 1: Establish shared brand system and navigation primitives
+### Task 1: Establish shared brand system and theme switch
 
-**Files:** Create `Frontendd/design-tokens.css`; modify all page heads and `Frontendd/mainstyle.css`; test `Backend/test/ui.test.js`.
+**Files:** Create `Frontendd/design-tokens.css`, `Frontendd/theme.js`; modify all page heads, theme controls in `Frontendd/index.html`, `Frontendd/auth.html`, `Frontendd/dashboard.html`, `Frontendd/donate.html`, and `Frontendd/mainstyle.css`; test `Backend/test/ui.test.js`.
 
 **Interfaces:** CSS custom properties `--od-color-*`, `--od-font-*`, `--od-space-*`, `--od-radius-*`, and shared focus/disabled styles. Preserve each page's existing IDs and JavaScript selectors.
 
-- [ ] **Step 1: Write failing UI assertions** for every public page loading the shared stylesheet and the expected brand tokens being defined once.
+- [ ] **Step 1: Write failing UI assertions** for every public page loading the shared stylesheet, Dark as the unsaved default, Light persistence across pages, and a theme control with an accessible label.
 - [ ] **Step 2: Run** `node --test --test-reporter=spec Backend/test/ui.test.js`; confirm the new assertions fail because shared tokens are absent.
-- [ ] **Step 3: Add** the logo-checked Deep Sea `#06182E`, Night Current `#0B2744`, Ocean Blue `#1687E8`, Wave Cyan `#38D6EF`, Coin Gold `#FFC83D`, Sea Mist `#F2F7FC`, and Foam `#AFC3D8` tokens, plus typography, focus, spacing, and motion preferences.
-- [ ] **Step 4: Link** the shared stylesheet from every page and replace duplicated shared colors in `mainstyle.css` with the tokens.
-- [ ] **Step 5: Run** the UI test file and inspect the landing page at 1440 px and 390 px; confirm contrast, focus, and mobile navigation still work.
+- [ ] **Step 3: Add** the logo-checked Deep Sea `#06182E`, Night Current `#0B2744`, Ocean Blue `#1687E8`, Wave Cyan `#38D6EF`, Coin Gold `#FFC83D`, Sea Mist `#F2F7FC`, and Foam `#AFC3D8` tokens and a contrast-checked Light palette, plus typography, focus, spacing, and motion preferences.
+- [ ] **Step 4: Add** `theme.js` to apply `localStorage.oceandonate_theme` before paint (default `dark`), keep preference when navigating, and toggle `data-theme` with accurate `aria-pressed` and label state.
+- [ ] **Step 5: Link** the shared stylesheet and theme control from each public page; keep OBS pages transparent and dark-brand; replace duplicated shared colors in `mainstyle.css` with tokens.
+- [ ] **Step 6: Run** the UI test file and inspect the landing page at 1440 px and 390 px in both themes; confirm contrast, focus, and mobile navigation still work.
 
 ### Task 2: Rework landing and account access
 

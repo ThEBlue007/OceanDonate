@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="theme.js"></script>
     <title>ระบบรับโดเนท | Ocean Donate</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap">
@@ -122,8 +123,9 @@
         body[data-preview="true"] #btn-submit-donate { opacity:.55; cursor:not-allowed; }
         @media (max-width: 768px) { body[data-layout="minimal"] .donate-container { grid-template-columns: 1fr; } }
     </style>
+    <link rel="stylesheet" href="design-tokens.css">
 </head>
-<body>
+<body class="donate-page">
 
     <div id="preview-banner" role="status">ตัวอย่างหน้า Donate — ปิดการชำระเงินจริงและ Test Donation</div>
 
@@ -133,6 +135,7 @@
     <nav class="simple-nav">
         <a href="index.html" class="logo">OCEAN<span>DONATE</span></a>
         <div style="display: flex; gap: 20px; align-items: center;">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="สลับธีมสี"><i class="fas fa-moon" data-theme-icon aria-hidden="true"></i><span class="theme-toggle-label">มืด</span></button>
             <div style="color: var(--text); font-size: 0.9rem;" class="lang-el" data-th="<i class='fas fa-shield-alt' style='color: var(--success);'></i> ปลอดภัย 100%" data-en="<i class='fas fa-shield-alt' style='color: var(--success);'></i> 100% Secure">
                 <i class="fas fa-shield-alt" style="color: var(--success);"></i> ปลอดภัย 100%
             </div>

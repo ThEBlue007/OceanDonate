@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="obs-overlay">
 <head>
     <meta charset="UTF-8">
     <title>Donate Goal Widget</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="design-tokens.css">
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Kanit', sans-serif; background: transparent; color: white; }
         
@@ -18,7 +19,7 @@
         }
         
         .goal-bar-fill { 
-            height: 100%; width: 0%; background: #0ea5e9; 
+            height: 100%; width: 0%; background: linear-gradient(90deg,#1687e8,#38d6ef);
             border-radius: 25px; 
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease; 
         }
