@@ -445,7 +445,8 @@ function timerSnapshot(user, now = Date.now()) {
         remainingSeconds,
         bankedSeconds: Math.max(0, Number(state.bankedSeconds) || 0),
         initialSeconds: Math.max(1, Number(user.timerSettings?.initialSeconds) || 3600),
-        amountRules: Array.isArray(user.timerSettings?.amountRules) ? user.timerSettings.amountRules : []
+        amountRules: Array.isArray(user.timerSettings?.amountRules) ? user.timerSettings.amountRules : [],
+        appearance: cleanTimerAppearance(user.timerSettings?.appearance)
     };
 }
 
@@ -544,16 +545,40 @@ function applyDonationTimer(user, donation, now = Date.now()) {
 
 const settingFields = {
     goalSettings: ['title', 'target', 'current', 'barColor', 'textColor', 'font'],
-    alertSettings: ['layout', 'sound', 'soundVol', 'ttsRate', 'ttsPitch', 'ttsVol', 'ttsNameToggle', 'ttsMsgToggle', 'imgUrl', 'nameColor', 'amountColor', 'textColor', 'font'],
+    alertSettings: ['layout', 'alertTheme', 'sound', 'soundVol', 'ttsRate', 'ttsPitch', 'ttsVol', 'ttsNameToggle', 'ttsMsgToggle', 'imgUrl', 'nameColor', 'amountColor', 'textColor', 'font'],
     topDonorSettings: ['title', 'titleColor', 'textColor', 'boxColor', 'isTransparent', 'hasBorder', 'borderColor']
 };
+
+const ALERT_FONTS = new Set([
+    "'Kanit', sans-serif", "'IBM Plex Sans Thai', sans-serif", "'Prompt', sans-serif",
+    "'Sarabun', sans-serif", "'Bai Jamjuree', sans-serif", "'Chakra Petch', sans-serif",
+    "'Mitr', sans-serif", "'Noto Sans Thai', sans-serif"
+]);
+const ALERT_THEMES = new Set(['default', 'minecraft', 'pink-love', 'neon', 'glass', 'gold']);
+const TIMER_FONTS = new Set(["'Kanit', sans-serif", "'Prompt', sans-serif", "'IBM Plex Sans Thai', sans-serif"]);
+
+function cleanTimerAppearance(value = {}) {
+    const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    return {
+        color: typeof source.color === 'string' && /^#[0-9a-f]{6}$/i.test(source.color) ? source.color : '#22c55e',
+        font: TIMER_FONTS.has(source.font) ? source.font : "'Kanit', sans-serif",
+        message: typeof source.message === 'string' ? source.message.trim().slice(0, 200) : 'โดเนทเพื่อเพิ่มเวลา!',
+        position: ['left', 'center', 'right'].includes(source.position) ? source.position : 'center',
+        animation: ['none', 'pulse'].includes(source.animation) ? source.animation : 'none'
+    };
+}
 
 function cleanSettings(type, value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
     const allowed = settingFields[type] || [];
-    return Object.fromEntries(allowed
+    const cleaned = Object.fromEntries(allowed
         .filter(key => value[key] !== undefined)
         .map(key => [key, value[key]]));
+    if (type === 'alertSettings') {
+        if (value.font !== undefined) cleaned.font = ALERT_FONTS.has(value.font) ? value.font : "'Kanit', sans-serif";
+        if (value.alertTheme !== undefined) cleaned.alertTheme = ALERT_THEMES.has(value.alertTheme) ? value.alertTheme : 'default';
+    }
+    return cleaned;
 }
 
 function safeHttpsUrl(value) {
@@ -1314,7 +1339,7 @@ io.on('connection', (socket) => {
             if (!user) return;
             const initialSeconds = safeSeconds(data.initialSeconds, false);
             const amountRules = normalizeAmountRules(data.amountRules || []);
-            user.timerSettings = { initialSeconds, amountRules };
+            user.timerSettings = { initialSeconds, amountRules, appearance: cleanTimerAppearance(data.appearance ?? user.timerSettings?.appearance) };
             user.markModified('timerSettings');
             await user.save();
             emitTimer(user);
@@ -1680,9 +1705,9 @@ io.on('connection', (socket) => {
     socket.on('save_gifts', async (data) => {
         if (!await checkAuth(data)) return;
         try {
-            if (!Array.isArray(data.gifts) || data.gifts.length > 30) throw Object.assign(new Error('ตั้งของขวัญได้ไม่เกิน 30 รายการ'), { status: 400 });
-            const allowedIcons = new Set(['wave', 'gift', 'star', 'gem', 'dolphin', 'jellyfish']);
-            const allowedEffects = new Set(['sparkle', 'burst', 'coins', 'heart']);
+            if (!Array.isArray(data.gifts) || data.gifts.length > 48) throw Object.assign(new Error('ตั้งของขวัญได้ไม่เกิน 48 รายการ'), { status: 400 });
+            const allowedIcons = new Set(['wave', 'gift', 'star', 'gem', 'dolphin', 'jellyfish', 'flower', 'balloon', 'cake', 'rocket', 'crown', 'firework']);
+            const allowedEffects = new Set(['sparkle', 'burst', 'coins', 'heart', 'confetti', 'firework', 'shine', 'shake']);
             const gifts = data.gifts.map(gift => {
                 const name = String(gift?.name || '').trim();
                 const price = Number(gift?.price);

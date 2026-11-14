@@ -470,11 +470,11 @@ test('OBS gift effects render an allowlisted icon and untrusted gift names as te
     const html = fs.readFileSync(path.join(frontendPath, 'widget.html'), 'utf8');
     const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/widget.html?token=test', beforeParse(window) { window.io = () => fakeSocket; } });
     const unsafeName = '<img src=x onerror="window.__xss=1">';
-    handlers.get('show_alert')({ name: 'Donor', amount: 50, giftSnapshot: { name: unsafeName, iconId: 'gem', effectId: 'sparkle' } });
+    handlers.get('show_alert')({ name: 'Donor', amount: 50, giftSnapshot: { name: unsafeName, iconId: 'flower', effectId: 'confetti' } });
     const effect = dom.window.document.getElementById('gift-effect');
-    assert.equal(effect.textContent, `💎 ${unsafeName}`);
+    assert.equal(effect.textContent, `🌸 ${unsafeName}`);
     assert.equal(effect.querySelector('img'), null);
-    assert.equal(effect.classList.contains('gift-sparkle'), true);
+    assert.equal(effect.classList.contains('gift-confetti'), true);
     assert.equal(dom.window.__xss, undefined);
     dom.window.close();
 });
@@ -506,6 +506,79 @@ test('donation gifts and live timer are grouped under Widgets & Alerts', () => {
     assert.ok(document.querySelector('#widgets #w-gifts #gift-catalog-list'));
     assert.ok(document.querySelector('#widgets #w-timer #timer-current'));
     dom.window.close();
+});
+
+test('Timer appearance and Alert font/theme settings are persisted through allowlists', async () => {
+    const owner = await connectSocket();
+    const authenticated = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await authenticated;
+
+    const alertSettings = socketEvent(owner, 'apply_settings');
+    owner.emit('update_alert', { username, token, font: "'Prompt', sans-serif", alertTheme: 'neon' });
+    const alert = await alertSettings;
+    assert.equal(alert.font, "'Prompt', sans-serif");
+    assert.equal(alert.alertTheme, 'neon');
+
+    const unsafeAlertSettings = socketEvent(owner, 'apply_settings');
+    owner.emit('update_alert', { username, token, font: 'url(javascript:alert(1))', alertTheme: 'external-css' });
+    const safeAlert = await unsafeAlertSettings;
+    assert.equal(safeAlert.font, "'Kanit', sans-serif");
+    assert.equal(safeAlert.alertTheme, 'default');
+
+    const timerSettings = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_config', {
+        username, token, initialSeconds: 3600, amountRules: [],
+        appearance: { color: '#22c55e', font: "'Prompt', sans-serif", message: 'โดเนทเพื่อเพิ่มเวลา!', position: 'left', animation: 'pulse' }
+    });
+    const timer = await timerSettings;
+    assert.deepEqual(timer.appearance, { color: '#22c55e', font: "'Prompt', sans-serif", message: 'โดเนทเพื่อเพิ่มเวลา!', position: 'left', animation: 'pulse' });
+
+    const unsafeTimerSettings = socketEvent(owner, 'apply_timer');
+    owner.emit('timer_config', {
+        username, token, initialSeconds: 3600, amountRules: [],
+        appearance: { color: 'url(javascript:alert(1))', font: 'external-font', message: 'A'.repeat(250), position: 'outside', animation: 'script' }
+    });
+    const safeTimer = await unsafeTimerSettings;
+    assert.deepEqual(safeTimer.appearance, { color: '#22c55e', font: "'Kanit', sans-serif", message: 'A'.repeat(200), position: 'center', animation: 'none' });
+
+    const saved = await dbConnection.collection('users').findOne({ username });
+    assert.deepEqual(saved.timerSettings.appearance, safeTimer.appearance);
+    owner.disconnect();
+});
+
+test('gift catalog accepts the expanded built-in gallery and exposes searchable controls', async () => {
+    const owner = await connectSocket();
+    const authenticated = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await authenticated;
+
+    const applied = socketEvent(owner, 'apply_gifts');
+    owner.emit('save_gifts', { username, token, gifts: [
+        { giftId: crypto.randomUUID(), name: 'ดอกไม้', price: 80, iconId: 'flower', effectId: 'confetti', active: true, timerAction: 'none', seconds: 0 }
+    ] });
+    const gifts = await applied;
+    assert.equal(gifts.length, 1);
+    assert.equal(gifts[0].iconId, 'flower');
+    assert.equal(gifts[0].effectId, 'confetti');
+
+    const html = fs.readFileSync(path.join(frontendPath, 'dashboard.html'), 'utf8');
+    const dom = new JSDOM(html);
+    assert.ok(dom.window.document.getElementById('gift-search'));
+    assert.ok(dom.window.document.getElementById('gift-enable-all'));
+    assert.ok(dom.window.document.getElementById('gift-disable-all'));
+    dom.window.close();
+    owner.disconnect();
+});
+
+test('Alert template and font galleries are available to preview and OBS', () => {
+    const dashboard = fs.readFileSync(path.join(frontendPath, 'dashboard.html'), 'utf8');
+    const widget = fs.readFileSync(path.join(frontendPath, 'widget.html'), 'utf8');
+    const timer = fs.readFileSync(path.join(frontendPath, 'timer.html'), 'utf8');
+    assert.match(dashboard, /data-alert-theme="pink-love"/);
+    assert.match(dashboard, /<option value="'Prompt', sans-serif">Prompt/);
+    assert.match(widget, /\.alert-theme-pink-love/);
+    assert.match(timer, /body\[data-position="left"\]/);
 });
 
 test('linked login providers show a checkmark and do not offer linking twice', async () => {
