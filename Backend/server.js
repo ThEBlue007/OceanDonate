@@ -1423,12 +1423,17 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('pause_alerts', async (data) => {
-        if (!await checkAuth(data)) return;
+    socket.on('pause_alerts', async (data, acknowledge) => {
+        const respond = result => { if (typeof acknowledge === 'function') acknowledge(result); };
+        if (!await checkAuth(data)) return respond({ ok: false, message: 'ยืนยันสิทธิ์ไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่' });
         const minutes = Number(data.minutes);
-        if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) return socket.emit('alert_control_error', { message: 'เลือกระยะพักระหว่าง 1 นาทีถึง 24 ชั่วโมง' });
+        if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+            const message = 'เลือกระยะพักระหว่าง 1 นาทีถึง 24 ชั่วโมง';
+            socket.emit('alert_control_error', { message });
+            return respond({ ok: false, message });
+        }
         const user = await User.findOne({ username: data.username });
-        if (!user) return;
+        if (!user) return respond({ ok: false, message: 'ไม่พบบัญชีผู้ใช้' });
         const pausedUntil = new Date(Date.now() + minutes * 60_000);
         user.alertControl = { pausedUntil };
         user.markModified('alertControl');
@@ -1442,12 +1447,14 @@ io.on('connection', (socket) => {
         if (current) io.to(alertRoom(user.username)).emit('stop_alert', { queueId: String(current._id) });
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: pausedUntil.toISOString() });
         socket.emit('alert_control_result', { action: 'pause', ok: true });
+        respond({ ok: true });
     });
 
-    socket.on('resume_alerts', async (data) => {
-        if (!await checkAuth(data)) return;
+    socket.on('resume_alerts', async (data, acknowledge) => {
+        const respond = result => { if (typeof acknowledge === 'function') acknowledge(result); };
+        if (!await checkAuth(data)) return respond({ ok: false, message: 'ยืนยันสิทธิ์ไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่' });
         const user = await User.findOne({ username: data.username });
-        if (!user) return;
+        if (!user) return respond({ ok: false, message: 'ไม่พบบัญชีผู้ใช้' });
         user.alertControl = { pausedUntil: null };
         user.markModified('alertControl');
         await user.save();
@@ -1455,17 +1462,24 @@ io.on('connection', (socket) => {
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: null });
         await pumpAlertQueue(user.username);
         socket.emit('alert_control_result', { action: 'resume', ok: true });
+        respond({ ok: true });
     });
 
-    socket.on('skip_current_alert', async (data) => {
-        if (!await checkAuth(data)) return;
+    socket.on('skip_current_alert', async (data, acknowledge) => {
+        const respond = result => { if (typeof acknowledge === 'function') acknowledge(result); };
+        if (!await checkAuth(data)) return respond({ ok: false, message: 'ยืนยันสิทธิ์ไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่' });
         const user = await User.findOne({ username: data.username });
-        if (!user) return;
-        const current = await AlertQueue.findOneAndUpdate({ userId: user._id, status: 'playing' }, { $set: { status: 'skipped', finishedAt: new Date(), leaseUntil: null } }, { new: true, sort: { createdAt: 1, _id: 1 } });
+        if (!user) return respond({ ok: false, message: 'ไม่พบบัญชีผู้ใช้' });
+        let current = await AlertQueue.findOneAndUpdate({ userId: user._id, status: 'playing' }, { $set: { status: 'skipped', finishedAt: new Date(), leaseUntil: null } }, { new: true, sort: { createdAt: 1, _id: 1 } });
+        const pausedUntil = user.alertControl?.pausedUntil ? new Date(user.alertControl.pausedUntil).getTime() : 0;
+        if (!current && pausedUntil > Date.now()) {
+            current = await AlertQueue.findOneAndUpdate({ userId: user._id, status: 'queued' }, { $set: { status: 'skipped', finishedAt: new Date(), leaseUntil: null } }, { new: true, sort: { createdAt: 1, _id: 1 } });
+        }
         socket.emit('alert_control_result', { action: 'skip', skipped: Boolean(current) });
-        if (!current) return;
+        if (!current) return respond({ ok: true, skipped: false });
         if (current) io.to(alertRoom(user.username)).emit('stop_alert', { queueId: String(current._id) });
         await pumpAlertQueue(user.username);
+        respond({ ok: true, skipped: true });
     });
 
     socket.on('alert_finished', async ({ queueId } = {}) => {

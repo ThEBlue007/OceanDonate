@@ -158,6 +158,7 @@ test('live alert controls send pause, resume, and skip commands and show server 
     const controlEvents = emitted.filter(([event]) => ['pause_alerts', 'resume_alerts', 'skip_current_alert'].includes(event));
     assert.deepEqual(controlEvents.map(([event]) => event), ['pause_alerts', 'resume_alerts', 'skip_current_alert']);
     assert.equal(controlEvents[0][1].minutes, 10);
+    controlEvents.forEach(([, , acknowledge]) => acknowledge({ ok: true }));
     handlers.get('alert_control_result')({ action: 'pause', ok: true });
     handlers.get('alert_control_result')({ action: 'resume', ok: true });
     assert.match(document.querySelectorAll('.app-toast')[0].textContent, /พักแจ้งเตือนแล้ว/);
@@ -165,4 +166,27 @@ test('live alert controls send pause, resume, and skip commands and show server 
     const note = document.querySelector('#live-controls-card small').textContent;
     assert.match(note, /หยุด Alert ที่กำลังเล่น/);
     assert.match(note, /โดเนทยังรับได้ตามปกติ/);
+});
+
+test('donation history can be sorted newest-first or oldest-first without changing delete targets', () => {
+    const { dom, handlers } = createDashboard();
+    const { document, Event } = dom.window;
+    const entries = [
+        { _id: 'old-id', name: 'Oldest', amount: 10, date: '2026-01-01T00:00:00.000Z' },
+        { _id: 'middle-id', name: 'Middle', amount: 20, date: '2026-03-01T00:00:00.000Z' },
+        { _id: 'new-id', name: 'Newest', amount: 30, date: '2026-05-01T00:00:00.000Z' }
+    ];
+    handlers.get('update_history')(entries);
+    const names = () => [...document.querySelectorAll('#dash-history-list tr td:nth-child(2)')].map(cell => cell.textContent);
+    assert.deepEqual(names(), ['Newest', 'Middle', 'Oldest']);
+
+    const deleted = [];
+    dom.window.deleteHistory = id => deleted.push(id);
+    const sort = document.getElementById('history-sort-order');
+    sort.value = 'oldest';
+    sort.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.deepEqual(names(), ['Oldest', 'Middle', 'Newest']);
+    document.querySelector('#dash-history-list tr button').click();
+    assert.deepEqual(deleted, ['old-id']);
+    dom.window.close();
 });

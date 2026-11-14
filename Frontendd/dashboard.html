@@ -245,6 +245,11 @@
 
                 <div class="page-title">
                     <span class="lang-el" data-th="ประวัติการโดเนท" data-en="Donation History">ประวัติการโดเนท</span>
+                    <label for="history-sort-order">เรียงตาม</label>
+                    <select id="history-sort-order" class="form-control" aria-label="เรียงประวัติการโดเนท">
+                        <option value="newest" selected>ใหม่ไปเก่า</option>
+                        <option value="oldest">เก่าไปใหม่</option>
+                    </select>
                     <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 0.95rem; padding: 8px 16px;">
                         <i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูลทั้งหมด
                     </button>
@@ -1215,9 +1220,27 @@
                 timerSettings.amountRules = next; renderTimerRules();
             } catch (error) { showToast(error.message); }
         };
-        window.pauseAlerts = () => socket.emit('pause_alerts', { username, token, minutes: Number(document.getElementById('pause-alert-minutes').value) });
-        window.resumeAlerts = () => socket.emit('resume_alerts', { username, token });
-        window.skipCurrentAlert = () => socket.emit('skip_current_alert', { username, token });
+        function sendLiveControl(eventName, payload) {
+            if (socket.connected === false) {
+                showToast('ยังไม่ได้เชื่อมต่อเซิร์ฟเวอร์ คำสั่งยังไม่ถูกส่ง', 'error');
+                return;
+            }
+            let acknowledged = false;
+            const timeoutId = setTimeout(() => {
+                if (acknowledged) return;
+                acknowledged = true;
+                showToast('เซิร์ฟเวอร์ไม่ตอบกลับ กรุณารีเฟรชหน้าแล้วลองอีกครั้ง', 'error');
+            }, 8000);
+            socket.emit(eventName, payload, result => {
+                if (acknowledged) return;
+                acknowledged = true;
+                clearTimeout(timeoutId);
+                if (!result?.ok) showToast(result?.message || 'เซิร์ฟเวอร์ทำรายการไม่สำเร็จ', 'error');
+            });
+        }
+        window.pauseAlerts = () => sendLiveControl('pause_alerts', { username, token, minutes: Number(document.getElementById('pause-alert-minutes').value) });
+        window.resumeAlerts = () => sendLiveControl('resume_alerts', { username, token });
+        window.skipCurrentAlert = () => sendLiveControl('skip_current_alert', { username, token });
         socket.on('apply_alert_control', state => {
             const until = state?.pausedUntil ? Date.parse(state.pausedUntil) : 0;
             document.getElementById('alert-pause-status').textContent = until > Date.now() ? `พักแจ้งเตือนถึง ${new Date(until).toLocaleTimeString()}` : 'กำลังเล่นแจ้งเตือนตามปกติ';
@@ -1482,7 +1505,10 @@
             if(document.getElementById('dash-stat-views')) document.getElementById('dash-stat-views').innerText = (stats.views || 0).toLocaleString();
         });
 
-        socket.on('update_history', (history) => {
+        let dashboardDonationHistory = [];
+        function renderDonationHistory(history = dashboardDonationHistory) {
+            if (Array.isArray(history)) dashboardDonationHistory = history;
+            history = dashboardDonationHistory;
             const tbody = document.getElementById('dash-history-list');
             if (!tbody) return;
             tbody.replaceChildren();
@@ -1497,8 +1523,12 @@
                 return;
             }
 
-            [...history].reverse().forEach((item, reversedIndex) => {
-                const originalIndex = history.length - 1 - reversedIndex;
+            const sortOrder = document.getElementById('history-sort-order')?.value || 'newest';
+            history.map((item, originalIndex) => ({ item, originalIndex, timestamp: Date.parse(item.date || '') || 0 }))
+                .sort((a, b) => {
+                    const timeDifference = sortOrder === 'oldest' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp;
+                    return timeDifference || (sortOrder === 'oldest' ? a.originalIndex - b.originalIndex : b.originalIndex - a.originalIndex);
+                }).forEach(({ item, originalIndex }) => {
                 const row = document.createElement('tr');
                 row.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
                 const dateCell = document.createElement('td');
@@ -1536,8 +1566,10 @@
                 }
                 row.append(dateCell, nameCell, amountCell, messageCell, actionCell);
                 tbody.appendChild(row);
-            });
-        });
+                });
+        }
+        document.getElementById('history-sort-order')?.addEventListener('change', () => renderDonationHistory());
+        socket.on('update_history', renderDonationHistory);
 
         window.deleteHistory = async function(id) {
             if(await showConfirm('รายการนี้จะถูกลบออกจากประวัติและสถิติที่เกี่ยวข้อง', { title: 'ลบประวัติโดเนท', confirmLabel: 'ลบรายการ', danger: true })) {

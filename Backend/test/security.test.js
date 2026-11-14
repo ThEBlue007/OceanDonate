@@ -421,8 +421,9 @@ test('pausing alerts stops the active OBS alert and keeps it first in the queue'
     const stoppedEvent = socketEvent(widget, 'stop_alert');
     const pauseState = socketEvent(owner, 'apply_alert_control');
     const controlResult = socketEvent(owner, 'alert_control_result');
-    owner.emit('pause_alerts', { username, token, minutes: 5 });
+    const controlAck = new Promise(resolve => owner.emit('pause_alerts', { username, token, minutes: 5 }, resolve));
     assert.deepEqual(await controlResult, { action: 'pause', ok: true });
+    assert.deepEqual(await controlAck, { ok: true });
     await pauseState;
     assert.equal((await stoppedEvent).queueId, String(currentId));
     const pausedItem = await dbConnection.collection('alertqueues').findOne({ _id: currentId });
@@ -430,6 +431,31 @@ test('pausing alerts stops the active OBS alert and keeps it first in the queue'
     assert.equal(pausedItem.leaseUntil, null);
     assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: nextId })).status, 'queued');
     widget.disconnect();
+    owner.disconnect();
+});
+
+test('skip control can skip the suspended current alert while the queue is paused', async () => {
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const user = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: user._id });
+    const currentId = new mongoose.Types.ObjectId();
+    const nextId = new mongoose.Types.ObjectId();
+    const now = new Date();
+    await dbConnection.collection('users').updateOne({ _id: user._id }, { $set: { alertControl: { pausedUntil: new Date(Date.now() + 60_000) } } });
+    await dbConnection.collection('alertqueues').insertMany([
+        { _id: currentId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Suspended' }, status: 'queued', createdAt: now },
+        { _id: nextId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Next' }, status: 'queued', createdAt: new Date(now.getTime() + 1) }
+    ]);
+
+    const controlResult = socketEvent(owner, 'alert_control_result');
+    const controlAck = new Promise(resolve => owner.emit('skip_current_alert', { username, token }, resolve));
+    assert.deepEqual(await controlResult, { action: 'skip', skipped: true });
+    assert.deepEqual(await controlAck, { ok: true, skipped: true });
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: currentId })).status, 'skipped');
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: nextId })).status, 'queued');
     owner.disconnect();
 });
 
