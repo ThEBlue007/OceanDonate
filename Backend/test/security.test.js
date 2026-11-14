@@ -400,6 +400,39 @@ test('skip control stops the active OBS alert, advances the queue, and confirms 
     owner.disconnect();
 });
 
+test('pausing alerts stops the active OBS alert and keeps it first in the queue', async () => {
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const widget = await connectSocket();
+    const widgetSettings = socketEvent(widget, 'apply_settings');
+    widget.emit('join_widget', { token: widgetToken });
+    await widgetSettings;
+
+    const user = await dbConnection.collection('users').findOne({ username });
+    const currentId = new mongoose.Types.ObjectId();
+    const nextId = new mongoose.Types.ObjectId();
+    const now = new Date();
+    await dbConnection.collection('alertqueues').insertMany([
+        { _id: currentId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Current' }, status: 'playing', leaseUntil: new Date(Date.now() + 60_000), createdAt: now },
+        { _id: nextId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Next' }, status: 'queued', createdAt: new Date(now.getTime() + 1) }
+    ]);
+    const stoppedEvent = socketEvent(widget, 'stop_alert');
+    const pauseState = socketEvent(owner, 'apply_alert_control');
+    const controlResult = socketEvent(owner, 'alert_control_result');
+    owner.emit('pause_alerts', { username, token, minutes: 5 });
+    assert.deepEqual(await controlResult, { action: 'pause', ok: true });
+    await pauseState;
+    assert.equal((await stoppedEvent).queueId, String(currentId));
+    const pausedItem = await dbConnection.collection('alertqueues').findOne({ _id: currentId });
+    assert.equal(pausedItem.status, 'queued');
+    assert.equal(pausedItem.leaseUntil, null);
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: nextId })).status, 'queued');
+    widget.disconnect();
+    owner.disconnect();
+});
+
 test('test donations create a log and OBS alert without changing totals or leaderboard', async () => {
     const beforeUser = await dbConnection.collection('users').findOne({ username });
     const giftId = `test-effect-${crypto.randomUUID()}`;

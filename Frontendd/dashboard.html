@@ -240,7 +240,7 @@
                         <button type="button" class="btn-outline" onclick="resumeAlerts()">เล่นต่อ</button>
                         <button type="button" class="btn-danger" onclick="skipCurrentAlert()">ข้ามรายการที่กำลังเล่น</button>
                     </div>
-                    <small style="color:var(--text);">พักการเริ่ม Alert รายการถัดไป (รายการที่กำลังเล่นจะจบก่อน) และเก็บรายการใหม่ไว้ในคิว; โดเนทยังรับได้ตามปกติ เมื่อครบเวลาแล้วคิวจะเล่นต่ออัตโนมัติ</small>
+                    <small style="color:var(--text);">เมื่อพัก ระบบจะหยุด Alert ที่กำลังเล่นและเก็บไว้หน้าคิว; รายการใหม่จะเข้าคิว และเมื่อเล่นต่อหรือครบเวลา ระบบจะเล่นต่อจากรายการเดิม โดเนทยังรับได้ตามปกติ</small>
                 </section>
 
                 <div class="page-title">
@@ -1223,10 +1223,16 @@
             document.getElementById('alert-pause-status').textContent = until > Date.now() ? `พักแจ้งเตือนถึง ${new Date(until).toLocaleTimeString()}` : 'กำลังเล่นแจ้งเตือนตามปกติ';
         });
         socket.on('alert_control_result', result => {
-            if (result?.action !== 'skip') return;
-            showToast(result.skipped ? 'ข้ามแจ้งเตือนที่กำลังเล่นแล้ว' : 'ไม่มีแจ้งเตือนที่กำลังเล่น', result.skipped ? 'success' : 'error');
+            if (result?.action === 'skip') {
+                showToast(result.skipped ? 'ข้ามแจ้งเตือนที่กำลังเล่นแล้ว' : 'ไม่มีแจ้งเตือนที่กำลังเล่น', result.skipped ? 'success' : 'error');
+            } else if (result?.action === 'pause' && result.ok) {
+                showToast('พักแจ้งเตือนแล้ว รายการปัจจุบันจะกลับมาเล่นต่อหลังหมดเวลา');
+            } else if (result?.action === 'resume' && result.ok) {
+                showToast('เล่นแจ้งเตือนต่อแล้ว');
+            }
         });
         socket.on('alert_control_error', error => showToast(error.message || 'ตั้งค่าการแจ้งเตือนไม่สำเร็จ'));
+        socket.on('connect_error', () => showToast('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ คำสั่งควบคุมยังไม่ถูกส่ง'));
         let giftCatalog = [];
         let giftCategory = 'all';
         const giftIcons = { wave: '🌊', gift: '🎁', star: '⭐', gem: '💎', dolphin: '🐬', jellyfish: '🪼', flower: '🌸', balloon: '🎈', cake: '🎂', rocket: '🚀', crown: '👑', firework: '🎆' };

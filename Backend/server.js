@@ -1434,7 +1434,14 @@ io.on('connection', (socket) => {
         user.markModified('alertControl');
         await user.save();
         alertResumeScheduler.schedule(user.username, pausedUntil, pumpAlertQueue);
+        const current = await AlertQueue.findOneAndUpdate(
+            { userId: user._id, status: 'playing' },
+            { $set: { status: 'queued', leaseUntil: null } },
+            { new: true, sort: { createdAt: 1, _id: 1 } }
+        );
+        if (current) io.to(alertRoom(user.username)).emit('stop_alert', { queueId: String(current._id) });
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: pausedUntil.toISOString() });
+        socket.emit('alert_control_result', { action: 'pause', ok: true });
     });
 
     socket.on('resume_alerts', async (data) => {
@@ -1447,6 +1454,7 @@ io.on('connection', (socket) => {
         alertResumeScheduler.cancel(user.username);
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: null });
         await pumpAlertQueue(user.username);
+        socket.emit('alert_control_result', { action: 'resume', ok: true });
     });
 
     socket.on('skip_current_alert', async (data) => {

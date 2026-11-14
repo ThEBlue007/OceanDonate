@@ -147,3 +147,22 @@ test('skip feedback explains whether a live alert was actually skipped', () => {
     handlers.get('alert_control_result')({ action: 'skip', skipped: false });
     assert.match(dom.window.document.querySelectorAll('.app-toast')[1].textContent, /ไม่มีแจ้งเตือนที่กำลังเล่น/);
 });
+
+test('live alert controls send pause, resume, and skip commands and show server confirmation', () => {
+    const { dom, emitted, handlers } = createDashboard();
+    const { document } = dom.window;
+    document.getElementById('pause-alert-minutes').value = '10';
+    document.querySelector('#live-controls-card button[onclick="pauseAlerts()"]')?.click();
+    document.querySelector('#live-controls-card button[onclick="resumeAlerts()"]')?.click();
+    document.querySelector('#live-controls-card button[onclick="skipCurrentAlert()"]')?.click();
+    const controlEvents = emitted.filter(([event]) => ['pause_alerts', 'resume_alerts', 'skip_current_alert'].includes(event));
+    assert.deepEqual(controlEvents.map(([event]) => event), ['pause_alerts', 'resume_alerts', 'skip_current_alert']);
+    assert.equal(controlEvents[0][1].minutes, 10);
+    handlers.get('alert_control_result')({ action: 'pause', ok: true });
+    handlers.get('alert_control_result')({ action: 'resume', ok: true });
+    assert.match(document.querySelectorAll('.app-toast')[0].textContent, /พักแจ้งเตือนแล้ว/);
+    assert.match(document.querySelectorAll('.app-toast')[1].textContent, /เล่นแจ้งเตือนต่อแล้ว/);
+    const note = document.querySelector('#live-controls-card small').textContent;
+    assert.match(note, /หยุด Alert ที่กำลังเล่น/);
+    assert.match(note, /โดเนทยังรับได้ตามปกติ/);
+});
