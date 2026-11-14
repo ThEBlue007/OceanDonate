@@ -240,6 +240,7 @@
                         <button type="button" class="btn-outline" onclick="resumeAlerts()">เล่นต่อ</button>
                         <button type="button" class="btn-danger" onclick="skipCurrentAlert()">ข้ามรายการที่กำลังเล่น</button>
                     </div>
+                    <small style="color:var(--text);">พักการเริ่ม Alert รายการถัดไป (รายการที่กำลังเล่นจะจบก่อน) และเก็บรายการใหม่ไว้ในคิว; โดเนทยังรับได้ตามปกติ เมื่อครบเวลาแล้วคิวจะเล่นต่ออัตโนมัติ</small>
                 </section>
 
                 <div class="page-title">
@@ -1220,6 +1221,10 @@
         socket.on('apply_alert_control', state => {
             const until = state?.pausedUntil ? Date.parse(state.pausedUntil) : 0;
             document.getElementById('alert-pause-status').textContent = until > Date.now() ? `พักแจ้งเตือนถึง ${new Date(until).toLocaleTimeString()}` : 'กำลังเล่นแจ้งเตือนตามปกติ';
+        });
+        socket.on('alert_control_result', result => {
+            if (result?.action !== 'skip') return;
+            showToast(result.skipped ? 'ข้ามแจ้งเตือนที่กำลังเล่นแล้ว' : 'ไม่มีแจ้งเตือนที่กำลังเล่น', result.skipped ? 'success' : 'error');
         });
         socket.on('alert_control_error', error => showToast(error.message || 'ตั้งค่าการแจ้งเตือนไม่สำเร็จ'));
         let giftCatalog = [];

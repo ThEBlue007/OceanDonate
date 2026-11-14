@@ -8,6 +8,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { createAlertResumeScheduler } = require('./alert-resume-scheduler');
 
 const app = express();
 const server = http.createServer(app);
@@ -460,7 +461,11 @@ async function pumpAlertQueue(username) {
     const user = await User.findOne({ username });
     if (!user) return;
     const pausedUntil = user.alertControl?.pausedUntil ? new Date(user.alertControl.pausedUntil) : null;
-    if (pausedUntil && pausedUntil.getTime() > Date.now()) return;
+    if (pausedUntil && pausedUntil.getTime() > Date.now()) {
+        alertResumeScheduler.schedule(username, pausedUntil, pumpAlertQueue);
+        return;
+    }
+    alertResumeScheduler.cancel(username);
     if (pausedUntil) {
         user.alertControl = { pausedUntil: null };
         user.markModified('alertControl');
@@ -484,6 +489,8 @@ async function pumpAlertQueue(username) {
     }
     if (item) io.to(alertRoom(username)).emit('show_alert', { ...item.payload, queueId: String(item._id) });
 }
+
+const alertResumeScheduler = createAlertResumeScheduler();
 
 function normalizeAmountRules(rules) {
     if (!Array.isArray(rules) || rules.length > 100) throw Object.assign(new Error('กฎเพิ่ม/ลดเวลาต้องไม่เกิน 100 รายการ'), { status: 400 });
@@ -1426,6 +1433,7 @@ io.on('connection', (socket) => {
         user.alertControl = { pausedUntil };
         user.markModified('alertControl');
         await user.save();
+        alertResumeScheduler.schedule(user.username, pausedUntil, pumpAlertQueue);
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: pausedUntil.toISOString() });
     });
 
@@ -1436,6 +1444,7 @@ io.on('connection', (socket) => {
         user.alertControl = { pausedUntil: null };
         user.markModified('alertControl');
         await user.save();
+        alertResumeScheduler.cancel(user.username);
         io.to(ownerRoom(user.username)).emit('apply_alert_control', { pausedUntil: null });
         await pumpAlertQueue(user.username);
     });
@@ -1445,6 +1454,8 @@ io.on('connection', (socket) => {
         const user = await User.findOne({ username: data.username });
         if (!user) return;
         const current = await AlertQueue.findOneAndUpdate({ userId: user._id, status: 'playing' }, { $set: { status: 'skipped', finishedAt: new Date(), leaseUntil: null } }, { new: true, sort: { createdAt: 1, _id: 1 } });
+        socket.emit('alert_control_result', { action: 'skip', skipped: Boolean(current) });
+        if (!current) return;
         if (current) io.to(alertRoom(user.username)).emit('stop_alert', { queueId: String(current._id) });
         await pumpAlertQueue(user.username);
     });

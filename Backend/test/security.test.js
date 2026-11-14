@@ -13,6 +13,7 @@ const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 const request = require('supertest');
 const { io } = require('socket.io-client');
+const { createAlertResumeScheduler } = require('../alert-resume-scheduler');
 
 const projectRoot = path.resolve(__dirname, '../..');
 const serverPath = path.join(projectRoot, 'Backend/server.js');
@@ -68,6 +69,27 @@ function connectSocket() {
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+test('alert resume scheduler replaces old deadlines and pumps the queue at the latest deadline', async () => {
+    let nextId = 0;
+    const timers = [];
+    const resumed = [];
+    const scheduler = createAlertResumeScheduler({
+        setTimeoutFn(callback, milliseconds) {
+            const timer = { id: ++nextId, callback, milliseconds, cleared: false, unref() {} };
+            timers.push(timer);
+            return timer;
+        },
+        clearTimeoutFn(timer) { timer.cleared = true; }
+    });
+    scheduler.schedule('streamer', new Date(Date.now() + 1_000), async username => resumed.push(username));
+    scheduler.schedule('streamer', new Date(Date.now() + 2_000), async username => resumed.push(username));
+    assert.equal(timers[0].cleared, true);
+    assert.ok(timers[1].milliseconds > 1_500 && timers[1].milliseconds <= 2_000);
+    timers[1].callback();
+    await Promise.resolve();
+    assert.deepEqual(resumed, ['streamer']);
+});
 
 async function registerAndLogin() {
     const email = `${username}@example.test`;
@@ -345,6 +367,37 @@ test('alert queue has a partial unique index for one playing alert per streamer'
     );
 
     assert.ok(playingIndex, 'expected a unique userId/status index limited to playing alerts');
+});
+
+test('skip control stops the active OBS alert, advances the queue, and confirms the result', async () => {
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const widget = await connectSocket();
+    const widgetSettings = socketEvent(widget, 'apply_settings');
+    widget.emit('join_widget', { token: widgetToken });
+    await widgetSettings;
+
+    const user = await dbConnection.collection('users').findOne({ username });
+    const currentId = new mongoose.Types.ObjectId();
+    const nextId = new mongoose.Types.ObjectId();
+    const now = new Date();
+    await dbConnection.collection('alertqueues').insertMany([
+        { _id: currentId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Current' }, status: 'playing', leaseUntil: new Date(Date.now() + 60_000), createdAt: now },
+        { _id: nextId, userId: user._id, username, donationId: new mongoose.Types.ObjectId(), payload: { name: 'Next' }, status: 'queued', createdAt: new Date(now.getTime() + 1) }
+    ]);
+    const stoppedEvent = socketEvent(widget, 'stop_alert');
+    const nextAlertEvent = socketEvent(widget, 'show_alert');
+    const resultEvent = socketEvent(owner, 'alert_control_result');
+    owner.emit('skip_current_alert', { username, token });
+    assert.deepEqual(await resultEvent, { action: 'skip', skipped: true });
+    assert.equal((await stoppedEvent).queueId, String(currentId));
+    assert.equal((await nextAlertEvent).queueId, String(nextId));
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: currentId })).status, 'skipped');
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: nextId })).status, 'playing');
+    widget.disconnect();
+    owner.disconnect();
 });
 
 test('test donations create a log and OBS alert without changing totals or leaderboard', async () => {

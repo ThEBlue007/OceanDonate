@@ -139,3 +139,11 @@ test('reset confirmation uses the OceanDonate dialog and only resets after appro
     assert.equal(await approved, true);
     assert.equal(emitted.some(([event]) => event === 'reset_stats'), true);
 });
+
+test('skip feedback explains whether a live alert was actually skipped', () => {
+    const { dom, handlers } = createDashboard();
+    handlers.get('alert_control_result')({ action: 'skip', skipped: true });
+    assert.match(dom.window.document.querySelector('.app-toast').textContent, /ข้ามแจ้งเตือนที่กำลังเล่นแล้ว/);
+    handlers.get('alert_control_result')({ action: 'skip', skipped: false });
+    assert.match(dom.window.document.querySelectorAll('.app-toast')[1].textContent, /ไม่มีแจ้งเตือนที่กำลังเล่น/);
+});
