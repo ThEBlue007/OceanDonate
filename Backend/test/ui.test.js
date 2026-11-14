@@ -6,6 +6,7 @@ const { JSDOM } = require('jsdom');
 
 const dashboardHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/dashboard.html'), 'utf8');
 const donateHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/donate.html'), 'utf8');
+const timerHtml = fs.readFileSync(path.resolve(__dirname, '../../Frontendd/timer.html'), 'utf8');
 const openDoms = [];
 after(() => openDoms.forEach(dom => dom.window.close()));
 
@@ -255,5 +256,33 @@ test('Donate preview has desktop and phone layouts and applies background change
     assert.equal(sent.at(-1).data.settings.themeId, 'soft');
     assert.equal(sent.at(-1).data.settings.bio, 'Preview biography');
     assert.equal(sent.at(-1).data.settings.bgUrl, 'https://images.example.test/background.png');
+    dom.window.close();
+});
+
+test('OBS Timer shows the next round starting time and banked donation bonus while stopped', () => {
+    const handlers = new Map();
+    const fakeSocket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
+    const dom = new JSDOM(timerHtml, {
+        runScripts: 'dangerously',
+        url: 'http://localhost/timer.html?token=widget-token',
+        beforeParse(window) { window.io = () => fakeSocket; }
+    });
+    openDoms.push(dom);
+    handlers.get('apply_timer')({
+        isRunning: false,
+        remainingSeconds: 0,
+        initialSeconds: 3600,
+        bankedSeconds: 3660,
+        appearance: { color: '#22c55e', font: "'Kanit', sans-serif", message: 'โดเนทเพื่อเพิ่มเวลา!', position: 'center', animation: 'none' }
+    });
+    assert.equal(dom.window.document.getElementById('timer').textContent, '02:01:00');
+    assert.match(dom.window.document.getElementById('status').textContent, /โบนัส.*รอบถัดไป/);
+    handlers.get('apply_timer')({ isRunning: true, hasEnded: false, endsAt: new Date(Date.now() + 60_000).toISOString(), remainingSeconds: 60, initialSeconds: 3600, bankedSeconds: 0 });
+    const liveTime = dom.window.document.getElementById('timer').textContent.split(':').map(Number);
+    assert.ok(liveTime[0] * 3600 + liveTime[1] * 60 + liveTime[2] >= 55, `running timer should show server time, got ${liveTime.join(':')}`);
+    assert.equal(dom.window.document.getElementById('status').textContent, '');
+    handlers.get('apply_timer')({ isRunning: false, hasEnded: true, endsAt: null, remainingSeconds: 0, initialSeconds: 3600, bankedSeconds: 0 });
+    assert.equal(dom.window.document.getElementById('timer').textContent, '00:00:00');
+    assert.equal(dom.window.document.getElementById('status').textContent, 'หมดเวลา');
     dom.window.close();
 });

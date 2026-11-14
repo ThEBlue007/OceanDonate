@@ -33,11 +33,14 @@
         const statusEl = document.getElementById('status');
         const timerEl = document.getElementById('timer');
         const socket = io();
-        let state = { isRunning: false, endsAt: null, remainingSeconds: 0 };
+        let state = { isRunning: false, endsAt: null, remainingSeconds: 0, initialSeconds: 3600, bankedSeconds: 0 };
+        let expired = false;
         function render() {
-            const remaining = state.isRunning && state.endsAt
+            const liveRemaining = state.isRunning && state.endsAt
                 ? Math.max(0, Math.ceil((Date.parse(state.endsAt) - Date.now()) / 1000))
                 : Math.max(0, Number(state.remainingSeconds) || 0);
+            const nextSessionSeconds = Math.min(Number.MAX_SAFE_INTEGER, Math.max(1, Number(state.initialSeconds) || 3600) + Math.max(0, Number(state.bankedSeconds) || 0));
+            const remaining = state.isRunning || expired ? liveRemaining : nextSessionSeconds;
             const hours = Math.floor(remaining / 3600);
             const minutes = Math.floor(remaining % 3600 / 60);
             const seconds = remaining % 60;
@@ -45,6 +48,9 @@
             timerEl.dataset.stopped = String(!state.isRunning || remaining === 0);
             if (state.isRunning && remaining === 0) {
                 state.isRunning = false;
+                state.endsAt = null;
+                state.remainingSeconds = 0;
+                expired = true;
                 statusEl.textContent = 'หมดเวลา';
             }
         }
@@ -56,6 +62,7 @@
         socket.on('auth_error', error => { statusEl.textContent = error?.message || 'Widget token ไม่ถูกต้อง'; });
         socket.on('apply_timer', incoming => {
             state = { ...state, ...incoming };
+            expired = Boolean(incoming?.hasEnded);
             const appearance = incoming?.appearance || {};
             const allowedFonts = new Set(["'Kanit', sans-serif", "'Prompt', sans-serif", "'IBM Plex Sans Thai', sans-serif"]);
             document.body.dataset.position = ['left', 'center', 'right'].includes(appearance.position) ? appearance.position : 'center';
@@ -64,7 +71,8 @@
             timerEl.classList.toggle('timer-pulse', appearance.animation === 'pulse');
             document.getElementById('message').textContent = typeof appearance.message === 'string' ? appearance.message.slice(0, 200) : 'โดเนทเพื่อเพิ่มเวลา!';
             document.getElementById('message').style.fontFamily = allowedFonts.has(appearance.font) ? appearance.font : "'Kanit', sans-serif";
-            render(); statusEl.textContent = state.isRunning ? '' : 'หยุดอยู่';
+            render();
+            statusEl.textContent = state.isRunning ? '' : expired ? 'หมดเวลา' : state.bankedSeconds > 0 ? 'โบนัสพร้อมใช้รอบถัดไป' : 'หยุดอยู่';
         });
         socket.on('disconnect', () => { statusEl.textContent = 'กำลังเชื่อมต่อใหม่'; });
         setInterval(render, 250);

@@ -442,6 +442,7 @@ function timerSnapshot(user, now = Date.now()) {
     }
     return {
         isRunning: Boolean(state.isRunning && remainingSeconds > 0),
+        hasEnded: Boolean(state.isRunning && state.endsAt && remainingSeconds === 0),
         endsAt: state.isRunning && remainingSeconds > 0 ? new Date(now + remainingSeconds * 1000).toISOString() : null,
         remainingSeconds,
         bankedSeconds: Math.max(0, Number(state.bankedSeconds) || 0),
