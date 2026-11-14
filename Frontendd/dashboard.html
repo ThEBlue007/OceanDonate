@@ -154,7 +154,6 @@
                 <li><a href="#" class="tab-link active" data-tab="overview"><i class="fas fa-chart-pie"></i> <span class="lang-el" data-th="ภาพรวม (Analytics)" data-en="Overview (Analytics)">ภาพรวม (Analytics)</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="payment"><i class="fas fa-wallet"></i> <span class="lang-el" data-th="ช่องทางรับเงิน" data-en="Payment Methods">ช่องทางรับเงิน</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="page-settings"><i class="fas fa-laptop-house"></i> <span class="lang-el" data-th="ตกแต่งหน้ารับเงิน" data-en="Page Settings">ตกแต่งหน้ารับเงิน</span></a></li>
-                <li><a href="#" class="tab-link" data-tab="gifts"><i class="fas fa-gift"></i> <span>ของขวัญ</span></a></li>
                 <li><a href="#" class="tab-link" data-tab="widgets"><i class="fas fa-bolt"></i> <span class="lang-el" data-th="วิดเจ็ต & แจ้งเตือน" data-en="Widgets & Alerts">วิดเจ็ต & แจ้งเตือน</span></a></li>
                 <li style="margin-top: 30px;"><a href="javascript:void(0)" onclick="logout()" style="color: #ff4757;"><i class="fas fa-sign-out-alt"></i> <span class="lang-el" data-th="ออกจากระบบ" data-en="Logout">ออกจากระบบ</span></a></li>
             </ul>
@@ -181,42 +180,6 @@
                         <button type="button" class="btn-outline" onclick="pauseAlerts()">พัก</button>
                         <button type="button" class="btn-outline" onclick="resumeAlerts()">เล่นต่อ</button>
                         <button type="button" class="btn-danger" onclick="skipCurrentAlert()">ข้ามรายการที่กำลังเล่น</button>
-                    </div>
-                    <div style="border-top:1px solid var(--border);padding-top:18px;">
-                        <h3 style="margin-bottom:8px;">Timer ไลฟ์</h3>
-                        <div id="timer-current" role="timer" aria-live="off" style="font-size:2rem;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;">00:00:00</div>
-                        <p id="timer-banked" style="color:var(--text);margin:4px 0 14px;">โบนัสไลฟ์ถัดไป: 0 วินาที</p>
-                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
-                            <label>เวลาเริ่ม (ชม.)<input id="timer-initial-hours" type="number" class="form-control" min="0" value="1" style="width:110px;"></label>
-                            <label>(นาที)<input id="timer-initial-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
-                            <label>(วินาที)<input id="timer-initial-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
-                            <button type="button" class="btn-outline" onclick="saveTimerSettings()">บันทึกเวลาเริ่ม</button>
-                            <button type="button" class="btn-primary" onclick="startTimer()">เริ่ม / เริ่มไลฟ์ใหม่</button>
-                        </div>
-                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:18px;">
-                            <label>ตั้งเวลา (ชม.)<input id="timer-set-hours" type="number" class="form-control" min="0" value="0" style="width:110px;"></label>
-                            <label>(นาที)<input id="timer-set-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
-                            <label>(วินาที)<input id="timer-set-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
-                            <button type="button" class="btn-outline" onclick="setTimer()">ตั้งเวลา</button>
-                            <label>ปรับเวลา<select id="timer-adjust-action" class="form-control"><option value="add">เพิ่ม</option><option value="subtract">ลด</option></select></label>
-                            <label>ชม.<input id="timer-adjust-hours" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
-                            <label>นาที<input id="timer-adjust-minutes" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
-                            <label>วินาที<input id="timer-adjust-seconds" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
-                            <button type="button" class="btn-outline" onclick="adjustTimer()">ปรับเวลา</button>
-                        </div>
-                        <h4>กฎตามยอดโดเนท</h4>
-                        <p style="color:var(--text);margin:4px 0 10px;">ระบุช่วงยอดไม่ให้ทับกัน; แต่ละรายการใช้กฎเดียว ของขวัญใช้กฎเวลาของตัวเองแทน</p>
-                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
-                            <label>ตั้งแต่ (บาท)<input id="timer-rule-min" type="number" min="0" step="0.01" class="form-control" value="10" style="width:120px;"></label>
-                            <label>ถึง (บาท)<input id="timer-rule-max" type="number" min="0.01" step="0.01" class="form-control" value="50" style="width:120px;"></label>
-                            <label>การทำงาน<select id="timer-rule-action" class="form-control"><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
-                            <label>ชม.<input id="timer-rule-hours" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
-                            <label>นาที<input id="timer-rule-minutes" type="number" min="0" class="form-control" value="1" style="width:85px;"></label>
-                            <label>วินาที<input id="timer-rule-seconds" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
-                            <button type="button" class="btn-outline" onclick="addTimerRule()">เพิ่มกฎ</button>
-                            <button type="button" class="btn-primary" onclick="saveTimerSettings()">บันทึกกฎ</button>
-                        </div>
-                        <ul id="timer-rules-list" style="margin-top:10px;padding-left:20px;"></ul>
                     </div>
                 </section>
 
@@ -386,34 +349,15 @@
                 <div class="card" style="margin-top:24px;">
                     <h3>วิธีเข้าสู่ระบบ</h3>
                     <p style="color:var(--text);margin:8px 0 12px;">บัญชีเดิมต้องเข้าสู่ระบบอยู่ก่อนจึงจะผูก Google หรือ Discord ได้</p>
-                    <div id="auth-identity-status" aria-live="polite" style="margin-bottom:12px;">กำลังโหลดบัญชีที่ผูกไว้...</div>
-                    <button class="btn-outline" type="button" onclick="linkOAuthProvider('google')">ผูก Google</button>
-                    <button class="btn-outline" type="button" onclick="linkOAuthProvider('discord')">ผูก Discord</button>
+                    <div id="auth-identity-status" aria-live="polite" style="display:grid;gap:10px;margin-bottom:12px;">
+                        <p>กำลังโหลดบัญชีที่ผูกไว้...</p>
+                    </div>
+                    <p id="auth-identity-error" role="status" style="color:#ff7b85;" hidden></p>
                 </div>
                 <div class="card" style="margin-top:24px;">
                     <h3 style="margin-bottom:8px;">Preview หน้า Donate</h3>
                     <p style="color:var(--text);margin-bottom:12px;">ลองเปลี่ยนรูปแบบและชุดสีก่อนบันทึก หน้า Preview จะปิดการจ่ายเงินจริงและ Test Donation</p>
                     <iframe id="donate-preview-frame" title="ตัวอย่างหน้าโดเนท" style="width:100%;height:680px;border:1px solid var(--border);border-radius:12px;background:#050811;"></iframe>
-                </div>
-            </div>
-
-            <div id="gifts" class="tab-content">
-                <div class="page-title">ของขวัญโดเนท</div>
-                <div class="card">
-                    <p style="color:var(--text);margin-bottom:16px;">ตั้งชื่อ ราคาแน่นอน ไอคอน และเอฟเฟกต์สำเร็จรูป ของขวัญแต่ละชิ้นใช้ได้หนึ่งกฎ Timer ต่อรายการ และผู้โดเนทยังพิมพ์ข้อความได้</p>
-                    <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
-                        <label>ชื่อของขวัญ<input id="gift-name" class="form-control" maxlength="40" placeholder="เช่น เพชรทะเล"></label>
-                        <label>ราคา (บาท)<input id="gift-price" class="form-control" type="number" min="1" max="50000" step="0.01" value="50"></label>
-                        <label>ไอคอน<select id="gift-icon" class="form-control"><option value="wave">🌊 คลื่น</option><option value="gift">🎁 กล่องของขวัญ</option><option value="star">⭐ ดาว</option><option value="gem">💎 อัญมณี</option><option value="dolphin">🐬 โลมา</option><option value="jellyfish">🪼 แมงกะพรุน</option></select></label>
-                        <label>เอฟเฟกต์<select id="gift-effect" class="form-control"><option value="sparkle">ประกาย</option><option value="burst">ระเบิดแสง</option><option value="coins">เหรียญ</option><option value="heart">หัวใจ</option></select></label>
-                        <label>ผลต่อ Timer<select id="gift-timer-action" class="form-control"><option value="none">ไม่เปลี่ยนเวลา</option><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
-                        <label>ชั่วโมง<input id="gift-hours" class="form-control" type="number" min="0" step="1" value="0"></label>
-                        <label>นาที<input id="gift-minutes" class="form-control" type="number" min="0" step="1" value="0"></label>
-                        <label>วินาที<input id="gift-seconds" class="form-control" type="number" min="0" step="1" value="0"></label>
-                        <button type="button" class="btn-outline" onclick="addGift()">เพิ่มของขวัญ</button>
-                        <button type="button" class="btn-primary" onclick="saveGifts()">บันทึกของขวัญ</button>
-                    </div>
-                    <div id="gift-catalog-list" style="display:grid;gap:10px;margin-top:20px;"></div>
                 </div>
             </div>
 
@@ -458,6 +402,67 @@
                     <div class="widget-tab active" data-sub="w-alert"><i class="fas fa-bell" style="color: var(--blue);"></i> <span>Donate Alert</span></div>
                     <div class="widget-tab" data-sub="w-goal"><i class="fas fa-bullseye" style="color: #ef4444;"></i> <span>Donate Goal</span></div>
                     <div class="widget-tab" data-sub="w-topdonor"><i class="fas fa-trophy" style="color: #fbbf24;"></i> <span>Top Donator</span></div>
+                    <div class="widget-tab" data-sub="w-timer"><i class="fas fa-stopwatch" style="color: #10b981;"></i> <span>Timer</span></div>
+                    <div class="widget-tab" data-sub="w-gifts"><i class="fas fa-gift" style="color: #c084fc;"></i> <span>ของขวัญโดเนท</span></div>
+                </div>
+
+                <div id="w-timer" class="widget-panel">
+                    <div class="page-title">Timer ไลฟ์</div>
+                    <section class="card">
+                        <div id="timer-current" role="timer" aria-live="off" style="font-size:2rem;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;">00:00:00</div>
+                        <p id="timer-banked" style="color:var(--text);margin:4px 0 14px;">โบนัสไลฟ์ถัดไป: 0 วินาที</p>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
+                            <label>เวลาเริ่ม (ชม.)<input id="timer-initial-hours" type="number" class="form-control" min="0" value="1" style="width:110px;"></label>
+                            <label>(นาที)<input id="timer-initial-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <label>(วินาที)<input id="timer-initial-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <button type="button" class="btn-outline" onclick="saveTimerSettings()">บันทึกเวลาเริ่ม</button>
+                            <button type="button" class="btn-primary" onclick="startTimer()">เริ่ม / เริ่มไลฟ์ใหม่</button>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:18px;">
+                            <label>ตั้งเวลา (ชม.)<input id="timer-set-hours" type="number" class="form-control" min="0" value="0" style="width:110px;"></label>
+                            <label>(นาที)<input id="timer-set-minutes" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <label>(วินาที)<input id="timer-set-seconds" type="number" class="form-control" min="0" max="59" value="0" style="width:100px;"></label>
+                            <button type="button" class="btn-outline" onclick="setTimer()">ตั้งเวลา</button>
+                            <label>ปรับเวลา<select id="timer-adjust-action" class="form-control"><option value="add">เพิ่ม</option><option value="subtract">ลด</option></select></label>
+                            <label>ชม.<input id="timer-adjust-hours" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <label>นาที<input id="timer-adjust-minutes" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <label>วินาที<input id="timer-adjust-seconds" type="number" class="form-control" min="0" value="0" style="width:85px;"></label>
+                            <button type="button" class="btn-outline" onclick="adjustTimer()">ปรับเวลา</button>
+                        </div>
+                        <h4>กฎตามยอดโดเนท</h4>
+                        <p style="color:var(--text);margin:4px 0 10px;">ระบุช่วงยอดไม่ให้ทับกัน; แต่ละรายการใช้กฎเดียว ของขวัญใช้กฎเวลาของตัวเองแทน</p>
+                        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
+                            <label>ตั้งแต่ (บาท)<input id="timer-rule-min" type="number" min="0" step="0.01" class="form-control" value="10" style="width:120px;"></label>
+                            <label>ถึง (บาท)<input id="timer-rule-max" type="number" min="0.01" step="0.01" class="form-control" value="50" style="width:120px;"></label>
+                            <label>การทำงาน<select id="timer-rule-action" class="form-control"><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
+                            <label>ชม.<input id="timer-rule-hours" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
+                            <label>นาที<input id="timer-rule-minutes" type="number" min="0" class="form-control" value="1" style="width:85px;"></label>
+                            <label>วินาที<input id="timer-rule-seconds" type="number" min="0" class="form-control" value="0" style="width:85px;"></label>
+                            <button type="button" class="btn-outline" onclick="addTimerRule()">เพิ่มกฎ</button>
+                            <button type="button" class="btn-primary" onclick="saveTimerSettings()">บันทึกกฎ</button>
+                        </div>
+                        <ul id="timer-rules-list" style="margin-top:10px;padding-left:20px;"></ul>
+                    </section>
+                </div>
+
+                <div id="w-gifts" class="widget-panel">
+                    <div class="page-title">ของขวัญโดเนท</div>
+                    <div class="card">
+                        <p style="color:var(--text);margin-bottom:16px;">ตั้งชื่อ ราคาแน่นอน ไอคอน และเอฟเฟกต์สำเร็จรูป ของขวัญแต่ละชิ้นใช้ได้หนึ่งกฎ Timer ต่อรายการ และผู้โดเนทยังพิมพ์ข้อความได้</p>
+                        <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+                            <label>ชื่อของขวัญ<input id="gift-name" class="form-control" maxlength="40" placeholder="เช่น เพชรทะเล"></label>
+                            <label>ราคา (บาท)<input id="gift-price" class="form-control" type="number" min="1" max="50000" step="0.01" value="50"></label>
+                            <label>ไอคอน<select id="gift-icon" class="form-control"><option value="wave">🌊 คลื่น</option><option value="gift">🎁 กล่องของขวัญ</option><option value="star">⭐ ดาว</option><option value="gem">💎 อัญมณี</option><option value="dolphin">🐬 โลมา</option><option value="jellyfish">🪼 แมงกะพรุน</option></select></label>
+                            <label>เอฟเฟกต์<select id="gift-effect" class="form-control"><option value="sparkle">ประกาย</option><option value="burst">ระเบิดแสง</option><option value="coins">เหรียญ</option><option value="heart">หัวใจ</option></select></label>
+                            <label>ผลต่อ Timer<select id="gift-timer-action" class="form-control"><option value="none">ไม่เปลี่ยนเวลา</option><option value="add">เพิ่มเวลา</option><option value="subtract">ลดเวลา</option></select></label>
+                            <label>ชั่วโมง<input id="gift-hours" class="form-control" type="number" min="0" step="1" value="0"></label>
+                            <label>นาที<input id="gift-minutes" class="form-control" type="number" min="0" step="1" value="0"></label>
+                            <label>วินาที<input id="gift-seconds" class="form-control" type="number" min="0" step="1" value="0"></label>
+                            <button type="button" class="btn-outline" onclick="addGift()">เพิ่มของขวัญ</button>
+                            <button type="button" class="btn-primary" onclick="saveGifts()">บันทึกของขวัญ</button>
+                        </div>
+                        <div id="gift-catalog-list" style="display:grid;gap:10px;margin-top:20px;"></div>
+                    </div>
                 </div>
 
                 <!-- WIDGET PANEL: ALERT -->
@@ -863,16 +868,45 @@
         });
         window.linkOAuthProvider = async function(provider) {
             if (!['google','discord'].includes(provider)) return;
-            const response = await fetch(`/api/auth/${provider}/link/start`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
-            const result = await response.json().catch(() => ({}));
-            if (!response.ok || !result.url) return alert(result.message || 'เริ่มผูกบัญชีไม่สำเร็จ');
-            location.href = result.url;
+            const errorElement = document.getElementById('auth-identity-error');
+            errorElement.hidden = true;
+            try {
+                const response = await fetch(`/api/auth/${provider}/link/start`, { method:'POST', headers:{ Authorization:`Bearer ${token}` } });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.url) {
+                    errorElement.textContent = result.message || 'เริ่มผูกบัญชีไม่สำเร็จ กรุณาลองใหม่';
+                    errorElement.hidden = false;
+                    return;
+                }
+                location.href = result.url;
+            } catch {
+                errorElement.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่';
+                errorElement.hidden = false;
+            }
         };
         const identityStatusElement = document.getElementById('auth-identity-status');
         fetch('/api/auth/identities', { headers:{ Authorization:`Bearer ${token}` } }).then(response => response.ok ? response.json() : {providers:[]}).then(result => {
             const providers = new Set(result.providers || []);
-            if (identityStatusElement?.isConnected) identityStatusElement.textContent = `ผูกไว้แล้ว: ${[...providers].map(name => name === 'google' ? 'Google' : 'Discord').join(', ') || 'ยังไม่มี'}`;
-        }).catch(() => { if (identityStatusElement?.isConnected) identityStatusElement.textContent = 'โหลดบัญชีที่ผูกไว้ไม่สำเร็จ'; });
+            if (!identityStatusElement?.isConnected) return;
+            identityStatusElement.replaceChildren();
+            for (const [provider, label] of [['google', 'Google'], ['discord', 'Discord']]) {
+                const linked = providers.has(provider);
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;';
+                const status = document.createElement('span');
+                status.textContent = `${linked ? '✓' : '○'} ${label}${linked ? ' · เชื่อมต่อแล้ว' : ' · ยังไม่ได้เชื่อมต่อ'}`;
+                status.style.color = linked ? '#34d399' : 'var(--text)';
+                status.setAttribute('aria-label', `${label} ${linked ? 'เชื่อมต่อแล้ว' : 'ยังไม่ได้เชื่อมต่อ'}`);
+                row.appendChild(status);
+                if (!linked) {
+                    const button = document.createElement('button');
+                    button.type = 'button'; button.className = 'btn-outline'; button.textContent = `ผูก ${label}`;
+                    button.addEventListener('click', () => window.linkOAuthProvider(provider));
+                    row.appendChild(button);
+                }
+                identityStatusElement.appendChild(row);
+            }
+        }).catch(() => { if (identityStatusElement?.isConnected) identityStatusElement.textContent = 'โหลดบัญชีที่ผูกไว้ไม่สำเร็จ กรุณาโหลดหน้าใหม่'; });
         const oauthLinkResult = new URLSearchParams(location.search).get('oauth_link');
         if (oauthLinkResult === 'success') alert('ผูกบัญชีเข้าสู่ระบบเรียบร้อยแล้ว');
         if (oauthLinkResult === 'conflict') alert('บัญชีผู้ให้บริการนี้ถูกผูกกับ OceanDonate บัญชีอื่นแล้ว');

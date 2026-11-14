@@ -121,7 +121,7 @@ before(async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     serverProcess = spawn(process.execPath, [serverPath], {
         cwd: projectRoot,
-        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: '', DISCORD_CLIENT_SECRET: '', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
+        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: 'not-a-discord-snowflake', DISCORD_CLIENT_SECRET: 'discord-test-secret', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -485,12 +485,70 @@ test('OAuth start is configured and forgot-password responses do not reveal acco
     assert.match(oauth.headers.location, /^https:\/\/accounts\.google\.com\//);
     assert.ok(oauth.headers['set-cookie'].some(cookie => cookie.startsWith('ocean_oauth_google=')));
     const unavailableProvider = await request(baseUrl).get('/api/auth/discord/start');
-    assert.equal(unavailableProvider.status, 503);
+    assert.equal(unavailableProvider.status, 302);
+    assert.equal(unavailableProvider.headers.location, '/auth.html?oauth_error=discord-config');
+    const discordLink = await request(baseUrl).post('/api/auth/discord/link/start').set('Authorization', `Bearer ${token}`);
+    assert.equal(discordLink.status, 503);
+    assert.equal(discordLink.body.code, 'INVALID_DISCORD_CLIENT_ID');
+    assert.match(discordLink.body.message, /Application ID.*ตัวเลข/);
     const unknown = await request(baseUrl).post('/api/password/forgot').send({ email: 'missing@example.test' });
     const existing = await request(baseUrl).post('/api/password/forgot').send({ email: `${username}@example.test` });
     assert.equal(unknown.status, 202);
     assert.equal(existing.status, 202);
     assert.deepEqual(unknown.body, existing.body);
+});
+
+test('donation gifts and live timer are grouped under Widgets & Alerts', () => {
+    const html = fs.readFileSync(path.join(frontendPath, 'dashboard.html'), 'utf8');
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    assert.equal(document.querySelector('.tab-link[data-tab="gifts"]'), null);
+    assert.ok(document.querySelector('#widgets #w-gifts #gift-catalog-list'));
+    assert.ok(document.querySelector('#widgets #w-timer #timer-current'));
+    dom.window.close();
+});
+
+test('linked login providers show a checkmark and do not offer linking twice', async () => {
+    const html = fs.readFileSync(path.join(frontendPath, 'dashboard.html'), 'utf8');
+    const fakeSocket = { on() {}, emit() {} };
+    const dom = new JSDOM(html, {
+        runScripts: 'dangerously',
+        url: 'http://localhost/dashboard.html?u=test-user',
+        beforeParse(window) {
+            window.localStorage.setItem('ocean_token', 'test-token');
+            window.localStorage.setItem('ocean_user', 'test-user');
+            window.fetch = async url => url === '/api/auth/identities'
+                ? { ok: true, json: async () => ({ providers: ['google'] }) }
+                : { ok: true, json: async () => ({ valid: true }) };
+            window.io = () => fakeSocket;
+            window.alert = () => {};
+            window.confirm = () => true;
+        }
+    });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const identityStatus = dom.window.document.getElementById('auth-identity-status');
+    assert.match(identityStatus.textContent, /✓ Google · เชื่อมต่อแล้ว/);
+    assert.equal([...identityStatus.querySelectorAll('button')].some(button => button.textContent.includes('Google')), false);
+    assert.equal([...identityStatus.querySelectorAll('button')].some(button => button.textContent.includes('Discord')), true);
+    dom.window.close();
+});
+
+test('forgot-password request displays pending and generic completion feedback', async () => {
+    const html = fs.readFileSync(path.join(frontendPath, 'auth.html'), 'utf8');
+    const dom = new JSDOM(html, {
+        runScripts: 'dangerously',
+        url: 'http://localhost/auth.html',
+        beforeParse(window) {
+            window.fetch = async () => ({ ok: true, status: 202, json: async () => ({ message: 'หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านให้' }) });
+            window.alert = () => {};
+        }
+    });
+    dom.window.document.getElementById('forgot-email').value = 'streamer@example.test';
+    const requestReset = dom.window.requestPasswordReset();
+    assert.match(dom.window.document.getElementById('forgot-status').textContent, /กำลังส่ง/);
+    await requestReset;
+    assert.match(dom.window.document.getElementById('forgot-status').textContent, /หากอีเมลนี้มีบัญชี/);
+    dom.window.close();
 });
 
 test('Google OAuth verifies state, creates a username account, and issues a one-use login handoff', async () => {

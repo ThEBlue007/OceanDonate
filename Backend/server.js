@@ -673,7 +673,7 @@ app.get('/api/verify', async (req, res) => {
 
 const passwordResetBuckets = new Map();
 app.post('/api/password/forgot', async (req, res) => {
-    const response = { success: true, message: 'หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์รีเซ็ตรหัสผ่านให้' };
+    const response = { success: true, message: 'หากอีเมลนี้มีบัญชีและระบบอีเมลพร้อม ระบบจะส่งลิงก์รีเซ็ตให้ภายใน 30 นาที กรุณาตรวจกล่อง Spam ด้วย' };
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase().slice(0, 254) : '';
     const key = `${req.ip || req.socket.remoteAddress || 'unknown'}:${hashToken(email)}`;
     const now = Date.now();
@@ -770,8 +770,18 @@ async function ensureCollection(model) {
 }
 
 async function beginOAuth(provider, purpose, userId, req, res, returnUrl = false) {
+    const clientId = process.env[provider === 'google' ? 'GOOGLE_CLIENT_ID' : 'DISCORD_CLIENT_ID'] || '';
+    if (provider === 'discord' && clientId && !/^\d{17,20}$/.test(clientId)) {
+        const message = 'ค่า DISCORD_CLIENT_ID ไม่ถูกต้อง ต้องใช้ Application ID ซึ่งเป็นตัวเลขจาก Discord Developer Portal';
+        if (returnUrl) return res.status(503).json({ code: 'INVALID_DISCORD_CLIENT_ID', message });
+        return res.redirect('/auth.html?oauth_error=discord-config');
+    }
     const config = oauthConfig(provider);
-    if (!config) return res.status(503).json({ message: 'ผู้ให้บริการเข้าสู่ระบบยังตั้งค่าไม่ครบ กรุณาลองภายหลัง' });
+    if (!config) {
+        const message = 'การเข้าสู่ระบบนี้ยังตั้งค่าไม่ครบ กรุณาตรวจ APP_BASE_URL, Client ID และ Client Secret ใน Render';
+        if (returnUrl) return res.status(503).json({ code: 'OAUTH_NOT_CONFIGURED', message });
+        return res.redirect('/auth.html?oauth_error=not-configured');
+    }
     const state = crypto.randomBytes(32).toString('base64url');
     await ensureCollection(OAuthAttempt);
     await OAuthAttempt.create({ stateHash: hashToken(state), provider, purpose, userId, expiresAt: new Date(Date.now() + 5 * 60_000) });

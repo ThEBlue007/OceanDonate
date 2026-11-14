@@ -158,7 +158,8 @@
                 <h3>รีเซ็ตรหัสผ่าน</h3>
                 <p>กรอกอีเมลบัญชีของคุณ หากพบรายการจะส่งลิงก์รีเซ็ตที่ใช้ได้ 30 นาที</p>
                 <div class="form-group"><label for="forgot-email">อีเมล</label><input type="email" id="forgot-email" class="form-control" autocomplete="email"></div>
-                <button class="btn-primary" onclick="requestPasswordReset()">ส่งลิงก์รีเซ็ต</button>
+                <button class="btn-primary" id="forgot-submit" onclick="requestPasswordReset()">ส่งลิงก์รีเซ็ต</button>
+                <p id="forgot-status" role="status" aria-live="polite" style="margin-top:12px;color:var(--text);"></p>
                 <button class="btn-social" onclick="showAuthForm('login')">กลับไปเข้าสู่ระบบ</button>
             </div>
 
@@ -287,9 +288,32 @@
         window.beginOAuth = provider => { if (['google','discord'].includes(provider)) location.href = `/api/auth/${provider}/start`; };
         window.requestPasswordReset = async function() {
             const email = document.getElementById('forgot-email').value.trim();
-            const response = await fetch('/api/password/forgot', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email}) });
-            const result = await response.json().catch(() => ({}));
-            alert(result.message || (response.ok ? 'หากอีเมลนี้มีบัญชี ระบบจะส่งลิงก์รีเซ็ตให้' : 'ส่งคำขอไม่สำเร็จ'));
+            const status = document.getElementById('forgot-status');
+            const button = document.getElementById('forgot-submit');
+            if (!email) {
+                status.textContent = 'กรอกอีเมลก่อนส่งคำขอ';
+                status.style.color = '#ff7b85';
+                document.getElementById('forgot-email').focus();
+                return;
+            }
+            button.disabled = true;
+            status.style.color = 'var(--text)';
+            status.textContent = 'กำลังส่งคำขอ...';
+            try {
+                const response = await fetch('/api/password/forgot', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email}) });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    status.textContent = result.message || 'ส่งคำขอไม่สำเร็จ กรุณาลองใหม่';
+                    status.style.color = '#ff7b85';
+                    return;
+                }
+                status.textContent = result.message || 'หากอีเมลนี้มีบัญชีและระบบอีเมลพร้อม ระบบจะส่งลิงก์รีเซ็ตให้ภายใน 30 นาที กรุณาตรวจกล่อง Spam ด้วย';
+            } catch {
+                status.textContent = 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่';
+                status.style.color = '#ff7b85';
+            } finally {
+                button.disabled = false;
+            }
         };
         window.submitPasswordReset = async function() {
             const token = new URLSearchParams(location.search).get('reset');
@@ -325,6 +349,8 @@
                 location.href = `dashboard.html?u=${encodeURIComponent(result.username)}`; return;
             }
             if (params.get('oauth_error') === 'link-required') alert('อีเมลนี้มีบัญชี OceanDonate แล้ว กรุณาเข้าสู่ระบบบัญชีเดิมก่อน แล้วจึงผูก Google/Discord จาก Dashboard');
+            else if (params.get('oauth_error') === 'discord-config') alert('Discord ยังเชื่อมไม่ได้: DISCORD_CLIENT_ID ต้องเป็น Application ID ซึ่งเป็นตัวเลขจาก Discord Developer Portal ให้แก้ค่าใน Render');
+            else if (params.get('oauth_error') === 'not-configured') alert('ผู้ให้บริการนี้ยังตั้งค่าไม่ครบใน Render กรุณาตรวจ APP_BASE_URL, Client ID และ Client Secret');
             else if (params.has('oauth_error')) alert('เข้าสู่ระบบภายนอกไม่สำเร็จ กรุณาลองใหม่');
             if (params.has('oauth_error')) history.replaceState(null, '', '/auth.html');
         })();
