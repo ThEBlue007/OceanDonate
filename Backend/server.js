@@ -504,7 +504,7 @@ function normalizeAmountRules(rules) {
         return { minAmount, maxAmount, action: rule.action, seconds };
     }).sort((a, b) => a.minAmount - b.minAmount);
     for (let i = 1; i < normalized.length; i++) {
-        if (normalized[i].minAmount < normalized[i - 1].maxAmount) throw Object.assign(new Error('ช่วงยอดเงินของกฎ Timer ห้ามทับซ้อนกัน'), { status: 400 });
+        if (normalized[i].minAmount <= normalized[i - 1].maxAmount) throw Object.assign(new Error('ช่วงยอดเงินของกฎ Timer ห้ามทับซ้อนกัน'), { status: 400 });
     }
     return normalized;
 }
@@ -544,7 +544,7 @@ function applyDonationTimer(user, donation, now = Date.now()) {
             seconds = donation.giftSnapshot.seconds;
         }
     } else {
-        const rule = (user.timerSettings?.amountRules || []).find(item => donation.amount >= item.minAmount && donation.amount < item.maxAmount);
+        const rule = (user.timerSettings?.amountRules || []).find(item => donation.amount >= item.minAmount && donation.amount <= item.maxAmount);
         if (rule) ({ action, seconds } = rule);
     }
     if (action && seconds > 0) applyTimerChange(user, action, seconds, now);
@@ -1201,7 +1201,8 @@ app.post('/api/donations/test', rateLimitDonation, async (req, res) => {
         } : null;
         const testDonation = await Donation.create({ userId: user._id, username: user.username, ...parsed, paymentMethod: 'test', status: 'test', giftSnapshot });
         const alert = { name: testDonation.name, amount: testDonation.amount, message: testDonation.message, imageUrl: testDonation.imageUrl, giftSnapshot: testDonation.giftSnapshot, date: testDonation.date, isTest: true };
-        io.to(alertRoom(user.username)).emit('show_alert', alert);
+        await AlertQueue.create({ userId: user._id, username: user.username, donationId: testDonation._id, payload: alert, status: 'queued' });
+        await pumpAlertQueue(user.username);
         io.to(ownerRoom(user.username)).emit('update_history', await dashboardHistory(user));
         res.status(201).json({ success: true, status: 'test', message: 'ส่งการทดสอบแล้ว' });
     } catch (err) {
@@ -1350,19 +1351,22 @@ io.on('connection', (socket) => {
         return false;
     }
 
-    socket.on('timer_config', async (data) => {
-        if (!await checkAuth(data)) return;
+    socket.on('timer_config', async (data, acknowledge) => {
+        const respond = result => { if (typeof acknowledge === 'function') acknowledge(result); };
+        if (!await checkAuth(data)) return respond({ ok: false, message: 'ยืนยันสิทธิ์ไม่สำเร็จ กรุณาเข้าสู่ระบบใหม่' });
         try {
             const user = await User.findOne({ username: data.username });
-            if (!user) return;
+            if (!user) return respond({ ok: false, message: 'ไม่พบบัญชีผู้ใช้' });
             const initialSeconds = safeSeconds(data.initialSeconds, false);
             const amountRules = normalizeAmountRules(data.amountRules || []);
             user.timerSettings = { initialSeconds, amountRules, appearance: cleanTimerAppearance(data.appearance ?? user.timerSettings?.appearance) };
             user.markModified('timerSettings');
             await user.save();
             emitTimer(user);
+            respond({ ok: true });
         } catch (error) {
             socket.emit('timer_error', { message: error.message || 'บันทึกการตั้งเวลาไม่สำเร็จ' });
+            respond({ ok: false, message: error.message || 'บันทึกการตั้งเวลาไม่สำเร็จ' });
         }
     });
 
@@ -1514,7 +1518,10 @@ io.on('connection', (socket) => {
             isTest: true,
             date: new Date()
         };
-        io.to(alertRoom(data.username)).emit('show_alert', testDonation);
+        const user = await User.findOne({ username: data.username });
+        if (!user) return;
+        await AlertQueue.create({ userId: user._id, username: user.username, donationId: new mongoose.Types.ObjectId(), payload: testDonation, status: 'queued' });
+        await pumpAlertQueue(user.username);
     });
 
     // 🟢 สร้าง Token ลิงก์ OBS ใหม่

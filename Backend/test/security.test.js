@@ -143,7 +143,7 @@ before(async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     serverProcess = spawn(process.execPath, [serverPath], {
         cwd: projectRoot,
-        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: 'not-a-discord-snowflake', DISCORD_CLIENT_SECRET: 'discord-test-secret', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
+        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', RENDER: 'true', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: 'not-a-discord-snowflake', DISCORD_CLIENT_SECRET: 'discord-test-secret', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -264,8 +264,9 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     await ownerAuth;
 
     const timerConfigured = socketEvent(owner, 'apply_timer');
-    owner.emit('timer_config', { username, token, initialSeconds: 3600, amountRules: [{ minAmount: 20, maxAmount: 50, action: 'add', seconds: 30 }] });
+    const timerConfigAck = new Promise(resolve => owner.emit('timer_config', { username, token, initialSeconds: 3600, amountRules: [{ minAmount: 20, maxAmount: 50, action: 'add', seconds: 30 }] }, resolve));
     await timerConfigured;
+    assert.deepEqual(await timerConfigAck, { ok: true });
 
     const paused = socketEvent(owner, 'apply_alert_control');
     owner.emit('pause_alerts', { username, token, minutes: 5 });
@@ -310,8 +311,10 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     assert.equal(await dbConnection.collection('donations').countDocuments({ username, status: 'pending' }), 2);
 
     await dbConnection.collection('users').updateOne({ username }, { $set: { 'paymentMethods.bank.accountNumber': '999-9-99999-9', 'paymentMethods.bank.accountName': 'บัญชีใหม่' } });
+    const historyUpdate = socketEvent(owner, 'update_history');
     const confirmed = await request(baseUrl).post(`/api/donations/${order.body.donationId}/slip`).send({ base64: 'data:image/png;base64,SLIPREUSED00001' });
     assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+    assert.ok((await historyUpdate).some(item => item.name === 'Verified donor'), 'confirmed donations should update history over Socket.IO immediately');
     const queuedAlert = await dbConnection.collection('alertqueues').findOne({ donationId: new mongoose.Types.ObjectId(String(order.body.donationId)) });
     assert.equal(queuedAlert.status, 'queued');
     const resumed = socketEvent(owner, 'apply_alert_control');
@@ -350,9 +353,15 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     assert.equal(wrongAmountOrder.status, 201);
     const wrongAmount = await request(baseUrl).post(`/api/donations/${wrongAmountOrder.body.donationId}/slip`).send({ base64: 'data:image/png;base64,WRONGAMOUNT0001' });
     assert.equal(wrongAmount.status, 400);
+    const boundaryIp = '198.51.100.50';
+    const boundaryOrder = await request(baseUrl).post('/api/donations').set('X-Forwarded-For', boundaryIp).send({ username, paymentMethod: 'promptpay', amount: 50, name: 'Upper boundary' });
+    assert.equal(boundaryOrder.status, 201);
+    const boundarySlip = await request(baseUrl).post(`/api/donations/${boundaryOrder.body.donationId}/slip`).set('X-Forwarded-For', boundaryIp).send({ base64: 'data:image/png;base64,BOUNDARYAMT50001' });
+    assert.equal(boundarySlip.status, 200, JSON.stringify(boundarySlip.body));
     user = await dbConnection.collection('users').findOne({ username });
-    assert.equal(user.stats.total, 25.5);
-    assert.equal(user.history.length, 1);
+    assert.equal(user.stats.total, 75.5);
+    assert.equal(user.history.length, 2);
+    assert.equal(user.timerState.bankedSeconds, 60, 'the configured 20–50 baht rule includes an exact 50 baht donation');
     owner.disconnect();
     widget.disconnect();
 });
@@ -374,12 +383,14 @@ test('skip control stops the active OBS alert, advances the queue, and confirms 
     const ownerAuth = socketEvent(owner, 'auth_success');
     owner.emit('auth_dashboard', { token, username });
     await ownerAuth;
+    const user = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: user._id });
+    await dbConnection.collection('users').updateOne({ _id: user._id }, { $set: { alertControl: { pausedUntil: null } } });
     const widget = await connectSocket();
     const widgetSettings = socketEvent(widget, 'apply_settings');
     widget.emit('join_widget', { token: widgetToken });
     await widgetSettings;
 
-    const user = await dbConnection.collection('users').findOne({ username });
     const currentId = new mongoose.Types.ObjectId();
     const nextId = new mongoose.Types.ObjectId();
     const now = new Date();
@@ -405,12 +416,14 @@ test('pausing alerts stops the active OBS alert and keeps it first in the queue'
     const ownerAuth = socketEvent(owner, 'auth_success');
     owner.emit('auth_dashboard', { token, username });
     await ownerAuth;
+    const user = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: user._id });
+    await dbConnection.collection('users').updateOne({ _id: user._id }, { $set: { alertControl: { pausedUntil: null } } });
     const widget = await connectSocket();
     const widgetSettings = socketEvent(widget, 'apply_settings');
     widget.emit('join_widget', { token: widgetToken });
     await widgetSettings;
 
-    const user = await dbConnection.collection('users').findOne({ username });
     const currentId = new mongoose.Types.ObjectId();
     const nextId = new mongoose.Types.ObjectId();
     const now = new Date();
@@ -461,6 +474,8 @@ test('skip control can skip the suspended current alert while the queue is pause
 
 test('test donations create a log and OBS alert without changing totals or leaderboard', async () => {
     const beforeUser = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: beforeUser._id });
+    await dbConnection.collection('users').updateOne({ _id: beforeUser._id }, { $set: { alertControl: { pausedUntil: null } } });
     const giftId = `test-effect-${crypto.randomUUID()}`;
     await dbConnection.collection('giftcatalogitems').insertOne({ userId: beforeUser._id, giftId, name: 'Test Gift', price: 999, iconId: 'firework', effectId: 'firework', active: true, timerAction: 'none', seconds: 0 });
     const widget = await connectSocket();
@@ -477,11 +492,100 @@ test('test donations create a log and OBS alert without changing totals or leade
     const afterUser = await dbConnection.collection('users').findOne({ username });
     assert.equal(afterUser.stats.total, beforeUser.stats.total);
     assert.equal(afterUser.stats.today, beforeUser.stats.today);
-    assert.equal(afterUser.goalSettings.current, beforeUser.goalSettings.current);
+    assert.equal(afterUser.goalSettings?.current, beforeUser.goalSettings?.current);
     const testEntry = await dbConnection.collection('donations').findOne({ username, status: 'test', name: 'Test only' });
     assert.ok(testEntry);
     assert.equal(testEntry.giftSnapshot.effectId, 'firework');
     widget.disconnect();
+});
+
+test('test donations respect the pause queue and resume as skippable test alerts without affecting totals or timer', async () => {
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const widget = await connectSocket();
+    const initialSettings = socketEvent(widget, 'apply_settings');
+    widget.emit('join_widget', { token: widgetToken });
+    await initialSettings;
+
+    const userBefore = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: userBefore._id });
+    const pausedState = socketEvent(owner, 'apply_alert_control');
+    owner.emit('pause_alerts', { username, token, minutes: 5 });
+    await pausedState;
+    let alertArrivedWhilePaused = false;
+    widget.on('show_alert', () => { alertArrivedWhilePaused = true; });
+    const historyUpdated = socketEvent(owner, 'update_history');
+    const result = await request(baseUrl).post('/api/donations/test').set('X-Forwarded-For', '198.51.100.51').send({ username, amount: 50, name: 'Queued test', message: 'must wait' });
+    assert.equal(result.status, 201, JSON.stringify(result.body));
+    const history = await historyUpdated;
+    assert.ok(history.some(item => item.name === 'Queued test' && item.isTest));
+    await delay(100);
+    assert.equal(alertArrivedWhilePaused, false, 'test donation should not bypass the active pause');
+
+    const testEntry = await dbConnection.collection('donations').findOne({ username, status: 'test', name: 'Queued test' });
+    const queued = await dbConnection.collection('alertqueues').findOne({ donationId: testEntry._id });
+    assert.equal(queued.status, 'queued');
+    assert.equal(queued.payload.isTest, true);
+    const userAfterTest = await dbConnection.collection('users').findOne({ username });
+    assert.equal(userAfterTest.stats.total, userBefore.stats.total);
+    assert.equal(userAfterTest.goalSettings?.current, userBefore.goalSettings?.current);
+    assert.deepEqual(userAfterTest.timerState, userBefore.timerState);
+
+    const resumedState = socketEvent(owner, 'apply_alert_control');
+    const resumedAlert = socketEvent(widget, 'show_alert');
+    owner.emit('resume_alerts', { username, token });
+    await resumedState;
+    const alert = await resumedAlert;
+    assert.equal(alert.queueId, String(queued._id));
+    assert.equal(alert.isTest, true);
+    const played = new Promise(resolve => {
+        const check = async () => {
+            const item = await dbConnection.collection('alertqueues').findOne({ _id: queued._id });
+            if (item?.status === 'playing') resolve(item);
+            else setTimeout(check, 10);
+        };
+        check();
+    });
+    await played;
+    widget.emit('alert_finished', { queueId: alert.queueId });
+    widget.disconnect();
+    owner.disconnect();
+});
+
+test('Dashboard OBS test alerts enter the queue and can be skipped while paused', async () => {
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const widget = await connectSocket();
+    const initialSettings = socketEvent(widget, 'apply_settings');
+    widget.emit('join_widget', { token: widgetToken });
+    await initialSettings;
+
+    const user = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: user._id });
+    await dbConnection.collection('users').updateOne({ _id: user._id }, { $set: { alertControl: { pausedUntil: null } } });
+    const pausedState = socketEvent(owner, 'apply_alert_control');
+    owner.emit('pause_alerts', { username, token, minutes: 5 });
+    await pausedState;
+    owner.emit('test_alert', { username, token, name: 'OBS queued test', amount: 25 });
+    await delay(50);
+    const queued = await dbConnection.collection('alertqueues').findOne({ userId: user._id, 'payload.name': 'OBS queued test' });
+    assert.ok(queued, 'Dashboard test alert should be persisted in AlertQueue');
+    assert.equal(queued.status, 'queued');
+
+    const result = socketEvent(owner, 'alert_control_result');
+    const acknowledged = new Promise(resolve => owner.emit('skip_current_alert', { username, token }, resolve));
+    assert.deepEqual(await result, { action: 'skip', skipped: true });
+    assert.deepEqual(await acknowledged, { ok: true, skipped: true });
+    assert.equal((await dbConnection.collection('alertqueues').findOne({ _id: queued._id })).status, 'skipped');
+    const resumedState = socketEvent(owner, 'apply_alert_control');
+    owner.emit('resume_alerts', { username, token });
+    await resumedState;
+    widget.disconnect();
+    owner.disconnect();
 });
 
 test('widget username fallback is rejected and a valid widget token remains supported', async () => {

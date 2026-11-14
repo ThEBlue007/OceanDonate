@@ -168,25 +168,92 @@ test('live alert controls send pause, resume, and skip commands and show server 
     assert.match(note, /โดเนทยังรับได้ตามปกติ/);
 });
 
-test('donation history can be sorted newest-first or oldest-first without changing delete targets', () => {
+test('donation history sorts by time or amount and can hide test donations without changing delete targets', () => {
     const { dom, handlers } = createDashboard();
     const { document, Event } = dom.window;
     const entries = [
         { _id: 'old-id', name: 'Oldest', amount: 10, date: '2026-01-01T00:00:00.000Z' },
         { _id: 'middle-id', name: 'Middle', amount: 20, date: '2026-03-01T00:00:00.000Z' },
-        { _id: 'new-id', name: 'Newest', amount: 30, date: '2026-05-01T00:00:00.000Z' }
+        { _id: 'new-id', name: 'Newest', amount: 30, date: '2026-05-01T00:00:00.000Z' },
+        { _id: 'test-id', name: 'Test donor', amount: 500, date: '2026-04-01T00:00:00.000Z', isTest: true }
     ];
     handlers.get('update_history')(entries);
     const names = () => [...document.querySelectorAll('#dash-history-list tr td:nth-child(2)')].map(cell => cell.textContent);
-    assert.deepEqual(names(), ['Newest', 'Middle', 'Oldest']);
+    assert.deepEqual(names(), ['Newest', 'Test donor (ทดสอบ)', 'Middle', 'Oldest']);
 
     const deleted = [];
     dom.window.deleteHistory = id => deleted.push(id);
     const sort = document.getElementById('history-sort-order');
     sort.value = 'oldest';
     sort.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.deepEqual(names(), ['Oldest', 'Middle', 'Test donor (ทดสอบ)', 'Newest']);
+    sort.value = 'amount-high';
+    sort.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.deepEqual(names(), ['Test donor (ทดสอบ)', 'Newest', 'Middle', 'Oldest']);
+    sort.value = 'amount-low';
+    sort.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.deepEqual(names(), ['Oldest', 'Middle', 'Newest', 'Test donor (ทดสอบ)']);
+    const showTests = document.getElementById('history-show-tests');
+    showTests.checked = false;
+    showTests.dispatchEvent(new Event('change', { bubbles: true }));
     assert.deepEqual(names(), ['Oldest', 'Middle', 'Newest']);
+    showTests.checked = true;
+    showTests.dispatchEvent(new Event('change', { bubbles: true }));
+    assert.deepEqual(names(), ['Oldest', 'Middle', 'Newest', 'Test donor (ทดสอบ)']);
     document.querySelector('#dash-history-list tr button').click();
     assert.deepEqual(deleted, ['old-id']);
+    dom.window.close();
+});
+
+test('timer amount range includes its displayed upper bound and rejects touching inclusive ranges', () => {
+    const { dom, alerts } = createDashboard();
+    const { document } = dom.window;
+    document.getElementById('timer-rule-min').value = '10';
+    document.getElementById('timer-rule-max').value = '50';
+    dom.window.addTimerRule();
+    assert.equal(document.querySelectorAll('#timer-rules-list li').length, 1);
+    document.getElementById('timer-rule-min').value = '50';
+    document.getElementById('timer-rule-max').value = '100';
+    dom.window.addTimerRule();
+    assert.equal(document.querySelectorAll('#timer-rules-list li').length, 1);
+    assert.match([...document.querySelectorAll('.app-toast')].at(-1).textContent, /ช่วงยอดเงินของกฎห้ามทับซ้อนกัน/);
+    assert.match(document.querySelector('#timer-pane-rules p').textContent, /รวมยอดเริ่มต้นและยอดปลายช่วง/);
+    dom.window.close();
+});
+
+test('saving timer rules waits for the server acknowledgement and confirms persistence', () => {
+    const { dom, emitted } = createDashboard();
+    dom.window.saveTimerSettings();
+    const save = emitted.find(([event]) => event === 'timer_config');
+    assert.ok(save);
+    assert.equal(typeof save[2], 'function');
+    save[2]({ ok: true });
+    assert.match(dom.window.document.querySelector('.app-toast').textContent, /บันทึกการตั้งค่า Timer และกฎสำเร็จ/);
+    dom.window.close();
+});
+
+test('Donate preview has desktop and phone layouts and applies background changes before save', () => {
+    const { dom } = createDashboard();
+    const { document, Event } = dom.window;
+    const frame = document.getElementById('donate-preview-frame');
+    const sent = [];
+    Object.defineProperty(frame.contentWindow, 'postMessage', { configurable: true, value: (data, origin) => sent.push({ data, origin }) });
+    const mobileButton = document.querySelector('[data-donate-preview-device="mobile"]');
+    mobileButton.click();
+    assert.equal(frame.dataset.device, 'mobile');
+    assert.equal(dom.window.getComputedStyle(frame).width, '390px');
+    document.getElementById('donate-layout').value = 'neon';
+    document.getElementById('donate-palette').value = 'soft';
+    const backgroundPreset = document.getElementById('dash-theme-preset');
+    backgroundPreset.value = 'custom';
+    backgroundPreset.dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('dash-bg').value = 'https://images.example.test/background.png';
+    document.getElementById('dash-bio').value = 'Preview biography';
+    document.getElementById('dash-bg').dispatchEvent(new Event('input', { bubbles: true }));
+    dom.window.updateDonatePreview();
+    assert.equal(sent.at(-1).data.settings.layoutId, 'neon');
+    assert.equal(sent.at(-1).data.settings.themeId, 'soft');
+    assert.equal(sent.at(-1).data.settings.bio, 'Preview biography');
+    assert.equal(sent.at(-1).data.settings.bgUrl, 'https://images.example.test/background.png');
     dom.window.close();
 });
