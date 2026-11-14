@@ -349,20 +349,26 @@ test('alert queue has a partial unique index for one playing alert per streamer'
 
 test('test donations create a log and OBS alert without changing totals or leaderboard', async () => {
     const beforeUser = await dbConnection.collection('users').findOne({ username });
+    const giftId = `test-effect-${crypto.randomUUID()}`;
+    await dbConnection.collection('giftcatalogitems').insertOne({ userId: beforeUser._id, giftId, name: 'Test Gift', price: 999, iconId: 'firework', effectId: 'firework', active: true, timerAction: 'none', seconds: 0 });
     const widget = await connectSocket();
     const initialSettings = socketEvent(widget, 'apply_settings');
     widget.emit('join_widget', { token: widgetToken });
     await initialSettings;
     const alert = socketEvent(widget, 'show_alert');
-    const result = await request(baseUrl).post('/api/donations/test').send({ username, amount: 999, name: 'Test only', message: 'OBS test' });
+    const result = await request(baseUrl).post('/api/donations/test').send({ username, amount: 999, giftId, name: 'Test only', message: 'OBS test' });
     assert.equal(result.status, 201, JSON.stringify(result.body));
-    assert.equal((await alert).isTest, true);
+    const alertPayload = await alert;
+    assert.equal(alertPayload.isTest, true);
+    assert.equal(alertPayload.giftSnapshot.name, 'Test Gift');
+    assert.equal(alertPayload.giftSnapshot.effectId, 'firework');
     const afterUser = await dbConnection.collection('users').findOne({ username });
     assert.equal(afterUser.stats.total, beforeUser.stats.total);
     assert.equal(afterUser.stats.today, beforeUser.stats.today);
     assert.equal(afterUser.goalSettings.current, beforeUser.goalSettings.current);
     const testEntry = await dbConnection.collection('donations').findOne({ username, status: 'test', name: 'Test only' });
     assert.ok(testEntry);
+    assert.equal(testEntry.giftSnapshot.effectId, 'firework');
     widget.disconnect();
 });
 
@@ -464,19 +470,43 @@ test('owner can configure an uncapped live timer and carry stopped-time changes 
     owner.disconnect();
 });
 
-test('OBS gift effects render an allowlisted icon and untrusted gift names as text', () => {
+test('OBS gift effects render safely and restart the same animation for consecutive gifts', async () => {
     const handlers = new Map();
     const fakeSocket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
     const html = fs.readFileSync(path.join(frontendPath, 'widget.html'), 'utf8');
     const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/widget.html?token=test', beforeParse(window) { window.io = () => fakeSocket; } });
     const unsafeName = '<img src=x onerror="window.__xss=1">';
-    handlers.get('show_alert')({ name: 'Donor', amount: 50, giftSnapshot: { name: unsafeName, iconId: 'flower', effectId: 'confetti' } });
     const effect = dom.window.document.getElementById('gift-effect');
+    let forcedReflows = 0;
+    Object.defineProperty(effect, 'offsetWidth', { get() { forcedReflows++; return 1; } });
+    handlers.get('show_alert')({ name: 'Donor', amount: 50, giftSnapshot: { name: unsafeName, iconId: 'flower', effectId: 'confetti' } });
     assert.equal(effect.textContent, `🌸 ${unsafeName}`);
     assert.equal(effect.querySelector('img'), null);
     assert.equal(effect.classList.contains('gift-confetti'), true);
+    assert.equal(forcedReflows, 1, 'removing and re-adding the animation class must restart the effect');
     assert.equal(dom.window.__xss, undefined);
+    dom.window.eval('finishCurrentAlert()');
+    await delay(420);
+    handlers.get('show_alert')({ name: 'Next donor', amount: 80, giftSnapshot: { name: 'Next gift', iconId: 'flower', effectId: 'confetti' } });
+    assert.equal(effect.classList.contains('gift-confetti'), true);
+    assert.equal(forcedReflows, 2);
     dom.window.close();
+});
+
+test('resetting totals updates the owner and acknowledges completion', async () => {
+    await dbConnection.collection('users').updateOne({ username }, { $set: { 'stats.total': 120, 'stats.today': 80, history: [{ name: 'Old donor', amount: 120, date: new Date() }] } });
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { token, username });
+    await ownerAuth;
+    const success = socketEvent(owner, 'notify_success');
+    const updatedStats = socketEvent(owner, 'update_stats');
+    const updatedHistory = socketEvent(owner, 'update_history');
+    owner.emit('reset_stats', { username, token });
+    assert.match(await success, /รีเซ็ตข้อมูลเรียบร้อย/);
+    assert.equal((await updatedStats).total, 0);
+    assert.equal((await updatedHistory).length, 0);
+    owner.disconnect();
 });
 
 test('OAuth start is configured and forgot-password responses do not reveal accounts', async () => {

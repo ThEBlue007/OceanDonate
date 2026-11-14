@@ -99,15 +99,17 @@
             max-height: 150px;
             overflow: hidden;
         }
-        #gift-effect { display: none; font-size: clamp(2rem, 6vw, 4rem); line-height: 1.1; margin-bottom: 10px; }
-        #gift-effect.gift-sparkle { animation: giftSparkle .9s ease-out both; }
-        #gift-effect.gift-burst { animation: giftBurst .75s ease-out both; }
-        #gift-effect.gift-coins { animation: giftCoins .9s ease-out both; }
-        #gift-effect.gift-heart { animation: giftHeart .8s ease-out both; }
-        #gift-effect.gift-confetti { animation: giftConfetti .9s ease-out both; }
-        #gift-effect.gift-firework { animation: giftFirework .9s ease-out both; }
-        #gift-effect.gift-shine { animation: giftShine 1s ease-in-out both; }
-        #gift-effect.gift-shake { animation: giftShake .45s ease-in-out both; }
+        #gift-effect { display: none; min-width: 180px; padding: 9px 22px; color: #fff; font-size: clamp(2rem, 6vw, 4rem); line-height: 1.1; margin-bottom: 12px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; background: radial-gradient(ellipse at center,rgba(96,165,250,.32),rgba(79,70,229,.18) 62%,rgba(15,23,42,.72)); box-shadow: 0 0 26px rgba(96,165,250,.36),inset 0 0 16px rgba(255,255,255,.1); text-shadow: 0 3px 12px rgba(0,0,0,.7); }
+        #gift-effect.gift-sparkle { animation: giftSparkle 1.25s ease-out both; }
+        #gift-effect.gift-burst { animation: giftBurst 1.15s ease-out both; }
+        #gift-effect.gift-coins { animation: giftCoins 1.2s ease-out both; }
+        #gift-effect.gift-heart { animation: giftHeart 1.15s ease-out both; }
+        #gift-effect.gift-confetti { animation: giftConfetti 1.2s ease-out both; }
+        #gift-effect.gift-firework { animation: giftFirework 1.3s ease-out both; }
+        #gift-effect.gift-shine { animation: giftShine 1.3s ease-in-out both; }
+        #gift-effect.gift-shake { animation: giftShake .7s ease-in-out both; }
+        #gift-effect.gift-burst, #gift-effect.gift-firework { box-shadow: 0 0 36px rgba(251,191,36,.55),inset 0 0 22px rgba(251,191,36,.18); }
+        #gift-effect.gift-heart { box-shadow: 0 0 34px rgba(244,114,182,.48),inset 0 0 20px rgba(244,114,182,.16); }
         @keyframes giftSparkle { 0% { opacity: 0; transform: scale(.35) rotate(-30deg); } 55% { opacity: 1; transform: scale(1.25) rotate(12deg); } 100% { transform: scale(1); } }
         @keyframes giftBurst { 0% { opacity: 0; transform: scale(.2); } 60% { opacity: 1; transform: scale(1.4); } 100% { transform: scale(1); } }
         @keyframes giftCoins { 0% { opacity: 0; transform: translateY(18px) rotate(-10deg); } 70% { opacity: 1; transform: translateY(-8px) rotate(8deg); } 100% { transform: translateY(0); } }
@@ -277,8 +279,11 @@
             const allowedEffects = new Set(['sparkle', 'burst', 'coins', 'heart', 'confetti', 'firework', 'shine', 'shake']);
             if (giftEl && data.giftSnapshot) {
                 giftEl.textContent = `${iconById[data.giftSnapshot.iconId] || '🎁'} ${data.giftSnapshot.name || 'ของขวัญ'}`;
-                giftEl.className = `gift-${allowedEffects.has(data.giftSnapshot.effectId) ? data.giftSnapshot.effectId : 'sparkle'}`;
+                const effectClass = `gift-${allowedEffects.has(data.giftSnapshot.effectId) ? data.giftSnapshot.effectId : 'sparkle'}`;
+                giftEl.className = '';
                 giftEl.style.display = 'block';
+                void giftEl.offsetWidth;
+                giftEl.classList.add(effectClass);
             } else if (giftEl) {
                 giftEl.textContent = '';
                 giftEl.className = '';

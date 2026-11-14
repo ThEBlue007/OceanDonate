@@ -73,6 +73,19 @@
         .app-toast.toast-success { border-left-color: #34d399; }
         .app-toast.toast-error { border-left-color: #fb7185; }
         .app-toast.toast-leaving { animation: toastOut .18s ease-in forwards; }
+        .confirm-backdrop { position: fixed; inset: 0; z-index: 4000; display: grid; place-items: center; padding: 20px; background: rgba(3,6,14,.78); backdrop-filter: blur(8px); animation: confirmFadeIn .16s ease-out; }
+        .confirm-dialog { width: min(460px,100%); padding: 25px; color: #f8fafc; background: linear-gradient(150deg,#1c2231,#10131d 75%); border: 1px solid rgba(148,163,184,.27); border-radius: 20px; box-shadow: 0 28px 90px rgba(0,0,0,.58),0 0 38px rgba(58,134,255,.12); }
+        .confirm-dialog-icon { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 14px; color: #fbbf24; background: rgba(251,191,36,.13); border: 1px solid rgba(251,191,36,.25); border-radius: 15px; font-size: 1.25rem; }
+        .confirm-dialog-icon.danger { color: #fb7185; background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.28); }
+        .confirm-dialog h2 { margin-bottom: 8px; font-size: 1.22rem; }
+        .confirm-dialog p { color: #aeb9ca; line-height: 1.65; white-space: pre-line; }
+        .confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+        .confirm-dialog-actions button { min-height: 42px; }
+        .confirm-cancel { color: #d5deec; background: rgba(255,255,255,.05); border: 1px solid rgba(148,163,184,.25); padding: 9px 16px; border-radius: 10px; cursor: pointer; }
+        .confirm-accept { color: #fff; background: var(--blue); border: 0; padding: 9px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .confirm-accept.danger { background: linear-gradient(135deg,#e11d48,#be123c); }
+        .confirm-cancel:focus-visible, .confirm-accept:focus-visible { outline: 3px solid rgba(96,165,250,.55); outline-offset: 2px; }
+        @keyframes confirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes toastIn { to { opacity: 1; transform: translateY(0); } }
         @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
         @media(max-width:600px) { #toast-container { top: auto; right: 16px; bottom: 16px; } }
@@ -820,6 +833,60 @@
             }, type === 'error' ? 5000 : 3200);
             return toast;
         };
+        window.showConfirm = function(message, options = {}) {
+            return new Promise(resolve => {
+                if (document.querySelector('[data-confirm-dialog]')) return resolve(false);
+                const backdrop = document.createElement('div');
+                backdrop.className = 'confirm-backdrop';
+                const dialog = document.createElement('section');
+                dialog.className = 'confirm-dialog';
+                dialog.dataset.confirmDialog = 'true';
+                dialog.setAttribute('role', 'alertdialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.setAttribute('aria-labelledby', 'confirm-dialog-title');
+                dialog.setAttribute('aria-describedby', 'confirm-dialog-message');
+                const icon = document.createElement('div');
+                icon.className = `confirm-dialog-icon${options.danger ? ' danger' : ''}`;
+                icon.innerHTML = options.danger ? '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i>' : '<i class="fas fa-circle-question" aria-hidden="true"></i>';
+                const title = document.createElement('h2');
+                title.id = 'confirm-dialog-title';
+                title.textContent = options.title || 'ยืนยันการดำเนินการ';
+                const body = document.createElement('p');
+                body.id = 'confirm-dialog-message';
+                body.textContent = String(message ?? '');
+                const actions = document.createElement('div');
+                actions.className = 'confirm-dialog-actions';
+                const cancel = document.createElement('button');
+                cancel.type = 'button'; cancel.className = 'confirm-cancel'; cancel.dataset.confirmCancel = 'true'; cancel.textContent = options.cancelLabel || 'ยกเลิก';
+                const accept = document.createElement('button');
+                accept.type = 'button'; accept.className = `confirm-accept${options.danger ? ' danger' : ''}`; accept.dataset.confirmAccept = 'true'; accept.textContent = options.confirmLabel || 'ยืนยัน';
+                actions.append(cancel, accept); dialog.append(icon, title, body, actions); backdrop.appendChild(dialog); document.body.appendChild(backdrop);
+                const previousFocus = document.activeElement;
+                let settled = false;
+                const finish = result => {
+                    if (settled) return;
+                    settled = true;
+                    document.removeEventListener('keydown', onKeyDown);
+                    backdrop.remove();
+                    if (previousFocus?.isConnected) previousFocus.focus();
+                    resolve(result);
+                };
+                const onKeyDown = event => {
+                    if (event.key === 'Escape') { event.preventDefault(); finish(false); return; }
+                    if (event.key === 'Tab') {
+                        const focusables = [cancel, accept];
+                        const current = focusables.indexOf(document.activeElement);
+                        if (event.shiftKey && current <= 0) { event.preventDefault(); accept.focus(); }
+                        else if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); cancel.focus(); }
+                    }
+                };
+                cancel.addEventListener('click', () => finish(false));
+                accept.addEventListener('click', () => finish(true));
+                backdrop.addEventListener('click', event => { if (event.target === backdrop) finish(false); });
+                document.addEventListener('keydown', onKeyDown);
+                cancel.focus();
+            });
+        };
         // ================= 📌 1. ตรวจสอบสิทธิ์ความปลอดภัย (JWT Authentication Guard) =================
         const token = localStorage.getItem('ocean_token');
         const tokenUser = localStorage.getItem('ocean_user');
@@ -842,11 +909,13 @@
 
         // ฟังก์ชัน Logout
         window.logout = function() {
-            if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+            return showConfirm('คุณต้องการออกจากระบบใช่หรือไม่?', { title: 'ออกจากระบบ' }).then(confirmed => {
+                if (!confirmed) return false;
                 localStorage.removeItem('ocean_token');
                 localStorage.removeItem('ocean_user');
                 window.location.href = 'auth.html';
-            }
+                return true;
+            });
         };
 
         // ตรวจสอบความถูกต้องของ Token กับ Server
@@ -1239,8 +1308,8 @@
             }
         });
 
-        window.regenerateStreamKey = function() {
-            if (confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการสร้าง OBS Stream Key ใหม่? (คุณจะต้องนำลิงก์ใหม่ไปใส่ใน OBS)')) {
+        window.regenerateStreamKey = async function() {
+            if (await showConfirm('การสร้าง Stream Key ใหม่จะตัดการเชื่อมต่อ Widget เดิม คุณต้องนำลิงก์ใหม่ไปใส่ใน OBS', { title: 'สร้าง OBS Stream Key ใหม่', confirmLabel: 'สร้างคีย์ใหม่', danger: true })) {
                 socket.emit('regenerate_widget_token', { username, token });
             }
         };
@@ -1456,17 +1525,18 @@
             });
         });
 
-        window.deleteHistory = function(id) {
-            if(confirm('คุณต้องการลบประวัติการโดเนทนี้ใช่หรือไม่?')) {
+        window.deleteHistory = async function(id) {
+            if(await showConfirm('รายการนี้จะถูกลบออกจากประวัติและสถิติที่เกี่ยวข้อง', { title: 'ลบประวัติโดเนท', confirmLabel: 'ลบรายการ', danger: true })) {
                 socket.emit('delete_donation', { username, token, id });
             }
         };
 
-        window.resetStats = function() {
-            if(confirm('⚠️ คุณแน่ใจหรือไม่ว่าต้องการ "รีเซ็ตยอดเงินและประวัติทั้งหมด" ให้เป็น 0 ?')) {
+        window.resetStats = async function() {
+            const confirmed = await showConfirm('การดำเนินการนี้จะรีเซ็ตยอดเงินและล้างประวัติโดเนททั้งหมด ไม่สามารถย้อนกลับได้', { title: 'รีเซ็ตยอดเงินและประวัติทั้งหมด', confirmLabel: 'รีเซ็ตข้อมูล', danger: true });
+            if (confirmed) {
                 socket.emit('reset_stats', { username, token });
-                showToast('✅ รีเซ็ตข้อมูลเรียบร้อยแล้ว!');
             }
+            return confirmed;
         };
 
         // ================= 📌 9. ตั้งค่าวิดเจ็ต Alert & พรีวิว & ทดสอบเสียง =================

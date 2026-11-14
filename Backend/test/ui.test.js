@@ -13,6 +13,7 @@ function createDashboard() {
     const handlers = new Map();
     const emitted = [];
     const alerts = [];
+    const confirms = [];
     const socket = {
         on: (name, callback) => handlers.set(name, callback),
         emit: (...args) => emitted.push(args)
@@ -25,12 +26,12 @@ function createDashboard() {
             window.localStorage.setItem('ocean_user', 'testuser');
             window.io = () => socket;
             window.alert = message => alerts.push(String(message));
-            window.confirm = () => true;
+            window.confirm = message => { confirms.push(String(message)); return false; };
             window.fetch = async () => ({ ok: true, status: 200, json: async () => ({ providers: [] }) });
         }
     });
     openDoms.push(dom);
-    return { dom, handlers, emitted, alerts };
+    return { dom, handlers, emitted, alerts, confirms };
 }
 
 test('Timer preview updates immediately from unsaved duration and appearance inputs', () => {
@@ -70,7 +71,7 @@ test('duplicate gift preset uses a non-modal toast instead of browser alert', ()
     dom.window.close();
 });
 
-test('selecting a donation gift shows its icon, price, effect, and fixed amount', () => {
+test('donation gift cards show their preview before selection and select fixed price', () => {
     const handlers = new Map();
     const socket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
     const dom = new JSDOM(donateHtml, {
@@ -84,7 +85,11 @@ test('selecting a donation gift shows its icon, price, effect, and fixed amount'
     });
     openDoms.push(dom);
     handlers.get('apply_gifts')([{ giftId: 'flower-80', name: 'ดอกไม้', price: 80, iconId: 'flower', effectId: 'confetti', active: true, timerAction: 'none' }]);
-    dom.window.selectGift('flower-80');
+    const giftCard = [...dom.window.document.querySelectorAll('.gift-option')].find(card => card.dataset.giftId === 'flower-80');
+    assert.ok(giftCard);
+    assert.equal(giftCard.querySelector('.gift-option-art').textContent, '🌸');
+    assert.match(giftCard.textContent, /เอฟเฟกต์กระดาษสี/);
+    giftCard.click();
     const preview = dom.window.document.getElementById('gift-selected-preview');
     assert.equal(preview.classList.contains('is-visible'), true);
     assert.equal(dom.window.document.getElementById('gift-selected-name').textContent, 'ดอกไม้');
@@ -93,4 +98,22 @@ test('selecting a donation gift shows its icon, price, effect, and fixed amount'
     assert.equal(dom.window.document.getElementById('input-amount').value, '80.00');
     dom.window.selectGift('');
     assert.equal(preview.classList.contains('is-visible'), false);
+});
+
+test('reset confirmation uses the OceanDonate dialog and only resets after approval', async () => {
+    const { dom, emitted, confirms } = createDashboard();
+    const pending = dom.window.resetStats();
+    const dialog = dom.window.document.querySelector('[data-confirm-dialog]');
+    assert.ok(dialog);
+    assert.equal(dialog.getAttribute('role'), 'alertdialog');
+    assert.match(dialog.textContent, /รีเซ็ตยอดเงินและประวัติทั้งหมด/);
+    dialog.querySelector('[data-confirm-cancel]').click();
+    assert.equal(await pending, false);
+    assert.equal(emitted.some(([event]) => event === 'reset_stats'), false);
+    assert.deepEqual(confirms, []);
+
+    const approved = dom.window.resetStats();
+    dom.window.document.querySelector('[data-confirm-accept]').click();
+    assert.equal(await approved, true);
+    assert.equal(emitted.some(([event]) => event === 'reset_stats'), true);
 });

@@ -60,6 +60,20 @@
         .gift-selected-details { min-width: 0; flex: 1; }
         .gift-selected-name { font-weight: 600; }
         .gift-selected-meta { color: var(--text); font-size: .9rem; }
+        .gift-selection-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(122px,1fr)); gap: 10px; margin: 10px 0; }
+        .gift-option { min-width: 0; padding: 10px 8px 11px; border: 1px solid rgba(148,163,184,.24); border-radius: 14px; background: linear-gradient(155deg,rgba(30,37,57,.94),rgba(12,16,28,.96)); color: white; text-align: center; cursor: pointer; transition: transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease; }
+        .gift-option:hover { transform: translateY(-2px); border-color: rgba(96,165,250,.7); box-shadow: 0 9px 22px rgba(0,0,0,.24); }
+        .gift-option[aria-pressed="true"] { border-color: var(--blue); background: linear-gradient(155deg,rgba(58,134,255,.24),rgba(12,16,28,.96)); box-shadow: 0 0 0 2px rgba(58,134,255,.2),0 10px 24px rgba(58,134,255,.14); }
+        .gift-option-art { display: grid; place-items: center; min-height: 68px; margin-bottom: 7px; border-radius: 10px; background: radial-gradient(circle at 50% 42%,rgba(96,165,250,.3),rgba(139,92,246,.13) 48%,transparent 76%); font-size: 2.65rem; filter: drop-shadow(0 5px 8px rgba(0,0,0,.35)); }
+        .gift-option[data-effect="firework"] .gift-option-art, .gift-option[data-effect="burst"] .gift-option-art { background: radial-gradient(circle,rgba(251,191,36,.34),rgba(244,63,94,.12) 52%,transparent 76%); }
+        .gift-option[data-effect="heart"] .gift-option-art, .gift-option[data-effect="shine"] .gift-option-art { background: radial-gradient(circle,rgba(244,114,182,.28),rgba(139,92,246,.12) 52%,transparent 76%); }
+        .gift-option-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+        .gift-option-price { display: block; margin-top: 2px; color: var(--text); font-size: .85rem; }
+        .gift-option-effect { display: block; min-height: 1.15rem; margin-top: 4px; color: #9fc2ff; font-size: .73rem; }
+        .gift-option-regular .gift-option-art { background: radial-gradient(circle,rgba(244,63,94,.25),transparent 72%); }
+        body[data-theme="soft"] .gift-option { color: #172033; background: linear-gradient(155deg,#fff,#eaf0f8); border-color: #cbd5e1; }
+        body[data-theme="soft"] .gift-option[aria-pressed="true"] { border-color: var(--blue); background: linear-gradient(155deg,#eff6ff,#fff); }
+        @media (prefers-reduced-motion: reduce) { .gift-option { transition: none; } .gift-option:hover { transform: none; } }
         @keyframes giftPreviewIn { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         
         .amount-presets { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
@@ -180,10 +194,9 @@
                 </div>
 
                 <div class="form-group" id="gift-picker-wrap" style="margin: -10px 0 24px;">
-                    <label for="gift-selection" class="lang-el" data-th="หรือเลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)" data-en="Or choose one fixed-price gift">หรือเลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)</label>
-                    <select id="gift-selection" class="form-control" onchange="selectGift(this.value)">
-                        <option value="" class="lang-el" data-th="โดเนททั่วไป — กำหนดจำนวนเงินเอง" data-en="Regular donation — enter any amount">โดเนททั่วไป — กำหนดจำนวนเงินเอง</option>
-                    </select>
+                    <span id="gift-selection-label" class="lang-el" data-th="เลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)" data-en="Choose one fixed-price gift">เลือกของขวัญราคาแน่นอน (เลือกได้ 1 ชิ้น)</span>
+                    <input id="gift-selection" type="hidden" value="">
+                    <div id="gift-selection-grid" class="gift-selection-grid" role="group" aria-labelledby="gift-selection-label"></div>
                     <small id="gift-selection-help" style="color:var(--text);">ถ้าเลือกของขวัญ ระบบจะใช้ราคาของขวัญนั้น และยังพิมพ์ข้อความได้</small>
                     <div id="gift-selected-preview" class="gift-selected-preview" role="status" aria-live="polite">
                         <span id="gift-selected-icon" class="gift-selected-icon" aria-hidden="true">🎁</span>
@@ -374,6 +387,30 @@
         const giftPreviewIcons = { wave: '🌊', gift: '🎁', star: '⭐', gem: '💎', dolphin: '🐬', jellyfish: '🪼', flower: '🌸', balloon: '🎈', cake: '🎂', rocket: '🚀', crown: '👑', firework: '🎆' };
         const giftPreviewEffects = { sparkle: 'ประกาย', burst: 'ระเบิดแสง', coins: 'เหรียญ', heart: 'หัวใจ', confetti: 'กระดาษสี', firework: 'ดอกไม้ไฟ', shine: 'แสงวาบ', shake: 'สั่นเบา ๆ' };
 
+        function renderGiftOptions() {
+            const grid = document.getElementById('gift-selection-grid');
+            if (!grid) return;
+            grid.replaceChildren();
+            const addOption = (gift, regular = false) => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `gift-option${regular ? ' gift-option-regular' : ''}`;
+                card.dataset.giftId = gift?.giftId || '';
+                if (gift?.effectId) card.dataset.effect = gift.effectId;
+                card.setAttribute('aria-pressed', String((gift?.giftId || '') === selectedGiftId));
+                card.setAttribute('aria-label', regular ? 'โดเนททั่วไป กำหนดจำนวนเงินเอง' : `${gift.name} ราคา ${Number(gift.price).toFixed(2)} บาท เอฟเฟกต์${giftPreviewEffects[gift.effectId] || 'ประกาย'}`);
+                const art = document.createElement('span'); art.className = 'gift-option-art'; art.textContent = regular ? '💝' : giftPreviewIcons[gift.iconId] || '🎁'; art.setAttribute('aria-hidden', 'true');
+                const name = document.createElement('span'); name.className = 'gift-option-name'; name.textContent = regular ? 'โดเนททั่วไป' : gift.name;
+                const price = document.createElement('span'); price.className = 'gift-option-price'; price.textContent = regular ? 'กำหนดราคาเอง' : `${Number(gift.price).toFixed(2)} บาท`;
+                const effect = document.createElement('span'); effect.className = 'gift-option-effect'; effect.textContent = regular ? 'พิมพ์ยอดได้ตามต้องการ' : `เอฟเฟกต์${giftPreviewEffects[gift.effectId] || 'ประกาย'}`;
+                card.append(art, name, price, effect);
+                card.addEventListener('click', () => selectGift(gift?.giftId || ''));
+                grid.appendChild(card);
+            };
+            addOption(null, true);
+            giftCatalog.forEach(gift => addOption(gift));
+        }
+
         function updateSelectedGiftPreview(gift) {
             const preview = document.getElementById('gift-selected-preview');
             if (!preview) return;
@@ -390,20 +427,13 @@
 
         function applyGiftCatalog(gifts) {
             giftCatalog = Array.isArray(gifts) ? gifts.filter(gift => gift && gift.giftId && gift.active !== false) : [];
-            const select = document.getElementById('gift-selection');
-            if (!select) return;
-            const selected = select.value;
-            select.replaceChildren();
-            const regular = document.createElement('option'); regular.value = ''; regular.textContent = currentLang === 'en' ? 'Regular donation — enter any amount' : 'โดเนททั่วไป — กำหนดจำนวนเงินเอง'; select.appendChild(regular);
-            giftCatalog.forEach(gift => {
-                const option = document.createElement('option'); option.value = gift.giftId; option.textContent = `${gift.name} · ${Number(gift.price).toFixed(2)} บาท`;
-                select.appendChild(option);
-            });
-            if (giftCatalog.some(gift => gift.giftId === selected)) select.value = selected;
             if (selectedGiftId && !giftCatalog.some(gift => gift.giftId === selectedGiftId)) selectGift('');
+            else renderGiftOptions();
         }
         window.selectGift = function(giftId) {
             selectedGiftId = giftId || null;
+            const giftSelection = document.getElementById('gift-selection');
+            if (giftSelection) giftSelection.value = selectedGiftId || '';
             const gift = giftCatalog.find(item => item.giftId === selectedGiftId);
             const amountInput = document.getElementById('input-amount');
             amountInput.disabled = Boolean(gift);
@@ -413,6 +443,7 @@
                 updateDonateButton(gift.price);
             }
             updateSelectedGiftPreview(gift);
+            renderGiftOptions();
         };
 
         // 🟢 โหลดข้อมูลโปรไฟล์สตรีมเมอร์ผ่าน REST API เพื่อความรวดเร็วและตรวจสอบว่ามีผู้ใช้จริง
@@ -620,6 +651,8 @@
             selectedGiftId = null;
             const giftSelect = document.getElementById('gift-selection');
             if (giftSelect) giftSelect.value = '';
+            updateSelectedGiftPreview(null);
+            renderGiftOptions();
             const amountInput = document.getElementById('input-amount');
             if (amountInput) amountInput.disabled = false;
             document.querySelectorAll('.amount-btn').forEach(button => button.disabled = false);

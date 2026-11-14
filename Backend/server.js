@@ -1178,11 +1178,22 @@ app.post('/api/donations/test', rateLimitDonation, async (req, res) => {
     try {
         const user = await User.findOne({ username: req.body?.username });
         if (!user) return res.status(404).json({ message: 'ไม่พบสตรีมเมอร์' });
-        const parsed = validateDonationInput(req.body);
+        let selectedGift = null;
+        if (req.body?.giftId !== undefined) {
+            if (typeof req.body.giftId !== 'string' || req.body.giftId.length > 80) return res.status(400).json({ message: 'ของขวัญที่เลือกไม่ถูกต้อง' });
+            selectedGift = await GiftCatalogItem.findOne({ userId: user._id, giftId: req.body.giftId, active: true });
+            if (!selectedGift) return res.status(400).json({ message: 'ของขวัญนี้ไม่พร้อมให้เลือกแล้ว กรุณาโหลดหน้าใหม่' });
+        }
+        const parsed = validateDonationInput(selectedGift ? { ...req.body, amount: selectedGift.price } : req.body);
         parsed.message = parsed.message.slice(0, Number(user.pageSettings?.maxMessageLength) || 150);
         if (donationTextIsBanned(user, parsed.name, parsed.message)) return res.status(400).json({ message: 'ชื่อหรือข้อความมีคำที่ไม่เหมาะสม' });
-        const testDonation = await Donation.create({ userId: user._id, username: user.username, ...parsed, paymentMethod: 'test', status: 'test' });
-        const alert = { name: testDonation.name, amount: testDonation.amount, message: testDonation.message, imageUrl: testDonation.imageUrl, date: testDonation.date, isTest: true };
+        const giftSnapshot = selectedGift ? {
+            giftId: selectedGift.giftId, name: selectedGift.name, price: selectedGift.price,
+            iconId: selectedGift.iconId, effectId: selectedGift.effectId,
+            timerAction: selectedGift.timerAction || 'none', seconds: selectedGift.seconds || 0
+        } : null;
+        const testDonation = await Donation.create({ userId: user._id, username: user.username, ...parsed, paymentMethod: 'test', status: 'test', giftSnapshot });
+        const alert = { name: testDonation.name, amount: testDonation.amount, message: testDonation.message, imageUrl: testDonation.imageUrl, giftSnapshot: testDonation.giftSnapshot, date: testDonation.date, isTest: true };
         io.to(alertRoom(user.username)).emit('show_alert', alert);
         io.to(ownerRoom(user.username)).emit('update_history', await dashboardHistory(user));
         res.status(201).json({ success: true, status: 'test', message: 'ส่งการทดสอบแล้ว' });
@@ -1546,6 +1557,7 @@ io.on('connection', (socket) => {
             io.to(ownerRoom(data.username)).emit('update_leaderboard', []);
             io.to(widgetRoom(data.username)).emit('update_leaderboard', []);
             io.to(publicRoom(data.username)).emit('update_leaderboard', []);
+            socket.emit('notify_success', 'รีเซ็ตข้อมูลเรียบร้อยแล้ว!');
         }
     });
 
