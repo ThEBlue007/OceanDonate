@@ -177,7 +177,7 @@ const AlertQueueSchema = new mongoose.Schema({
     finishedAt: { type: Date, default: null }
 });
 AlertQueueSchema.index({ userId: 1, status: 1, createdAt: 1 });
-AlertQueueSchema.index({ userId: 1 }, { unique: true, partialFilterExpression: { status: 'playing' } });
+AlertQueueSchema.index({ userId: 1, status: 1 }, { unique: true, partialFilterExpression: { status: 'playing' } });
 const AlertQueue = mongoose.model('AlertQueue', AlertQueueSchema);
 
 const GiftCatalogItemSchema = new mongoose.Schema({

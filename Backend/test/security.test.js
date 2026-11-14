@@ -134,6 +134,7 @@ before(async () => {
         if (Date.now() - startedAt > 15000) throw new Error(`Test server did not start:\n${output}`);
         await delay(50);
     }
+    assert.ok(!output.includes('Duplicate schema index on {"userId":1} for model "AlertQueue"'));
 
     username = `security-${Date.now()}`;
     await registerAndLogin();
@@ -332,6 +333,18 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     assert.equal(user.history.length, 1);
     owner.disconnect();
     widget.disconnect();
+});
+
+test('alert queue has a partial unique index for one playing alert per streamer', async () => {
+    const indexes = await dbConnection.collection('alertqueues').indexes();
+    const playingIndex = indexes.find(index =>
+        index.key.userId === 1 &&
+        index.key.status === 1 &&
+        index.unique === true &&
+        index.partialFilterExpression?.status === 'playing'
+    );
+
+    assert.ok(playingIndex, 'expected a unique userId/status index limited to playing alerts');
 });
 
 test('test donations create a log and OBS alert without changing totals or leaderboard', async () => {
