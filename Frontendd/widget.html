@@ -135,6 +135,7 @@
     </style>
 </head>
 <body>
+    <div id="demo-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:9999;padding:4px 9px;border-radius:6px;background:#fde68a;color:#422006;font:700 12px sans-serif;">DEMO · ไม่มีเงินจริง</div>
     <div id="gift-fx-layer" aria-hidden="true"></div>
     <div id="alert-box">
         <div id="gift-effect" aria-live="polite"></div>
@@ -314,6 +315,7 @@
                 processNextAlert(); 
             }
         });
+        socket.on('apply_demo_mode', enabled => { document.getElementById('demo-badge').style.display = enabled ? 'block' : 'none'; });
 
         // 🟢 ระบบรันคิวแจ้งเตือนแบบ State Machine (ป้องกันเสียงซ้อน & ไม่ค้าง 100%)
         function processNextAlert() {
@@ -324,6 +326,7 @@
             isAlertActive = true; 
             const data = alertQueue.shift(); 
             activeQueueId = data.queueId || null;
+            if (data.isDemo) document.getElementById('demo-badge').style.display = 'block';
 
             const donatorName = data.name || 'ผู้ไม่ประสงค์ออกนาม';
             const donateAmount = (data.amount || 0).toLocaleString();

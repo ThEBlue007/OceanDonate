@@ -30,6 +30,7 @@
     </style>
 </head>
 <body>
+    <div id="demo-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:99;padding:4px 9px;border-radius:6px;background:#fde68a;color:#422006;font:700 12px sans-serif;">DEMO · ไม่มีเงินจริง</div>
     <div class="goal-container">
         <div class="goal-title" id="goal-title">เป้าหมายโดเนท</div>
         <div class="goal-bar-bg">
@@ -49,6 +50,7 @@
         socket.on('connect', () => {
             socket.emit('join_widget', { token: widgetToken, username: streamerName });
         });
+        socket.on('apply_demo_mode', enabled => { document.getElementById('demo-badge').style.display = enabled ? 'block' : 'none'; });
 
         socket.on('apply_goal', (goal) => {
             if (!goal) return;

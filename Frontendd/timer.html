@@ -24,6 +24,7 @@
     </style>
 </head>
 <body data-position="center">
+    <div id="demo-badge" style="display:none;position:fixed;top:8px;right:8px;z-index:99;padding:4px 9px;border-radius:6px;background:#fde68a;color:#422006;font:700 12px sans-serif;">DEMO · ไม่มีเงินจริง</div>
     <output id="timer" role="timer" aria-label="เวลาไลฟ์คงเหลือ" data-stopped="true">00:00:00</output>
     <div id="message">โดเนทเพื่อเพิ่มเวลา!</div>
     <div id="status" role="status" aria-live="polite">เชื่อมต่อ Widget เพื่อรับเวลาไลฟ์</div>
@@ -60,6 +61,7 @@
             statusEl.textContent = 'กำลังเชื่อมต่อ';
         });
         socket.on('auth_error', error => { statusEl.textContent = error?.message || 'Widget token ไม่ถูกต้อง'; });
+        socket.on('apply_demo_mode', enabled => { document.getElementById('demo-badge').style.display = enabled ? 'block' : 'none'; });
         socket.on('apply_timer', incoming => {
             state = { ...state, ...incoming };
             expired = Boolean(incoming?.hasEnded);

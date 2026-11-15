@@ -119,6 +119,8 @@
         body[data-theme="neon"] .top-donor-box { background: rgba(217,70,239,.08); border-color: rgba(217,70,239,.35); }
         #preview-banner { display:none; position:sticky; top:0; z-index:1000; padding:9px 14px; text-align:center; background:#fbbf24; color:#172033; font-weight:600; }
         body[data-preview="true"] #preview-banner { display:block; }
+        #portfolio-demo-banner { display:none; position:sticky; top:0; z-index:999; padding:9px 14px; text-align:center; background:#fde68a; color:#422006; font-weight:700; }
+        body[data-portfolio-demo="true"] #portfolio-demo-banner { display:block; }
         body[data-preview="true"] #btn-submit-donate { opacity:.55; cursor:not-allowed; }
         @media (max-width: 768px) { body[data-layout="minimal"] .donate-container { grid-template-columns: 1fr; } }
     </style>
@@ -126,6 +128,7 @@
 <body>
 
     <div id="preview-banner" role="status">ตัวอย่างหน้า Donate — ปิดการชำระเงินจริงและ Test Donation</div>
+    <div id="portfolio-demo-banner" role="status">โหมดตัวอย่างสำหรับ Portfolio · ไม่มีการโอนเงินจริง และยอดที่แสดงเป็นสถิติเดโม</div>
 
     <div class="bg-glow top-left"></div>
     <div class="bg-glow bottom-right"></div>
@@ -350,6 +353,7 @@
             langToggle.addEventListener('click', () => {
                 currentLang = currentLang === 'th' ? 'en' : 'th';
                 updateLanguage();
+                if (typeof applyPaymentMethods === 'function') applyPaymentMethods(paymentSettings || {});
             });
         }
 
@@ -389,6 +393,7 @@
         let allowDonorImages = true;
         let minAmountForImage = 20;
         let paymentSettings = null;
+        let portfolioDemoMode = false;
         let selectedPayment = 'promptpay';
         let giftCatalog = [];
         let selectedGiftId = null;
@@ -498,6 +503,8 @@
                 applySocialLinks(data.socialLinks);
 
                 // ตั้งค่าช่องทางชำระเงิน
+                portfolioDemoMode = data.portfolioDemoMode === true;
+                document.body.dataset.portfolioDemo = String(portfolioDemoMode);
                 applyPaymentMethods(data.paymentMethods);
                 applyGiftCatalog(data.giftCatalog);
 
@@ -612,6 +619,11 @@
         socket.on('apply_payment', (settings) => {
             applyPaymentMethods(settings);
         });
+        socket.on('apply_demo_mode', enabled => {
+            portfolioDemoMode = enabled === true;
+            document.body.dataset.portfolioDemo = String(portfolioDemoMode);
+            applyPaymentMethods(paymentSettings || {});
+        });
         socket.on('apply_gifts', gifts => applyGiftCatalog(gifts));
 
         function applyPaymentMethods(settings) {
@@ -620,6 +632,21 @@
             const bankCard = document.getElementById('pay-bank');
             const noPayMsg = document.getElementById('no-payment-msg');
             const btnDonate = document.getElementById('btn-submit-donate');
+            const testCard = document.getElementById('pay-test');
+
+            if (portfolioDemoMode) {
+                if (ppCard) { ppCard.style.display = 'flex'; ppCard.querySelector('span').textContent = currentLang === 'en' ? 'PromptPay (Demo)' : 'พร้อมเพย์ (จำลอง)'; }
+                if (bankCard) { bankCard.style.display = 'flex'; bankCard.querySelector('span').textContent = currentLang === 'en' ? 'Bank Transfer (Demo)' : 'โอนธนาคาร (จำลอง)'; }
+                const warningTitle = noPayMsg?.querySelector('strong');
+                const warningText = noPayMsg?.querySelector('span');
+                if (warningTitle) warningTitle.textContent = currentLang === 'en' ? 'Portfolio demo mode' : 'โหมดจำลองสำหรับ Portfolio';
+                if (warningText) warningText.textContent = currentLang === 'en' ? 'No money is transferred. Demo stats, Goal, Timer, Leaderboard and OBS Alert will update.' : 'ไม่มีเงินจริงถูกโอน ระบบจะเพิ่มเฉพาะสถิติเดโม พร้อม Goal, Timer, Leaderboard และ OBS Alert';
+                if (noPayMsg) { noPayMsg.style.display = 'block'; noPayMsg.style.color = '#92400e'; noPayMsg.style.background = 'rgba(251,191,36,.12)'; noPayMsg.style.borderColor = 'rgba(251,191,36,.4)'; }
+                if (testCard) testCard.style.display = 'flex';
+                selectPayment('promptpay');
+                if (btnDonate) { btnDonate.style.opacity = '1'; btnDonate.style.pointerEvents = 'auto'; updateDonateButton(document.getElementById('input-amount').value || 50); }
+                return;
+            }
 
             let hasActiveMethod = false;
 
@@ -641,7 +668,6 @@
                 if (bankCard) bankCard.style.display = 'none';
             }
 
-            const testCard = document.getElementById('pay-test');
             if (testCard) testCard.style.display = 'flex';
             if (!hasActiveMethod) selectPayment('test');
 
@@ -732,6 +758,16 @@
             }
             const payload = { username: streamerName, amount, name, message, imageUrl };
             if (selectedGiftId) payload.giftId = selectedGiftId;
+            if (portfolioDemoMode && ['promptpay', 'bank'].includes(selectedPayment)) {
+                const response = await fetch('/api/donations/demo', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...payload, paymentMethod: selectedPayment })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) return alert(result.message || (currentLang === 'en' ? 'Demo donation failed.' : 'จำลองโดเนทไม่สำเร็จ'));
+                showThankYou(currentLang === 'en' ? 'Portfolio demo only. No money was transferred. Demo stats and OBS alert were updated.' : 'รายการจำลองสำหรับ Portfolio เท่านั้น ไม่มีการโอนเงินจริง และอัปเดตเฉพาะสถิติเดโมกับ OBS Alert แล้ว', false, true);
+                return;
+            }
             if (selectedPayment === 'test') {
                 const response = await fetch('/api/donations/test', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -794,10 +830,10 @@
             showThankYou(currentLang === 'en' ? 'Payment verified. Thank you for your donation!' : 'ตรวจสอบการโอนแล้ว ขอบคุณสำหรับโดเนทครับ!');
         };
 
-        function showThankYou(message, isTest = false) {
+        function showThankYou(message, isTest = false, isDemo = false) {
             const thankTitle = document.getElementById('thankyou-title');
-            const titleTh = isTest ? 'ส่งการทดสอบแล้ว' : 'ยืนยันโดเนทแล้ว';
-            const titleEn = isTest ? 'Test Alert Sent' : 'Donation Confirmed';
+            const titleTh = isDemo ? 'ส่งโดเนทจำลองแล้ว' : isTest ? 'ส่งการทดสอบแล้ว' : 'ยืนยันโดเนทแล้ว';
+            const titleEn = isDemo ? 'Demo Donation Sent' : isTest ? 'Test Alert Sent' : 'Donation Confirmed';
             thankTitle.setAttribute('data-th', titleTh);
             thankTitle.setAttribute('data-en', titleEn);
             thankTitle.textContent = currentLang === 'en' ? titleEn : titleTh;

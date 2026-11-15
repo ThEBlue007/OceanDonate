@@ -59,6 +59,7 @@ const UserSchema = new mongoose.Schema({
         total: { type: Number, default: 0 }, 
         views: { type: Number, default: 0 } 
     },
+    demoStats: { today: { type: Number, default: 0 }, total: { type: Number, default: 0 }, todayDate: { type: String, default: '' } },
     pageSettings: { 
         bio: { type: String, default: "ยินดีต้อนรับสู่ช่องของฉัน!" }, 
         thankMsg: { type: String, default: "ขอบคุณสำหรับการโดเนทครับ!" }, 
@@ -84,6 +85,7 @@ const UserSchema = new mongoose.Schema({
     topDonorSettings: { type: Object, default: {} },
     timerSettings: { type: Object, default: { initialSeconds: 3600, amountRules: [] } },
     timerState: { type: Object, default: { isRunning: false, endsAt: null, bankedSeconds: 0, remainingSeconds: 0 } },
+    demoTimerState: { type: Object, default: null },
     alertControl: { type: Object, default: { pausedUntil: null } },
     history: [{ 
         donationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Donation' },
@@ -156,7 +158,7 @@ const DonationSchema = new mongoose.Schema({
     receiverAccountName: { type: String },
     receiverAccountId: { type: Number },
     giftSnapshot: { type: Object, default: null },
-    status: { type: String, enum: ['pending', 'confirmed', 'rejected', 'test', 'deleted'], default: 'pending', index: true },
+    status: { type: String, enum: ['pending', 'confirmed', 'rejected', 'test', 'demo', 'deleted'], default: 'pending', index: true },
     providerRef: { type: String },
     createdAt: { type: Date, default: Date.now },
     date: { type: Date, default: Date.now, index: true },
@@ -396,6 +398,63 @@ function getTopDonators(history) {
         .slice(0, 5); 
 }
 
+const PORTFOLIO_DEMO_MODE = process.env.PORTFOLIO_DEMO_MODE !== 'false';
+function demoGoalSnapshot(user) {
+    const settings = user.goalSettings && user.goalSettings.title ? user.goalSettings :
+        { title: 'เป้าหมายโดเนท', target: 100, current: 0, barColor: '#0ea5e9', textColor: '#ffffff' };
+    return cleanSettings('goalSettings', { ...settings, current: Number(user.demoStats?.total) || 0 });
+}
+
+function activeTimerState(user) {
+    return PORTFOLIO_DEMO_MODE
+        ? (user.demoTimerState || user.timerState || { isRunning: false, endsAt: null, remainingSeconds: 0, bankedSeconds: 0 })
+        : (user.timerState || {});
+}
+
+function timerMutationTarget(user) {
+    return { timerState: { ...activeTimerState(user) }, timerSettings: user.timerSettings, markModified() {} };
+}
+
+function persistTimerMutation(user, target) {
+    if (PORTFOLIO_DEMO_MODE) {
+        user.demoTimerState = target.timerState;
+        user.markModified('demoTimerState');
+    } else {
+        user.timerState = target.timerState;
+        user.markModified('timerState');
+    }
+}
+
+function bumpDemoStats(user, amount, now = new Date()) {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
+    const previous = user.demoStats || {};
+    user.demoStats = {
+        total: (Number(previous.total) || 0) + amount,
+        today: previous.todayDate === today ? (Number(previous.today) || 0) + amount : amount,
+        todayDate: today
+    };
+}
+
+function demoStatsSnapshot(user, now = new Date()) {
+    const currentDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
+    const stats = user.demoStats || {};
+    return {
+        total: Number(stats.total) || 0,
+        today: stats.todayDate === currentDate ? Number(stats.today) || 0 : 0,
+        todayDate: currentDate
+    };
+}
+
+async function demoLeaderboard(user) {
+    return Donation.aggregate([
+        { $match: { userId: user._id, status: 'demo' } },
+        { $group: { _id: '$name', amount: { $sum: '$amount' } } },
+        { $sort: { amount: -1, _id: 1 } },
+        { $limit: 5 },
+        { $project: { _id: 0, name: '$_id', amount: 1 } }
+    ]);
+}
+
 // ตรวจสอบ JWT Token Helper
 function verifyToken(token) {
     if (!token) return null;
@@ -434,8 +493,7 @@ function safeSeconds(value, allowZero = true) {
     return seconds;
 }
 
-function timerSnapshot(user, now = Date.now()) {
-    const state = user.timerState || {};
+function timerSnapshot(user, now = Date.now(), state = activeTimerState(user)) {
     let remainingSeconds = Math.max(0, Number(state.remainingSeconds) || 0);
     if (state.isRunning && state.endsAt) {
         remainingSeconds = Math.max(0, Math.ceil((new Date(state.endsAt).getTime() - now) / 1000));
@@ -973,7 +1031,8 @@ app.get('/api/streamer/:username', async (req, res) => {
             socialLinks: user.socialLinks || {},
             paymentMethods: publicPaymentMethods(user.paymentMethods),
             giftCatalog: (await GiftCatalogItem.find({ userId: user._id, active: true }).sort({ price: 1 })).map(publicGift),
-            topDonator: getTopDonators(user.history)[0] || null,
+            topDonator: PORTFOLIO_DEMO_MODE ? (await demoLeaderboard(user))[0] || null : getTopDonators(user.history)[0] || null,
+            portfolioDemoMode: PORTFOLIO_DEMO_MODE,
             bannedWords: user.bannedWords || []
         });
     } catch (err) {
@@ -1015,15 +1074,19 @@ function donationTextIsBanned(user, name, message) {
 async function dashboardHistory(user) {
     const tests = await Donation.find({ userId: user._id, status: 'test' })
         .sort({ date: -1 }).limit(50).lean();
+    const demos = await Donation.find({ userId: user._id, status: 'demo' })
+        .sort({ date: -1 }).limit(100).lean();
     const combined = [
         ...(user.history || []).map(item => ({ ...item.toObject?.() || item, status: 'confirmed' })),
-        ...tests.map(item => ({ ...item, isTest: true }))
+        ...tests.map(item => ({ ...item, isTest: true })),
+        ...demos.map(item => ({ ...item, isDemo: true }))
     ];
     return combined.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 }
 
 app.post('/api/donations', rateLimitDonation, async (req, res) => {
     try {
+        if (PORTFOLIO_DEMO_MODE && process.env.ALLOW_REAL_PAYMENTS_IN_TESTS !== 'true') return res.status(503).json({ message: 'ขณะนี้เปิดเฉพาะโหมดจำลอง ไม่มีการรับหรือยืนยันเงินเงินจริง' });
         if (!process.env.EASYSLIP_API_KEY) return res.status(503).json({ message: 'ระบบตรวจสลิปยังไม่พร้อมใช้งาน' });
         const { username, paymentMethod } = req.body || {};
         if (!['promptpay', 'bank'].includes(paymentMethod)) return res.status(400).json({ message: 'ช่องทางชำระเงินไม่ถูกต้อง' });
@@ -1084,8 +1147,65 @@ app.post('/api/donations', rateLimitDonation, async (req, res) => {
     }
 });
 
+app.post('/api/donations/demo', rateLimitDonation, async (req, res) => {
+    try {
+        if (!PORTFOLIO_DEMO_MODE) return res.status(404).json({ message: 'ไม่พบช่องทางนี้' });
+        const { username, paymentMethod } = req.body || {};
+        if (!['promptpay', 'bank'].includes(paymentMethod)) return res.status(400).json({ message: 'ช่องทางจำลองไม่ถูกต้อง' });
+        const user = await User.findOne({ username });
+        if (!user) return res.status(404).json({ message: 'ไม่พบสตรีมเมอร์' });
+        let selectedGift = null;
+        if (req.body?.giftId !== undefined) {
+            if (typeof req.body.giftId !== 'string' || req.body.giftId.length > 80) return res.status(400).json({ message: 'ของขวัญที่เลือกไม่ถูกต้อง' });
+            selectedGift = await GiftCatalogItem.findOne({ userId: user._id, giftId: req.body.giftId, active: true });
+            if (!selectedGift) return res.status(400).json({ message: 'ของขวัญนี้ไม่พร้อมให้เลือกแล้ว กรุณาโหลดหน้าใหม่' });
+        }
+        const parsed = validateDonationInput(selectedGift ? { ...req.body, amount: selectedGift.price } : req.body);
+        parsed.message = parsed.message.slice(0, Number(user.pageSettings?.maxMessageLength) || 150);
+        if (donationTextIsBanned(user, parsed.name, parsed.message)) return res.status(400).json({ message: 'ชื่อหรือข้อความมีคำที่ไม่เหมาะสม' });
+
+        const giftSnapshot = selectedGift ? {
+            giftId: selectedGift.giftId, name: selectedGift.name, price: selectedGift.price,
+            iconId: selectedGift.iconId, effectId: selectedGift.effectId,
+            timerAction: selectedGift.timerAction || 'none', seconds: selectedGift.seconds || 0
+        } : null;
+        const donation = await Donation.create({ userId: user._id, username: user.username, ...parsed, paymentMethod, giftSnapshot, status: 'demo' });
+        bumpDemoStats(user, donation.amount);
+        const timerTarget = timerMutationTarget(user);
+        applyDonationTimer(timerTarget, donation);
+        user.markModified('demoStats');
+        persistTimerMutation(user, timerTarget);
+        await user.save();
+
+        const alert = {
+            name: donation.name, amount: donation.amount, message: donation.message, imageUrl: donation.imageUrl,
+            giftSnapshot: donation.giftSnapshot, date: donation.date, isDemo: true, demoLabel: 'DEMO · ไม่มีเงินจริง'
+        };
+        await AlertQueue.create({ userId: user._id, username: user.username, donationId: donation._id, payload: alert, status: 'queued' });
+        await pumpAlertQueue(user.username);
+
+        const history = await dashboardHistory(user);
+        const leaderboard = await demoLeaderboard(user);
+        const goal = demoGoalSnapshot(user);
+        const timer = timerSnapshot(user);
+        io.to(ownerRoom(user.username)).emit('update_demo_stats', demoStatsSnapshot(user));
+        io.to(ownerRoom(user.username)).emit('update_history', history);
+        io.to(ownerRoom(user.username)).emit('apply_goal', goal);
+        io.to(ownerRoom(user.username)).emit('apply_timer', timer);
+        io.to(ownerRoom(user.username)).emit('update_leaderboard', leaderboard);
+        io.to(widgetRoom(user.username)).emit('apply_goal', goal);
+        io.to(widgetRoom(user.username)).emit('apply_timer', timer);
+        io.to(widgetRoom(user.username)).emit('update_leaderboard', leaderboard);
+        io.to(publicRoom(user.username)).emit('update_leaderboard', leaderboard);
+        res.status(201).json({ success: true, status: 'demo', realPayment: false, demoLabel: alert.demoLabel });
+    } catch (err) {
+        res.status(err.status || 500).json({ message: err.status ? err.message : 'จำลองโดเนทไม่สำเร็จ' });
+    }
+});
+
 app.post('/api/donations/:id/slip', rateLimitDonation, async (req, res) => {
     try {
+        if (PORTFOLIO_DEMO_MODE && process.env.ALLOW_REAL_PAYMENTS_IN_TESTS !== 'true') return res.status(503).json({ message: 'โหมดนี้ปิดการรับและตรวจสอบเงินเงินจริง' });
         if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ message: 'ไม่พบรายการโดเนท' });
         const base64 = req.body?.base64;
         const imageMatch = typeof base64 === 'string' && base64.match(/^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/=]+)$/);
@@ -1146,8 +1266,9 @@ app.post('/api/donations/:id/slip', rateLimitDonation, async (req, res) => {
                     owner.goalSettings.current = (Number(owner.goalSettings.current) || 0) + donation.amount;
                     owner.markModified('goalSettings');
                 }
-                applyDonationTimer(owner, confirmed);
-                owner.markModified('timerState');
+                const timerTarget = timerMutationTarget(owner);
+                applyDonationTimer(timerTarget, confirmed);
+                persistTimerMutation(owner, timerTarget);
                 await owner.save({ session });
                 await AlertQueue.create([{
                     userId: owner._id,
@@ -1214,6 +1335,7 @@ app.post('/api/donations/test', rateLimitDonation, async (req, res) => {
 // Helper ส่งข้อมูลครบวงจรให้ Dashboard
 async function emitDashboardData(socket, user) {
     socket.emit('update_stats', user.stats);
+    socket.emit('update_demo_stats', demoStatsSnapshot(user));
     socket.emit('update_history', await dashboardHistory(user));
     socket.emit('apply_page_settings', user.pageSettings);
     socket.emit('apply_payment', cleanPaymentMethods(user.paymentMethods, true));
@@ -1222,12 +1344,13 @@ async function emitDashboardData(socket, user) {
     socket.emit('apply_security_settings', { widgetToken: user.widgetToken });
     socket.emit('apply_gifts', await GiftCatalogItem.find({ userId: user._id }).sort({ price: 1 }));
     socket.emit('apply_timer', timerSnapshot(user));
+    socket.emit('apply_demo_mode', PORTFOLIO_DEMO_MODE);
     socket.emit('apply_alert_control', { pausedUntil: user.alertControl?.pausedUntil || null });
     
     // 1. ค่าเริ่มต้นของ Goal
     const goalData = (user.goalSettings && user.goalSettings.title) ? user.goalSettings : 
         { title: 'เป้าหมายโดเนท', target: 100, current: 0, barColor: '#0ea5e9', textColor: '#ffffff' };
-    socket.emit('apply_goal', cleanSettings('goalSettings', goalData));
+    socket.emit('apply_goal', PORTFOLIO_DEMO_MODE ? demoGoalSnapshot(user) : cleanSettings('goalSettings', goalData));
 
     // 2. ค่าเริ่มต้นของ Alert
     const alertData = (user.alertSettings && user.alertSettings.layout) ? user.alertSettings : 
@@ -1254,7 +1377,7 @@ async function emitDashboardData(socket, user) {
     socket.emit('apply_top_donor', cleanSettings('topDonorSettings', tdData));
     
     // ส่งตารางอันดับ
-    socket.emit('update_leaderboard', getTopDonators(user.history));
+    socket.emit('update_leaderboard', PORTFOLIO_DEMO_MODE ? await demoLeaderboard(user) : getTopDonators(user.history));
 }
 
 // 📌 4. ระบบ Socket.io ครบวงจรพร้อม Authentication & Authorization
@@ -1300,13 +1423,14 @@ io.on('connection', (socket) => {
 
         const goalData = (user.goalSettings && user.goalSettings.title) ? user.goalSettings :
             { title: 'เป้าหมายโดเนท', target: 100, current: 0, barColor: '#0ea5e9', textColor: '#ffffff' };
-        socket.emit('apply_goal', cleanSettings('goalSettings', goalData));
+        socket.emit('apply_goal', PORTFOLIO_DEMO_MODE ? demoGoalSnapshot(user) : cleanSettings('goalSettings', goalData));
 
         const tdData = (user.topDonorSettings && user.topDonorSettings.title) ? user.topDonorSettings :
             { title: '🏆 Top Donators', titleColor: '#5BC0EB', textColor: '#ffffff', boxColor: 'rgba(0, 0, 0, 0.6)', isTransparent: false };
         socket.emit('apply_top_donor', cleanSettings('topDonorSettings', tdData));
 
-        socket.emit('update_leaderboard', getTopDonators(user.history));
+        socket.emit('apply_demo_mode', PORTFOLIO_DEMO_MODE);
+        socket.emit('update_leaderboard', PORTFOLIO_DEMO_MODE ? await demoLeaderboard(user) : getTopDonators(user.history));
         socket.emit('apply_timer', timerSnapshot(user));
         await pumpAlertQueue(user.username);
     });
@@ -1319,7 +1443,8 @@ io.on('connection', (socket) => {
             if (user.pageSettings) socket.emit('apply_page_settings', user.pageSettings);
             if (user.paymentMethods) socket.emit('apply_payment', publicPaymentMethods(user.paymentMethods));
             if (user.socialLinks) socket.emit('apply_social', user.socialLinks);
-            socket.emit('update_leaderboard', getTopDonators(user.history));
+            socket.emit('apply_demo_mode', PORTFOLIO_DEMO_MODE);
+            socket.emit('update_leaderboard', PORTFOLIO_DEMO_MODE ? await demoLeaderboard(user) : getTopDonators(user.history));
             socket.emit('apply_gifts', (await GiftCatalogItem.find({ userId: user._id, active: true }).sort({ price: 1 })).map(publicGift));
         }
     });
@@ -1375,11 +1500,12 @@ io.on('connection', (socket) => {
         if (!await checkAuth(data)) return;
         const user = await User.findOne({ username: data.username });
         if (!user) return;
-        const bonus = Number(user.timerState?.bankedSeconds) || 0;
+        const timerTarget = timerMutationTarget(user);
+        const bonus = Number(timerTarget.timerState?.bankedSeconds) || 0;
         const duration = (Number(user.timerSettings?.initialSeconds) || 3600) + bonus;
         if (!Number.isSafeInteger(duration) || duration < 1) return socket.emit('timer_error', { message: 'เวลาเริ่มต้นไม่ถูกต้อง' });
-        user.timerState = { ...(user.timerState || {}), isRunning: true, endsAt: new Date(Date.now() + duration * 1000), remainingSeconds: duration, bankedSeconds: 0, sessionStartedAt: new Date() };
-        user.markModified('timerState');
+        timerTarget.timerState = { ...timerTarget.timerState, isRunning: true, endsAt: new Date(Date.now() + duration * 1000), remainingSeconds: duration, bankedSeconds: 0, sessionStartedAt: new Date() };
+        persistTimerMutation(user, timerTarget);
         await user.save();
         emitTimer(user);
     });
@@ -1390,7 +1516,8 @@ io.on('connection', (socket) => {
             const user = await User.findOne({ username: data.username });
             if (!user) return;
             const seconds = safeSeconds(data.seconds);
-            const state = user.timerState || {};
+            const timerTarget = timerMutationTarget(user);
+            const state = timerTarget.timerState || {};
             if (state.isRunning && seconds > 0) {
                 state.isRunning = true;
                 state.endsAt = new Date(Date.now() + seconds * 1000);
@@ -1401,8 +1528,8 @@ io.on('connection', (socket) => {
                 state.remainingSeconds = 0;
                 state.bankedSeconds = seconds;
             }
-            user.timerState = { ...state };
-            user.markModified('timerState');
+            timerTarget.timerState = { ...state };
+            persistTimerMutation(user, timerTarget);
             await user.save();
             emitTimer(user);
         } catch (error) {
@@ -1420,7 +1547,9 @@ io.on('connection', (socket) => {
             if (!Number.isFinite(rawSeconds)) throw Object.assign(new Error('รูปแบบการปรับเวลาไม่ถูกต้อง'), { status: 400 });
             const seconds = safeSeconds(Math.abs(rawSeconds));
             const action = data.action || (Number(data.seconds) < 0 ? 'subtract' : 'add');
-            applyTimerChange(user, action, seconds);
+            const timerTarget = timerMutationTarget(user);
+            applyTimerChange(timerTarget, action, seconds);
+            persistTimerMutation(user, timerTarget);
             await user.save();
             emitTimer(user);
         } catch (error) {
@@ -1581,8 +1710,9 @@ io.on('connection', (socket) => {
         if (user) {
             user.stats.today = 0;
             user.stats.total = 0;
+            user.demoStats = { today: 0, total: 0, todayDate: '' };
             user.history = []; 
-            await Donation.updateMany({ userId: user._id, status: { $in: ['confirmed', 'test', 'pending'] } }, { $set: { status: 'deleted' }, $unset: { expiresAt: 1 } });
+            await Donation.updateMany({ userId: user._id, status: { $in: ['confirmed', 'test', 'demo', 'pending'] } }, { $set: { status: 'deleted' }, $unset: { expiresAt: 1 } });
             
             if (user.goalSettings && user.goalSettings.current !== undefined) {
                 user.goalSettings.current = 0;
@@ -1594,6 +1724,7 @@ io.on('connection', (socket) => {
 
             await user.save();
             io.to(ownerRoom(data.username)).emit('update_stats', user.stats);
+            io.to(ownerRoom(data.username)).emit('update_demo_stats', demoStatsSnapshot(user));
             io.to(ownerRoom(data.username)).emit('update_history', await dashboardHistory(user));
             io.to(ownerRoom(data.username)).emit('update_leaderboard', []);
             io.to(widgetRoom(data.username)).emit('update_leaderboard', []);

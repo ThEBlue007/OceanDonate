@@ -8,7 +8,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const { after, before, test } = require('node:test');
-const { JSDOM } = require('jsdom');
+const { JSDOM, VirtualConsole } = require('jsdom');
 const { MongoMemoryReplSet } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 const request = require('supertest');
@@ -143,7 +143,7 @@ before(async () => {
     baseUrl = `http://127.0.0.1:${port}`;
     serverProcess = spawn(process.execPath, [serverPath], {
         cwd: projectRoot,
-        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', RENDER: 'true', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: 'not-a-discord-snowflake', DISCORD_CLIENT_SECRET: 'discord-test-secret', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
+        env: { ...process.env, PORT: String(port), MONGODB_URI: mongoUri, JWT_SECRET: jwtSecret, NODE_ENV: 'test', ALLOW_REAL_PAYMENTS_IN_TESTS: 'true', RENDER: 'true', APP_BASE_URL: `http://127.0.0.1:${port}`, GOOGLE_CLIENT_ID: 'google-test-client', GOOGLE_CLIENT_SECRET: 'google-test-secret', OAUTH_GOOGLE_TOKEN_URL: `http://127.0.0.1:${slipApiPort}/google-token`, OAUTH_GOOGLE_PROFILE_URL: `http://127.0.0.1:${slipApiPort}/google-profile`, DISCORD_CLIENT_ID: 'not-a-discord-snowflake', DISCORD_CLIENT_SECRET: 'discord-test-secret', SMTP_HOST: '', SMTP_PORT: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: '', EASYSLIP_API_KEY: 'test-easyslip-key', EASYSLIP_API_BASE_URL: `http://127.0.0.1:${slipApiPort}` },
         stdio: ['ignore', 'pipe', 'pipe']
     });
 
@@ -335,7 +335,7 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     user = await dbConnection.collection('users').findOne({ username });
     assert.equal(user.stats.total, 25.5);
     assert.equal(user.stats.today, 25.5);
-    assert.equal(user.timerState.bankedSeconds, 30);
+    assert.equal(user.demoTimerState.bankedSeconds, 30);
 
     const second = await request(baseUrl).post('/api/donations').send({ username, paymentMethod: 'promptpay', amount: 25.5, name: 'Second donor' });
     assert.equal(second.status, 201);
@@ -361,7 +361,7 @@ test('verified slips credit once; wrong receiver and reused transaction do not a
     user = await dbConnection.collection('users').findOne({ username });
     assert.equal(user.stats.total, 75.5);
     assert.equal(user.history.length, 2);
-    assert.equal(user.timerState.bankedSeconds, 60, 'the configured 20–50 baht rule includes an exact 50 baht donation');
+    assert.equal(user.demoTimerState.bankedSeconds, 60, 'the configured 20–50 baht rule includes an exact 50 baht donation');
     owner.disconnect();
     widget.disconnect();
 });
@@ -499,6 +499,88 @@ test('test donations create a log and OBS alert without changing totals or leade
     widget.disconnect();
 });
 
+test('portfolio PromptPay and bank mock payments update demo state only and send demo overlays', async () => {
+    const userBefore = await dbConnection.collection('users').findOne({ username });
+    await dbConnection.collection('alertqueues').deleteMany({ userId: userBefore._id });
+    await dbConnection.collection('users').updateOne({ _id: userBefore._id }, {
+        $set: {
+            'stats.total': 321,
+            'stats.today': 45,
+            'goalSettings': { title: 'เงินจริง', target: 1000, current: 321 },
+            'timerSettings.amountRules': [{ minAmount: 1, maxAmount: 100, action: 'add', seconds: 60 }],
+            'timerState': { isRunning: false, endsAt: null, remainingSeconds: 0, bankedSeconds: 0 },
+            'demoStats.total': 0,
+            'demoStats.today': 0,
+            'demoTimerState': { isRunning: false, endsAt: null, remainingSeconds: 0, bankedSeconds: 0 }
+        },
+    });
+    const owner = await connectSocket();
+    const ownerAuth = socketEvent(owner, 'auth_success');
+    owner.emit('auth_dashboard', { username, token });
+    await ownerAuth;
+    const widget = await connectSocket();
+    const initialSettings = socketEvent(widget, 'apply_settings');
+    const initialGoal = socketEvent(widget, 'apply_goal');
+    const initialTimer = socketEvent(widget, 'apply_timer');
+    const initialLeaderboard = socketEvent(widget, 'update_leaderboard');
+    widget.emit('join_widget', { token: widgetToken, kind: 'alert' });
+    await Promise.all([initialSettings, initialGoal, initialTimer, initialLeaderboard]);
+
+    const demoStats = socketEvent(owner, 'update_demo_stats');
+    const demoHistory = socketEvent(owner, 'update_history');
+    const demoGoal = socketEvent(widget, 'apply_goal');
+    const demoTimer = socketEvent(widget, 'apply_timer');
+    const demoLeaderboard = socketEvent(widget, 'update_leaderboard');
+    const demoAlert = socketEvent(widget, 'show_alert');
+    const result = await request(baseUrl).post('/api/donations/demo').set('X-Forwarded-For', '198.51.100.53').send({
+        username, paymentMethod: 'promptpay', amount: 25, name: 'Portfolio donor', message: 'No money moved'
+    });
+    assert.equal(result.status, 201, JSON.stringify(result.body));
+    assert.equal(result.body.status, 'demo');
+    assert.equal(result.body.realPayment, false);
+    assert.match(result.body.demoLabel, /ไม่มีเงินจริง|DEMO/i);
+    const alert = await demoAlert;
+    assert.equal(alert.isDemo, true);
+    assert.equal(alert.paymentMethod, undefined);
+    assert.match(alert.demoLabel, /ตัวอย่าง|DEMO/i);
+    assert.ok((await demoHistory).some(item => item.name === 'Portfolio donor' && item.isDemo));
+    assert.equal((await demoStats).total, 25);
+    assert.equal((await demoGoal).current, 25);
+    assert.equal((await demoTimer).bankedSeconds, 60);
+    assert.ok((await demoLeaderboard).some(item => item.name === 'Portfolio donor' && item.amount === 25));
+
+    const bankStats = socketEvent(owner, 'update_demo_stats');
+    const bankGoal = socketEvent(widget, 'apply_goal');
+    const bankTimer = socketEvent(widget, 'apply_timer');
+    const bankLeaderboard = socketEvent(widget, 'update_leaderboard');
+    const bankResult = await request(baseUrl).post('/api/donations/demo').set('X-Forwarded-For', '198.51.100.54').send({
+        username, paymentMethod: 'bank', amount: 25, name: 'Bank demo donor'
+    });
+    assert.equal(bankResult.status, 201, JSON.stringify(bankResult.body));
+    assert.equal((await bankStats).total, 50);
+    assert.equal((await bankGoal).current, 50);
+    assert.equal((await bankTimer).bankedSeconds, 120);
+    assert.ok((await bankLeaderboard).some(item => item.name === 'Bank demo donor' && item.amount === 25));
+
+    const userAfter = await dbConnection.collection('users').findOne({ _id: userBefore._id });
+    assert.equal(userAfter.stats.total, 321);
+    assert.equal(userAfter.stats.today, 45);
+    assert.equal(userAfter.goalSettings.current, 321);
+    assert.equal(userAfter.timerState.bankedSeconds, 0);
+    assert.equal(userAfter.demoTimerState.bankedSeconds, 120);
+    assert.deepEqual(userAfter.history, userBefore.history);
+    const record = await dbConnection.collection('donations').findOne({ username, status: 'demo', name: 'Portfolio donor' });
+    assert.ok(record);
+    assert.equal(record.providerRef, undefined);
+    assert.equal(record.receiverAccountNumber, undefined);
+    const testDonation = await request(baseUrl).post('/api/donations/test').set('X-Forwarded-For', '198.51.100.55').send({ username, amount: 10, name: 'Alert only' });
+    assert.equal(testDonation.status, 201, JSON.stringify(testDonation.body));
+    const afterTest = await dbConnection.collection('users').findOne({ _id: userBefore._id });
+    assert.equal(afterTest.demoStats.total, 50);
+    owner.disconnect();
+    widget.disconnect();
+});
+
 test('test donations respect the pause queue and resume as skippable test alerts without affecting totals or timer', async () => {
     const owner = await connectSocket();
     const ownerAuth = socketEvent(owner, 'auth_success');
@@ -532,6 +614,7 @@ test('test donations respect the pause queue and resume as skippable test alerts
     assert.equal(userAfterTest.stats.total, userBefore.stats.total);
     assert.equal(userAfterTest.goalSettings?.current, userBefore.goalSettings?.current);
     assert.deepEqual(userAfterTest.timerState, userBefore.timerState);
+    assert.deepEqual(userAfterTest.demoTimerState, userBefore.demoTimerState);
 
     const resumedState = socketEvent(owner, 'apply_alert_control');
     const resumedAlert = socketEvent(widget, 'show_alert');
@@ -670,7 +753,7 @@ test('owner can configure an uncapped live timer and carry stopped-time changes 
     owner.emit('timer_adjust', { username, token, seconds: 120 });
     assert.equal((await adjusted).bankedSeconds, 120);
     const savedBonus = await dbConnection.collection('users').findOne({ username });
-    assert.equal(savedBonus.timerState.bankedSeconds, 120, JSON.stringify(savedBonus.timerState));
+    assert.equal(savedBonus.demoTimerState.bankedSeconds, 120, JSON.stringify(savedBonus.demoTimerState));
 
     const started = socketEvent(owner, 'apply_timer');
     owner.emit('timer_start', { username, token });
@@ -959,6 +1042,43 @@ test('Donate layout and palette accept only built-in choices and background URLs
     assert.equal(settings.themeId, 'soft');
     assert.equal(settings.bgUrl, '');
     owner.disconnect();
+});
+
+test('Donate page labels mock PromptPay/Bank clearly and submits them to the demo-only endpoint', async () => {
+    const handlers = new Map();
+    const fakeSocket = { on: (name, callback) => handlers.set(name, callback), emit() {} };
+    const fetchCalls = [];
+    const jsdomErrors = [];
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on('jsdomError', error => jsdomErrors.push(error));
+    const html = fs.readFileSync(path.join(frontendPath, 'donate.html'), 'utf8');
+    const dom = new JSDOM(html, {
+        runScripts: 'dangerously', url: 'http://localhost/donate.html?u=demo-user',
+        virtualConsole,
+        beforeParse(window) {
+            window.io = () => fakeSocket;
+            window.alert = () => {};
+            window.fetch = async (url, options = {}) => {
+                fetchCalls.push({ url: String(url), options });
+                if (String(url).includes('/api/streamer/')) return { ok: true, json: async () => ({ username: 'demo-user', giftCatalog: [], paymentMethods: {}, portfolioDemoMode: true }) };
+                return { ok: true, json: async () => ({ status: 'demo', realPayment: false }) };
+            };
+        }
+    });
+    await delay(10);
+    assert.equal(dom.window.document.body.dataset.portfolioDemo, 'true');
+    assert.match(dom.window.document.getElementById('pay-promptpay').textContent, /พร้อมเพย์ \(จำลอง\)/);
+    assert.match(dom.window.document.getElementById('pay-bank').textContent, /โอนธนาคาร \(จำลอง\)/);
+    dom.window.document.getElementById('donate-name').value = 'Demo donor';
+    dom.window.selectPayment('bank');
+    await dom.window.openPaymentModal();
+    const submitted = fetchCalls.find(call => call.url === '/api/donations/demo');
+    assert.ok(submitted, JSON.stringify(fetchCalls.map(call => call.url)));
+    assert.equal(JSON.parse(submitted.options.body).paymentMethod, 'bank');
+    assert.match(dom.window.document.getElementById('thankyou-title').textContent, /จำลอง/);
+    assert.match(dom.window.document.getElementById('thankyou-text').textContent, /ไม่มีการโอนเงินจริง/);
+    assert.deepEqual(jsdomErrors, []);
+    dom.window.close();
 });
 
 test('Donate Preview applies temporary design choices but blocks all payment submission', async () => {

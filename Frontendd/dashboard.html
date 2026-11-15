@@ -249,6 +249,12 @@
                     <div class="stat-card"><h4 class="lang-el" data-th="<i class='fas fa-eye'></i> จำนวนผู้เข้าชม" data-en="<i class='fas fa-eye'></i> Total Views"><i class="fas fa-eye"></i> จำนวนผู้เข้าชม</h4><div class="amount"><span id="dash-stat-views">0</span> <span style="font-size: 1rem; color: var(--blue);" class="lang-el" data-th="ครั้ง" data-en="Views">ครั้ง</span></div></div>
                 </div>
 
+                <section class="card" id="demo-stats-card" style="display:none;margin:18px 0;border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.06);">
+                    <h3 style="color:#fbbf24;margin:0 0 8px;">สถิติเดโม · ไม่มีเงินจริง</h3>
+                    <p style="margin:0 0 12px;color:var(--text);">ยอดส่วนนี้ใช้แสดงตัวอย่างเท่านั้น แยกจากยอดโดเนทจริง และส่งไปยัง Goal, Timer, Leaderboard กับ OBS Alert</p>
+                    <div style="display:flex;gap:24px;flex-wrap:wrap;"><strong>วันนี้: <span id="dash-demo-today">0</span> ฿</strong><strong>รวม: <span id="dash-demo-total">0</span> ฿</strong></div>
+                </section>
+
                 <section class="card" id="live-controls-card" style="margin: 24px 0;">
                     <h2 class="lang-el" data-th="ควบคุมระหว่างไลฟ์" data-en="Live controls" style="margin-bottom: 18px;">ควบคุมระหว่างไลฟ์</h2>
                     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:24px;">
@@ -274,7 +280,7 @@
                             <option value="amount-high">ยอดมากไปน้อย</option>
                             <option value="amount-low">ยอดน้อยไปมาก</option>
                         </select>
-                        <label class="history-test-toggle"><input id="history-show-tests" type="checkbox" checked><span class="lang-el" data-th="แสดงรายการทดสอบ" data-en="Show test entries">แสดงรายการทดสอบ</span></label>
+                        <label class="history-test-toggle"><input id="history-show-tests" type="checkbox" checked><span class="lang-el" data-th="แสดงรายการทดสอบ/เดโม" data-en="Show test/demo entries">แสดงรายการทดสอบ/เดโม</span></label>
                     <button class="btn-danger lang-el" onclick="resetStats()" data-th="<i class='fas fa-sync-alt'></i> รีเซ็ตข้อมูลทั้งหมด" data-en="<i class='fas fa-sync-alt'></i> Reset Data" style="font-size: 0.95rem; padding: 8px 16px;">
                         <i class="fas fa-sync-alt"></i> รีเซ็ตข้อมูลทั้งหมด
                     </button>
@@ -1564,6 +1570,11 @@
             if(document.getElementById('dash-stat-total')) document.getElementById('dash-stat-total').innerText = (stats.total || 0).toLocaleString();
             if(document.getElementById('dash-stat-views')) document.getElementById('dash-stat-views').innerText = (stats.views || 0).toLocaleString();
         });
+        socket.on('update_demo_stats', stats => {
+            document.getElementById('dash-demo-today').textContent = (Number(stats?.today) || 0).toLocaleString();
+            document.getElementById('dash-demo-total').textContent = (Number(stats?.total) || 0).toLocaleString();
+        });
+        socket.on('apply_demo_mode', enabled => { document.getElementById('demo-stats-card').style.display = enabled ? 'block' : 'none'; });
 
         let dashboardDonationHistory = [];
         function renderDonationHistory(history = dashboardDonationHistory) {
@@ -1586,7 +1597,7 @@
             const sortOrder = document.getElementById('history-sort-order')?.value || 'newest';
             const showTests = document.getElementById('history-show-tests')?.checked !== false;
             const entries = history.map((item, originalIndex) => ({ item, originalIndex, timestamp: Date.parse(item.date || '') || 0, amount: Number(item.amount) || 0 }))
-                .filter(entry => showTests || !entry.item.isTest)
+                .filter(entry => showTests || (!entry.item.isTest && !entry.item.isDemo))
                 .sort((a, b) => {
                     if (sortOrder === 'amount-high' || sortOrder === 'amount-low') {
                         const amountDifference = sortOrder === 'amount-high' ? b.amount - a.amount : a.amount - b.amount;
@@ -1614,7 +1625,7 @@
                 dateCell.textContent = item.date ? new Date(item.date).toLocaleString('th-TH') : 'ไม่ระบุเวลา';
                 const nameCell = document.createElement('td');
                 nameCell.style.cssText = 'padding: 15px; font-weight: 500;';
-                nameCell.textContent = item.isTest ? `${item.name || ''} (ทดสอบ)` : (item.name || '');
+                nameCell.textContent = item.isDemo ? `${item.name || ''} (เดโม · ไม่มีเงินจริง)` : item.isTest ? `${item.name || ''} (ทดสอบ)` : (item.name || '');
                 const amountCell = document.createElement('td');
                 amountCell.style.cssText = 'padding: 15px; color: var(--blue); font-weight: bold;';
                 amountCell.textContent = `${Number(item.amount || 0).toLocaleString()} ฿`;
@@ -1632,7 +1643,7 @@
                 }
                 const actionCell = document.createElement('td');
                 actionCell.style.cssText = 'padding: 15px; text-align: center;';
-                if (!item.isTest) {
+                if (!item.isTest && !item.isDemo) {
                     const deleteButton = document.createElement('button');
                     deleteButton.className = 'btn-danger';
                     deleteButton.style.cssText = 'padding: 6px 12px; font-size: 0.85rem; border: none; border-radius: 6px; cursor: pointer;';
